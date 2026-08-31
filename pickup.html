@@ -244,7 +244,7 @@
   </main>
 
   <footer>
-    &copy; 2026 Still Has Value | Murray, UT |
+    &copy; 2026 Still Has Value | Murray / West Jordan, UT |
     <a href="/">Shop</a> |
     <a href="/pickup">Request a pickup</a>
   </footer>
@@ -361,7 +361,11 @@
         btn.textContent = "Request pickup";
       }
       function showCheckBanner() {
-        showBanner("no", "Please complete the check (the widget is right above the button).");
+        if (!window.turnstile || window.__tsWidgetId == null) {
+          showBanner("no", "The bot check is still loading. Wait a moment and try again.");
+        } else {
+          showBanner("no", "Please complete the check (the widget is right above the button).");
+        }
         var w = document.getElementById("cf-widget");
         if (w) w.scrollIntoView({ behavior: "smooth", block: "center" });
       }

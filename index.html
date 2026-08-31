@@ -6,11 +6,53 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Still Has Value - We Prove It</title>
+  <meta name="description" content="Free pickup of items that still have value in Murray and West Jordan, Utah. Shop riding mowers, scooters, appliances, and more — cleaned and honestly listed.">
+  <link rel="canonical" href="https://stillhasvalue.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Still Has Value">
+  <meta property="og:title" content="Still Has Value - We Prove It">
+  <meta property="og:description" content="Free pickup of items that still have value in the Salt Lake valley. Shop the catalog — no junk, just value.">
+  <meta property="og:url" content="https://stillhasvalue.com/">
+  <meta property="og:image" content="https://stillhasvalue.com/Cybee%20with%20logo.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Still Has Value - We Prove It">
+  <meta name="twitter:description" content="Free pickup of items that still have value in Murray and West Jordan, UT. Shop the catalog.">
+  <meta name="twitter:image" content="https://stillhasvalue.com/Cybee%20with%20logo.jpg">
   <link rel="alternate" type="application/json" href="/inventory.json" title="Current inventory">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"LocalBusiness","name":"Still Has Value","url":"https://stillhasvalue.com/","image":"https://stillhasvalue.com/stillhasvalue_logo1024x1024_black.jpg","address":{"@type":"PostalAddress","addressLocality":"Murray","addressRegion":"UT","addressCountry":"US"},"areaServed":["Murray, UT","West Jordan, UT","Salt Lake Valley"],"sameAs":["https://classifieds.ksl.com/v2/search/member/134010"]}
+  </script>
   <style>
     :root { --hero: 0; --green: #15803d; --amber: #d97706; --bar: 64px; }
     html { scroll-behavior: smooth; }
     body { margin:0; font-family: Arial, Helvetica, sans-serif; background:#f8f8f8; color:#1c1917; }
+    .skip-link {
+      position: absolute; left: -9999px; top: 8px; z-index: 100;
+      background: var(--green); color: #fff; padding: 8px 14px;
+      border-radius: 8px; font-weight: 700; text-decoration: none;
+    }
+    .skip-link:focus { left: 8px; }
+    #persist {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 48;
+      height: var(--bar);
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 12px;
+      background: #000;
+      pointer-events: auto;
+    }
+    #persist .persist-brand {
+      display: flex; align-items: center; gap: 8px;
+      color: #fff; text-decoration: none; font-weight: 700;
+      letter-spacing: .04em; font-size: .85rem;
+    }
+    #persist .persist-brand img { height: 36px; width: auto; }
+    #persist .persist-pickup {
+      margin-left: auto;
+      background: var(--green); color: #fff; text-decoration: none;
+      border-radius: 999px; padding: 8px 14px; font-weight: 700;
+      font-size: 14px; white-space: nowrap; pointer-events: auto;
+    }
+    #persist .persist-pickup:hover { background: #166534; }
     #topbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 50;
       height: var(--bar);
@@ -22,7 +64,10 @@
       pointer-events: none;
     }
     #topbar.is-on { pointer-events: auto; }
-    #topbar .bar-truck { height: 44px; width: auto; border-radius: 6px; }
+    #topbar .bar-truck {
+      visibility: hidden;
+      height: 44px; width: auto; border-radius: 6px;
+    }
     #topbar .bar-logo { height: 36px; width: auto; }
     #topbar .bar-name { color:#fff; font-weight: 700; letter-spacing: .04em; font-size: .85rem; white-space: nowrap; }
     #topbar form { margin-left: auto; display: flex; gap: 6px; min-width: 0; flex: 1; max-width: 340px; }
@@ -36,14 +81,18 @@
       flex-shrink: 0;
       background: var(--green); color:#fff; text-decoration: none;
       border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 14px; white-space: nowrap;
+      pointer-events: auto;
+      position: relative;
+      z-index: 61;
     }
     #topbar .bar-pickup:hover { background: #166534; }
     header.hero {
       background:#000; color:#fff; text-align:center;
-      padding: 72px 20px 48px;
+      padding: 88px 20px 48px;
     }
     header.hero .logo { width:180px; margin:0 auto 16px; display:block; }
-    header.hero h3 { margin: 0 0 12px; font-weight: 600; }
+    header.hero h1 { margin: 0 0 4px; font-weight: 600; font-size: 1.17rem; }
+    .hero-tag { margin: 0 0 12px; font-weight: 600; }
     .hero-pickup {
       display: inline-block;
       background: var(--green); color: #fff;
@@ -51,8 +100,33 @@
       font-weight: 700; text-decoration: none; font-size: 1.1rem;
       margin: 0;
       box-shadow: 0 4px 16px rgba(21,128,61,.45);
+      position: relative;
+      z-index: 45;
     }
     .hero-pickup:hover { background: #166534; }
+    .hero-truck-wrap {
+      max-width: min(100%, 640px);
+      width: 100%;
+      margin: 28px auto 8px;
+    }
+    .hero-truck {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      margin: 0;
+      display: block;
+    }
+    .hero-truck.is-flying {
+      position: fixed;
+      left: 0;
+      top: 0;
+      margin: 0;
+      max-width: none;
+      z-index: 51;
+      pointer-events: none;
+      will-change: transform;
+      transform-origin: top left;
+    }
     .hero-ai-hint {
       margin: 10px 0 24px;
       color: #a8a29e;
@@ -61,14 +135,6 @@
     .hero-inner { max-width: 900px; margin: 0 auto; text-align: left; }
     .hero-inner h2 { color: var(--amber); }
     .hero-inner p { line-height: 1.55; color: #e7e5e4; }
-    .hero-truck {
-      max-width: min(100%, 640px);
-      width: 100%;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      margin: 28px auto 8px;
-      display: block;
-    }
     main { padding: 28px 16px 56px; max-width: 1280px; margin: 0 auto; }
     #shop-now h2 { color: var(--amber); margin: 0 0 8px; }
     .shop-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 14px; }
@@ -143,9 +209,10 @@
       #topbar .bar-name { display: none; }
       #topbar form { max-width: none; }
       #topbar .bar-pickup { padding: 8px 12px; font-size: 13px; }
-      header.hero { padding: 48px 16px 32px; }
+      header.hero { padding: 80px 16px 32px; }
       header.hero .logo { width: 140px; }
       .hero-pickup { padding: 12px 24px; font-size: 1rem; }
+      #persist .persist-brand span { display: none; }
       .chips {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -155,6 +222,14 @@
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#shop-now">Skip to inventory</a>
+  <div id="persist">
+    <a class="persist-brand" href="/">
+      <img src="stillhasvalue_black_trans.png" alt="Still Has Value">
+      <span>STILL HAS VALUE</span>
+    </a>
+    <a class="persist-pickup" href="/pickup">Request a pickup</a>
+  </div>
   <div id="topbar">
     <img class="bar-truck" src="Cybee with logo.jpg" alt="">
     <img class="bar-logo" src="stillhasvalue_black_trans.png" alt="">
@@ -163,18 +238,21 @@
       <input type="search" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off">
       <button type="submit">Search</button>
     </form>
-    <a class="bar-pickup" href="/pickup.html">Pickup</a>
+    <a class="bar-pickup" href="/pickup">Pickup</a>
   </div>
 
   <header class="hero" id="hero">
     <img src="stillhasvalue_black_trans.png" alt="Still Has Value Logo" class="logo">
-    <h3>Still Has Value - We Prove It</h3>
-    <a class="hero-pickup" href="/pickup.html">Request a pickup</a>
+    <h1>Still Has Value</h1>
+    <p class="hero-tag">We Prove It</p>
+    <a class="hero-pickup" href="/pickup">Request a pickup</a>
     <p class="hero-ai-hint">Or tell Grok, Gemini, or Claude on your phone.</p>
     <div class="hero-inner">
       <h2>Our Fleet</h2>
       <p>In 2026–2027, you'll see us rolling up in this: soon with autonomous pickups (eh Elon?), free removal of prescreened items you want gone.</p>
-      <img src="Cybee with logo.jpg" alt="Still Has Value Cybertruck" class="hero-truck" id="hero-truck">
+      <div class="hero-truck-wrap" id="hero-truck-wrap">
+        <img src="Cybee with logo.jpg" alt="Still Has Value Cybertruck" class="hero-truck" id="hero-truck">
+      </div>
       <h2>What We Do</h2>
       <p><b>Still Has Value</b> turns your no-longer-needed items into someone else's perfect find—without the hassle, guilt, or waste.
 For you (the seller): Schedule a free, quick pickup at your convenience. We get it out of your way fast and you can feel great knowing your unwanted item isn't heading to a landfill.
@@ -203,8 +281,9 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
   </main>
 
   <footer>
-    &copy; 2026 Still Has Value | Murray, UT | @StillHasValue |
-    <a href="/pickup.html">Request a pickup</a> |
+    &copy; 2026 Still Has Value | Murray / West Jordan, UT | @StillHasValue |
+    <a href="/">Shop</a> |
+    <a href="/pickup">Request a pickup</a> |
     <a href="https://tracker.stillhasvalue.com">tracker</a>
   </footer>
 
@@ -214,20 +293,279 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
       var root = document.documentElement;
       var bar = document.getElementById("topbar");
       var hero = document.getElementById("hero");
+      var truck = document.getElementById("hero-truck");
+      var truckWrap = document.getElementById("hero-truck-wrap");
+      var barTruck = document.querySelector("#topbar .bar-truck");
+      var flying = false;
+      var tickScheduled = false;
+      var truckAspect = 0;
+
+      function easeOutCubic(x) {
+        return 1 - Math.pow(1 - x, 3);
+      }
+      function flyTruck(t) {
+        if (!truck || !truckWrap || !barTruck) return;
+        var p = easeOutCubic(t);
+        if (p <= 0.002) {
+          if (flying) {
+            truck.classList.remove("is-flying");
+            truck.style.transform = "";
+            truck.style.width = "";
+            truck.style.height = "";
+            truck.style.borderRadius = "";
+            truckWrap.style.height = "";
+            flying = false;
+          }
+          return;
+        }
+        if (truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
+        if (truckAspect) truckWrap.style.height = (truckWrap.clientWidth * truckAspect) + "px";
+        var wrapRect = truckWrap.getBoundingClientRect();
+        if (!flying) {
+          if (!truckWrap.style.height) truckWrap.style.height = wrapRect.height + "px";
+          truck.classList.add("is-flying");
+          flying = true;
+          wrapRect = truckWrap.getBoundingClientRect();
+        }
+        var fromW = wrapRect.width;
+        var fromH = wrapRect.height || 1;
+        var dest = barTruck.getBoundingClientRect();
+        var scale = dest.height / fromH;
+        var x = wrapRect.left + (dest.left - wrapRect.left) * p;
+        var y = wrapRect.top + (dest.top - wrapRect.top) * p;
+        var s = 1 + (scale - 1) * p;
+        truck.style.width = fromW + "px";
+        truck.style.height = fromH + "px";
+        truck.style.transformOrigin = "top left";
+        truck.style.transform = "translate(" + x + "px," + y + "px) scale(" + s + ")";
+        truck.style.borderRadius = (12 + (6 - 12) * p) + "px";
+      }
       function onScroll() {
         var h = hero.offsetHeight || 1;
         var t = Math.min(1, Math.max(0, window.scrollY / Math.max(120, h - 80)));
         root.style.setProperty("--hero", String(t));
         if (t > 0.55) bar.classList.add("is-on");
         else bar.classList.remove("is-on");
+        flyTruck(t);
+      }
+      function requestTick() {
+        if (tickScheduled) return;
+        tickScheduled = true;
+        requestAnimationFrame(function () {
+          tickScheduled = false;
+          onScroll();
+        });
       }
       onScroll();
-      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("scroll", requestTick, { passive: true });
+      window.addEventListener("resize", requestTick);
+      if (truck) {
+        if (truck.complete && truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
+        truck.addEventListener("load", function () {
+          if (truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
+          requestTick();
+        });
+      }
 
       var inputs = document.querySelectorAll("#bar-search input, #shop-search input");
       var currentCat = "";
       var totalAvailable = 0;
       var inventoryReady = false;
+      var searchGen = 0;
+      var searchTimer = 0;
+      var searchAbort = null;
+
+      var SYN_GROUPS = [
+        ["mower", "lawnmower", "lawn mower", "riding mower", "tractor", "deere", "grass", "yard", "cut grass"],
+        ["scooter", "moped", "ebike", "e-bike", "electric bike", "mobility", "razor", "wheelchair", "jazzy"],
+        ["washer", "dryer", "laundry", "washing machine"],
+        ["ac", "air conditioner", "aircon", "cooling", "hvac", "swamp cooler", "evaporative"],
+        ["generator", "inverter", "power"],
+        ["tv", "television", "monitor", "display"],
+        ["printer", "scanner", "copier"],
+        ["vacuum", "mop", "tineco", "bissell", "shark", "floor cleaner"],
+        ["snowblower", "snow blower", "snow thrower"],
+        ["pressure washer", "power washer"],
+        ["trailer", "camper", "rv", "fifth wheel"],
+        ["atv", "quad", "four wheeler", "4wheeler"],
+        ["motorcycle", "dirt bike", "moto"],
+        ["microwave", "oven"],
+        ["chair", "recliner", "massage chair"],
+        ["computer", "pc", "imac", "desktop", "laptop"]
+      ];
+      var STOP = { to:1, the:1, a:1, an:1, of:1, for:1, and:1, or:1, in:1, on:1, at:1, is:1, it:1, something:1, some:1, any:1, please:1, with:1, this:1, that:1, from:1 };
+      var GENERIC = { electric:1, machine:1, machines:1, powered:1, start:1 };
+
+      function tokenize(s) {
+        var lower = String(s || "").toLowerCase();
+        var spaced = lower.replace(/[^a-z0-9]+/g, " ").trim();
+        var a = spaced ? spaced.split(/\s+/).filter(Boolean) : [];
+        var collapsed = lower.replace(/-/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+        var b = collapsed ? collapsed.split(/\s+/).filter(Boolean) : [];
+        var out = [], seen = {};
+        a.concat(b).forEach(function (t) { if (!seen[t]) { seen[t] = 1; out.push(t); } });
+        return out;
+      }
+      function levenshtein(a, b) {
+        if (a === b) return 0;
+        if (Math.abs(a.length - b.length) > 1) return 2;
+        var n = a.length, m = b.length, dp = [], i, j, cost;
+        for (i = 0; i <= n; i++) { dp[i] = []; dp[i][0] = i; }
+        for (j = 0; j <= m; j++) dp[0][j] = j;
+        for (i = 1; i <= n; i++) {
+          for (j = 1; j <= m; j++) {
+            cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+            dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+            if (i > 1 && j > 1 && a.charCodeAt(i - 1) === b.charCodeAt(j - 2) && a.charCodeAt(i - 2) === b.charCodeAt(j - 1)) {
+              dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + 1);
+            }
+          }
+        }
+        return dp[n][m];
+      }
+      function commonPrefixLen(a, b) {
+        var n = Math.min(a.length, b.length), i = 0;
+        while (i < n && a.charCodeAt(i) === b.charCodeAt(i)) i++;
+        return i;
+      }
+      function tokenMatch(a, b) {
+        if (a === b) return true;
+        if (a.length >= 3 && b.length >= 3 && (b.indexOf(a) === 0 || a.indexOf(b) === 0)) return true;
+        if (a.length >= 4 && b.length >= 4 && a.charCodeAt(0) === b.charCodeAt(0) && levenshtein(a, b) <= 1 && commonPrefixLen(a, b) >= 2) return true;
+        return false;
+      }
+      function anyTokenMatch(token, bag) {
+        for (var i = 0; i < bag.length; i++) if (tokenMatch(token, bag[i])) return true;
+        return false;
+      }
+      function expandTokens(tokens, rawText) {
+        var set = {}, i, g, phrase, parts, collapsed, hit, j;
+        for (i = 0; i < tokens.length; i++) set[tokens[i]] = 1;
+        var hay = " " + String(rawText || tokens.join(" ")).toLowerCase().replace(/[^a-z0-9]+/g, " ") + " ";
+        for (g = 0; g < SYN_GROUPS.length; g++) {
+          hit = false;
+          for (i = 0; i < SYN_GROUPS[g].length; i++) {
+            phrase = SYN_GROUPS[g][i];
+            if (phrase.indexOf(" ") !== -1) {
+              if (hay.indexOf(" " + phrase + " ") !== -1) { hit = true; break; }
+            } else if (set[phrase]) { hit = true; break; }
+          }
+          if (!hit) continue;
+          for (i = 0; i < SYN_GROUPS[g].length; i++) {
+            parts = SYN_GROUPS[g][i].replace(/-/g, " ").replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/);
+            for (j = 0; j < parts.length; j++) if (parts[j] && !GENERIC[parts[j]]) set[parts[j]] = 1;
+            collapsed = SYN_GROUPS[g][i].replace(/-/g, "").replace(/[^a-z0-9]+/g, "");
+            if (collapsed) set[collapsed] = 1;
+          }
+        }
+        return Object.keys(set);
+      }
+      function lexicalScore(q, title, category) {
+        var qTokens = tokenize(q).filter(function (t) { return t.length > 1 && !STOP[t]; });
+        if (!qTokens.length) return 0;
+        var titleTokens = tokenize(title);
+        var titleExp = expandTokens(titleTokens, title);
+        var titleExpSet = {};
+        titleExp.forEach(function (t) { titleExpSet[t] = 1; });
+        var matched = 0, direct = 0, i, j, qt, ok, isDirect, alts;
+        for (i = 0; i < qTokens.length; i++) {
+          qt = qTokens[i];
+          isDirect = false;
+          for (j = 0; j < titleTokens.length; j++) {
+            if (tokenMatch(qt, titleTokens[j])) { isDirect = true; break; }
+          }
+          ok = isDirect;
+          if (!ok) {
+            alts = expandTokens([qt], qt);
+            for (j = 0; j < alts.length; j++) if (titleExpSet[alts[j]]) { ok = true; break; }
+          }
+          if (ok) matched++;
+          if (isDirect) direct++;
+        }
+        if (!matched) return 0;
+        var score = (direct * 1 + (matched - direct) * 0.72) / qTokens.length;
+        var catTok = tokenize(category);
+        for (i = 0; i < qTokens.length; i++) {
+          if (anyTokenMatch(qTokens[i], catTok)) { score = Math.min(1, score + 0.12); break; }
+        }
+        return score;
+      }
+
+      function updateCount(n, q) {
+        var el = document.getElementById("count-line");
+        if (!el || !inventoryReady) return;
+        if (q) el.textContent = n + " of " + totalAvailable + " matching \u201c" + q + "\u201d";
+        else if (currentCat) el.textContent = n + " in " + currentCat;
+        else el.textContent = totalAvailable + " items for sale. This site is the catalog.";
+        var empty = document.getElementById("empty");
+        if (empty) empty.style.display = (inventoryReady && n === 0) ? "block" : "none";
+      }
+      function syncChips() {
+        document.querySelectorAll("#chips .chip").forEach(function (b) {
+          b.classList.toggle("is-on", (b.getAttribute("data-category") || "") === currentCat);
+        });
+      }
+      function showAllInCategory() {
+        var n = 0;
+        document.querySelectorAll("#grid .cat-group").forEach(function (g) {
+          var gcat = g.getAttribute("data-category") || "";
+          var catOk = !currentCat || gcat === currentCat;
+          var vis = 0;
+          var grid = g.querySelector(".grid");
+          var cards = Array.prototype.slice.call(g.querySelectorAll(".card"));
+          cards.sort(function (a, b) {
+            return Number(a.getAttribute("data-ord") || 0) - Number(b.getAttribute("data-ord") || 0);
+          });
+          cards.forEach(function (c) {
+            c.hidden = !catOk;
+            if (grid) grid.appendChild(c);
+            if (catOk) vis++;
+          });
+          g.hidden = !catOk || vis === 0;
+          n += vis;
+        });
+        updateCount(n, "");
+      }
+      function applyResults(items) {
+        var order = {};
+        (items || []).forEach(function (it, i) { order[String(it.id)] = i; });
+        var n = 0;
+        document.querySelectorAll("#grid .cat-group").forEach(function (g) {
+          var gcat = g.getAttribute("data-category") || "";
+          var catOk = !currentCat || gcat === currentCat;
+          var grid = g.querySelector(".grid");
+          var cards = Array.prototype.slice.call(g.querySelectorAll(".card"));
+          cards.sort(function (a, b) {
+            var ia = order[a.getAttribute("data-id")];
+            var ib = order[b.getAttribute("data-id")];
+            var ha = ia !== undefined, hb = ib !== undefined;
+            if (ha && hb) return ia - ib;
+            if (ha) return -1;
+            if (hb) return 1;
+            return Number(a.getAttribute("data-ord") || 0) - Number(b.getAttribute("data-ord") || 0);
+          });
+          var vis = 0;
+          cards.forEach(function (c) {
+            var show = catOk && order[c.getAttribute("data-id")] !== undefined;
+            c.hidden = !show;
+            if (show && grid) grid.appendChild(c);
+            if (show) vis++;
+          });
+          g.hidden = vis === 0;
+          n += vis;
+        });
+        return n;
+      }
+      function applyClientLexical(q) {
+        var rows = [];
+        document.querySelectorAll("#grid .card").forEach(function (c) {
+          var score = lexicalScore(q, c.getAttribute("data-title") || "", c.getAttribute("data-category") || "");
+          if (score > 0) rows.push({ id: c.getAttribute("data-id"), score: score });
+        });
+        rows.sort(function (a, b) { return b.score - a.score; });
+        var n = applyResults(rows);
+        updateCount(n, q);
+      }
 
       function apply(query, category) {
         var raw = (query == null)
@@ -236,45 +574,46 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
             || "")
           : String(query);
         if (category !== undefined) currentCat = category || "";
-        var q = raw.trim().toLowerCase();
-        var words = q.split(/\s+/).filter(Boolean);
-        var n = 0;
-        document.querySelectorAll("#grid .cat-group").forEach(function (g) {
-          var gcat = g.getAttribute("data-category") || "";
-          var catOk = !currentCat || gcat === currentCat;
-          var vis = 0;
-          g.querySelectorAll(".card").forEach(function (c) {
-            var hay = c.getAttribute("data-search") || "";
-            var match = !words.length || words.every(function (w) { return hay.indexOf(w) !== -1; });
-            var show = catOk && match;
-            c.hidden = !show;
-            if (show) vis++;
-          });
-          g.hidden = !catOk || vis === 0;
-          n += vis;
-        });
-        var el = document.getElementById("count-line");
-        if (el && inventoryReady) {
-          if (currentCat) el.textContent = n + " in " + currentCat;
-          else if (words.length) el.textContent = n + " of " + totalAvailable + " items";
-          else el.textContent = totalAvailable + " items for sale. This site is the catalog.";
-        }
-        var empty = document.getElementById("empty");
-        if (empty) empty.style.display = (inventoryReady && n === 0) ? "block" : "none";
+        var q = raw.trim();
         inputs.forEach(function (i) { if (i.value !== raw) i.value = raw; });
-        document.querySelectorAll("#chips .chip").forEach(function (b) {
-          var on = (b.getAttribute("data-category") || "") === currentCat;
-          b.classList.toggle("is-on", on);
-        });
+        syncChips();
+        if (!inventoryReady) return;
+        if (q.length < 2) {
+          searchGen++;
+          if (searchAbort) { try { searchAbort.abort(); } catch (e) {} searchAbort = null; }
+          showAllInCategory();
+          return;
+        }
+        var gen = ++searchGen;
+        var url = "/api/search?q=" + encodeURIComponent(q);
+        if (currentCat) url += "&category=" + encodeURIComponent(currentCat);
+        if (searchAbort) { try { searchAbort.abort(); } catch (e) {} }
+        searchAbort = (window.AbortController ? new AbortController() : null);
+        fetch(url, searchAbort ? { signal: searchAbort.signal } : undefined)
+          .then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
+          .then(function (data) {
+            if (gen !== searchGen) return;
+            var n = applyResults(data.items || []);
+            updateCount(n, q);
+          })
+          .catch(function (err) {
+            if (gen !== searchGen) return;
+            if (err && err.name === "AbortError") return;
+            applyClientLexical(q);
+          });
       }
 
       function bind(form) {
         form.addEventListener("submit", function (e) {
           e.preventDefault();
+          clearTimeout(searchTimer);
           apply(form.querySelector("input").value);
         });
         form.querySelector("input").addEventListener("input", function (e) {
-          apply(e.target.value);
+          var v = e.target.value;
+          inputs.forEach(function (i) { if (i !== e.target && i.value !== v) i.value = v; });
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(function () { apply(v); }, 180);
         });
       }
       bind(document.getElementById("bar-search"));
@@ -330,7 +669,7 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
               var img = it.image || "";
               var lazy = cardIndex < 18 ? "eager" : "lazy";
               var search = (title + " " + cat).toLowerCase();
-              html += '<a class="card" href="' + esc(href) + '" target="_blank" rel="noopener" data-search="' + esc(search) + '" data-category="' + esc(cat) + '">'
+              html += '<a class="card" href="' + esc(href) + '" target="_blank" rel="noopener" data-id="' + esc(String(it.id)) + '" data-ord="' + cardIndex + '" data-title="' + esc(title) + '" data-search="' + esc(search) + '" data-category="' + esc(cat) + '">'
                 + '<img src="' + esc(img) + '" alt="' + esc(title) + '" loading="' + lazy + '" decoding="async" width="400" height="300">'
                 + '<span class="title">' + esc(title) + "</span></a>";
               cardIndex++;

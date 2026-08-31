@@ -118,7 +118,7 @@ function prescreen(data) {
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Accept",
     "Access-Control-Max-Age": "86400",
   };
@@ -159,9 +159,307 @@ async function verifyTurnstile(request, env, data) {
   return null;
 }
 
+// --- lexical search (client may mirror) ---
+const SYN_GROUPS = [
+  ["mower", "lawnmower", "lawn mower", "riding mower", "tractor", "deere", "grass", "yard", "cut grass"],
+  ["scooter", "moped", "ebike", "e-bike", "electric bike", "mobility", "razor", "wheelchair", "jazzy"],
+  ["washer", "dryer", "laundry", "washing machine"],
+  ["ac", "air conditioner", "aircon", "cooling", "hvac", "swamp cooler", "evaporative"],
+  ["generator", "inverter", "power"],
+  ["tv", "television", "monitor", "display"],
+  ["printer", "scanner", "copier"],
+  ["vacuum", "mop", "tineco", "bissell", "shark", "floor cleaner"],
+  ["snowblower", "snow blower", "snow thrower"],
+  ["pressure washer", "power washer"],
+  ["trailer", "camper", "rv", "fifth wheel"],
+  ["atv", "quad", "four wheeler", "4wheeler"],
+  ["motorcycle", "dirt bike", "moto"],
+  ["microwave", "oven"],
+  ["chair", "recliner", "massage chair"],
+  ["computer", "pc", "imac", "desktop", "laptop"],
+];
+
+function tokenize(s) {
+  const lower = String(s || "").toLowerCase();
+  const spaced = lower.replace(/[^a-z0-9]+/g, " ").trim();
+  const a = spaced ? spaced.split(/\s+/).filter(Boolean) : [];
+  const collapsed = lower.replace(/-/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const b = collapsed ? collapsed.split(/\s+/).filter(Boolean) : [];
+  const out = [];
+  const seen = Object.create(null);
+  for (const t of a.concat(b)) {
+    if (!seen[t]) {
+      seen[t] = 1;
+      out.push(t);
+    }
+  }
+  return out;
+}
+
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  if (Math.abs(a.length - b.length) > 1) return 2;
+  const n = a.length, m = b.length;
+  const dp = new Array(n + 1);
+  for (let i = 0; i <= n; i++) {
+    dp[i] = new Array(m + 1);
+    dp[i][0] = i;
+  }
+  for (let j = 0; j <= m; j++) dp[0][j] = j;
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a.charCodeAt(i - 1) === b.charCodeAt(j - 2) && a.charCodeAt(i - 2) === b.charCodeAt(j - 1)) {
+        dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return dp[n][m];
+}
+
+function commonPrefixLen(a, b) {
+  const n = Math.min(a.length, b.length);
+  let i = 0;
+  while (i < n && a.charCodeAt(i) === b.charCodeAt(i)) i++;
+  return i;
+}
+
+function tokenMatch(a, b) {
+  if (a === b) return true;
+  if (a.length >= 3 && b.length >= 3) {
+    if (b.indexOf(a) === 0 || a.indexOf(b) === 0) return true;
+  }
+  if (a.length >= 4 && b.length >= 4 && a.charCodeAt(0) === b.charCodeAt(0) && levenshtein(a, b) <= 1) {
+    if (commonPrefixLen(a, b) >= 2) return true;
+  }
+  return false;
+}
+
+function anyTokenMatch(token, bagList) {
+  for (let i = 0; i < bagList.length; i++) {
+    if (tokenMatch(token, bagList[i])) return true;
+  }
+  return false;
+}
+
+function expandTokens(tokens, rawText) {
+  const set = Object.create(null);
+  for (const t of tokens) set[t] = 1;
+  const hay = " " + String(rawText || tokens.join(" ")).toLowerCase().replace(/[^a-z0-9]+/g, " ") + " ";
+  for (let g = 0; g < SYN_GROUPS.length; g++) {
+    const group = SYN_GROUPS[g];
+    let hit = false;
+    for (let i = 0; i < group.length; i++) {
+      const phrase = group[i];
+      if (phrase.indexOf(" ") !== -1) {
+        if (hay.indexOf(" " + phrase + " ") !== -1) {
+          hit = true;
+          break;
+        }
+      } else if (set[phrase]) {
+        hit = true;
+        break;
+      }
+    }
+    if (hit) {
+      for (let i = 0; i < group.length; i++) {
+        const parts = group[i].replace(/-/g, " ").replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/);
+        const GENERIC = { electric:1, machine:1, machines:1, powered:1, start:1 };
+        for (let j = 0; j < parts.length; j++) {
+          if (parts[j] && !GENERIC[parts[j]]) set[parts[j]] = 1;
+        }
+        const collapsed = group[i].replace(/-/g, "").replace(/[^a-z0-9]+/g, "");
+        if (collapsed) set[collapsed] = 1;
+      }
+    }
+  }
+  return Object.keys(set);
+}
+
+function aliasBlob(title) {
+  const tokens = tokenize(title);
+  return expandTokens(tokens, title).join(" ");
+}
+
+const STOP = { to:1, the:1, a:1, an:1, of:1, for:1, and:1, or:1, in:1, on:1, at:1, is:1, it:1, something:1, some:1, any:1, please:1, with:1, this:1, that:1, from:1 };
+
+function lexicalScore(q, title, category) {
+  const qTokens = tokenize(q).filter((t) => t.length > 1 && !STOP[t]);
+  if (!qTokens.length) return 0;
+  const titleTokens = tokenize(title);
+  const titleExp = expandTokens(titleTokens, title);
+  const titleExpSet = Object.create(null);
+  for (let i = 0; i < titleExp.length; i++) titleExpSet[titleExp[i]] = 1;
+  let matched = 0;
+  let direct = 0;
+  for (let i = 0; i < qTokens.length; i++) {
+    const qt = qTokens[i];
+    let isDirect = false;
+    for (let j = 0; j < titleTokens.length; j++) {
+      if (tokenMatch(qt, titleTokens[j])) {
+        isDirect = true;
+        break;
+      }
+    }
+    let ok = isDirect;
+    if (!ok) {
+      const alts = expandTokens([qt], qt);
+      for (let j = 0; j < alts.length; j++) {
+        if (titleExpSet[alts[j]]) {
+          ok = true;
+          break;
+        }
+      }
+    }
+    if (ok) matched++;
+    if (isDirect) direct++;
+  }
+  if (!matched) return 0;
+  let score = (direct * 1 + (matched - direct) * 0.72) / qTokens.length;
+  const catTok = tokenize(category);
+  for (let i = 0; i < qTokens.length; i++) {
+    if (anyTokenMatch(qTokens[i], catTok)) {
+      score = Math.min(1, score + 0.12);
+      break;
+    }
+  }
+  return score;
+}
+
+function cosine(a, b) {
+  if (!a || !b || a.length !== b.length) return 0;
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
+  }
+  const d = Math.sqrt(na) * Math.sqrt(nb);
+  return d ? dot / d : 0;
+}
+
+let itemVecCache = null;
+let itemVecSig = "";
+
+async function loadInventory(env, request) {
+  const u = new URL("/inventory.json", request.url);
+  const r = await env.ASSETS.fetch(new Request(u.toString(), { method: "GET" }));
+  if (!r.ok) throw new Error("inventory");
+  const data = await r.json();
+  return (data.items || []).filter((it) => it.status !== "sold");
+}
+
+async function embedTexts(ai, texts) {
+  const out = [];
+  for (let i = 0; i < texts.length; i += 20) {
+    const slice = texts.slice(i, i + 20);
+    const res = await ai.run("@cf/baai/bge-small-en-v1.5", { text: slice });
+    const data = (res && res.data) || res;
+    for (let j = 0; j < slice.length; j++) out.push(data[j]);
+  }
+  return out;
+}
+
+async function ensureItemVecs(ai, items) {
+  const sig = items.map((it) => String(it.id) + ":" + String(it.title || "")).join("|");
+  if (itemVecCache && itemVecSig === sig) return itemVecCache;
+  const texts = items.map((it) => {
+    const title = String(it.title || "");
+    const cat = String(it.category || "");
+    return title + " " + cat + " " + aliasBlob(title);
+  });
+  const vecs = await embedTexts(ai, texts);
+  const map = Object.create(null);
+  for (let i = 0; i < items.length; i++) map[String(items[i].id)] = vecs[i];
+  itemVecCache = map;
+  itemVecSig = sig;
+  return map;
+}
+
+async function handleSearch(request, env, url) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders() });
+  }
+  if (request.method !== "GET" && request.method !== "POST") {
+    return json({ ok: false, error: "method not allowed" }, 405);
+  }
+
+  let q = url.searchParams.get("q");
+  let category = url.searchParams.get("category");
+  if (q == null) q = "";
+  if (category == null) category = "";
+  if (request.method === "POST") {
+    try {
+      const body = await request.json();
+      if (body) {
+        if (!url.searchParams.has("q") && body.q != null) q = body.q;
+        if (!url.searchParams.has("category") && body.category != null) category = body.category;
+      }
+    } catch (e) {}
+  }
+  q = String(q || "").trim();
+  category = String(category || "").trim();
+
+  let items;
+  try {
+    items = await loadInventory(env, request);
+  } catch (e) {
+    return json({ q: q, mode: "lexical", items: [] }, 200);
+  }
+  if (category) {
+    items = items.filter((it) => String(it.category || "") === category);
+  }
+
+  if (!q) {
+    return json({
+      q: q,
+      mode: "lexical",
+      items: items.map((it) => ({ id: String(it.id), score: 1 })),
+    });
+  }
+
+  const lexicalRows = items.map((it) => ({
+    id: String(it.id),
+    lex: lexicalScore(q, it.title, it.category),
+    sem: 0,
+  }));
+
+  let mode = "lexical";
+  if (env.AI) {
+    try {
+      const qRes = await env.AI.run("@cf/baai/bge-small-en-v1.5", { text: [q] });
+      const qVec = ((qRes && qRes.data) || qRes)[0];
+      if (qVec && qVec.length) {
+        const vecs = await ensureItemVecs(env.AI, items);
+        for (let i = 0; i < lexicalRows.length; i++) {
+          const v = vecs[lexicalRows[i].id];
+          const c = cosine(qVec, v);
+          lexicalRows[i].sem = c >= 0.28 ? c : 0;
+        }
+        mode = "hybrid";
+      }
+    } catch (e) {
+      mode = "lexical";
+    }
+  }
+
+  const outItems = [];
+  for (let i = 0; i < lexicalRows.length; i++) {
+    const row = lexicalRows[i];
+    const score = Math.max(row.sem, row.lex);
+    if (score > 0) outItems.push({ id: row.id, score: Math.round(score * 1000) / 1000 });
+  }
+  outItems.sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : 1));
+  return json({ q: q, mode: mode, items: outItems });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/search") {
+      return handleSearch(request, env, url);
+    }
     if (url.pathname === "/api/pickup") {
       if (request.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: corsHeaders() });

@@ -9,5 +9,6 @@
     "binding": "ASSETS",
     "run_worker_first": ["/api/*"]
   },
+  "ai": { "binding": "AI" },
   "compatibility_flags": ["nodejs_compat"]
 }
