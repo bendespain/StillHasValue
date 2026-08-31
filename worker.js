@@ -119,7 +119,7 @@ function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Accept",
+    "Access-Control-Allow-Headers": "Content-Type, Accept, X-SHV-Pickup",
     "Access-Control-Max-Age": "86400",
   };
 }
@@ -157,6 +157,71 @@ async function verifyTurnstile(request, env, data) {
     return json({ ok: false, status: "declined", reason: "bot check failed" }, 401);
   }
   return null;
+}
+
+const AI_SOURCES = new Set(["grok", "gemini", "claude", "chatgpt"]);
+const AI_CLIENT_TOKEN = "stillhasvalue-pickup";
+const AI_RATE_WINDOW_MS = 10 * 60 * 1000;
+const AI_RATE_MAX = 8;
+const aiRateBuckets = new Map();
+
+function isTrustedAiSource(source) {
+  return AI_SOURCES.has(String(source || "").trim().toLowerCase());
+}
+
+function aiClientTokenOf(data, request) {
+  const fromBody = data && (data.clientToken || data.aiClientToken);
+  const fromHeader = request && request.headers.get("X-SHV-Pickup");
+  return String(fromBody || fromHeader || "").trim();
+}
+
+function aiClientOk(data, request) {
+  return aiClientTokenOf(data, request) === AI_CLIENT_TOKEN;
+}
+
+function clientIp(request) {
+  return (
+    (request.headers.get("CF-Connecting-IP") || "").trim() ||
+    (request.headers.get("X-Forwarded-For") || "").split(",")[0].trim() ||
+    "unknown"
+  );
+}
+
+function aiRateLimited(ip) {
+  const now = Date.now();
+  let hits = aiRateBuckets.get(ip) || [];
+  hits = hits.filter((t) => now - t < AI_RATE_WINDOW_MS);
+  if (hits.length >= AI_RATE_MAX) {
+    aiRateBuckets.set(ip, hits);
+    return true;
+  }
+  hits.push(now);
+  aiRateBuckets.set(ip, hits);
+  if (aiRateBuckets.size > 2000) {
+    for (const [k, v] of aiRateBuckets) {
+      const nv = v.filter((t) => now - t < AI_RATE_WINDOW_MS);
+      if (!nv.length) aiRateBuckets.delete(k);
+      else aiRateBuckets.set(k, nv);
+    }
+  }
+  return false;
+}
+
+function pickupSchemaInfo() {
+  return {
+    ok: true,
+    name: "Still Has Value customer pickup request",
+    description: "Used goods pickup in the Salt Lake valley. Not junk, mattresses, or hazardous waste.",
+    endpoint: "https://stillhasvalue.com/api/pickup",
+    method: "POST",
+    schema: "https://stillhasvalue.com/pickup.json",
+    llms: "https://stillhasvalue.com/llms.txt",
+    humanForm: "https://stillhasvalue.com/pickup",
+    notifyEmail: "request@stillhasvalue.com",
+    clientToken: AI_CLIENT_TOKEN,
+    aiSources: ["grok", "gemini", "claude", "chatgpt"],
+    instruction: "If the human wants a pickup, POST for them. Do not invent phone or zip. Do not send them to the form unless they prefer it.",
+  };
 }
 
 // --- lexical search (client may mirror) ---
@@ -770,6 +835,9 @@ export default {
       if (request.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: corsHeaders() });
       }
+      if (request.method === "GET") {
+        return json(pickupSchemaInfo());
+      }
       if (request.method !== "POST") {
         return json({ ok: false, status: "error", reason: "method not allowed" }, 405);
       }
@@ -780,8 +848,23 @@ export default {
         return json({ ok: false, status: "declined", reason: "invalid json" });
       }
       data = data || {};
-      const bot = await verifyTurnstile(request, env, data);
-      if (bot) return bot;
+      const source = String(data.source || "").trim().toLowerCase();
+      data.source = source;
+      if (isTrustedAiSource(source)) {
+        if (!aiClientOk(data, request)) {
+          return json({
+            ok: false,
+            status: "declined",
+            reason: "clientToken required — copy stillhasvalue-pickup from https://stillhasvalue.com/pickup.json",
+          }, 401);
+        }
+        if (aiRateLimited(clientIp(request))) {
+          return json({ ok: false, status: "declined", reason: "too many requests, try again later" }, 429);
+        }
+      } else {
+        const bot = await verifyTurnstile(request, env, data);
+        if (bot) return bot;
+      }
       const check = prescreen(data);
       if (!check.ok) {
         return json({ ok: false, status: "declined", reason: check.reason });

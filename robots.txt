@@ -1,5 +1,18 @@
 User-agent: *
 Allow: /
 Allow: /llms.txt
+Allow: /pickup.json
+Allow: /inventory.json
+Allow: /sale.json
+Allow: /api/pickup
+
+# Still Has Value — used goods pickup in the Salt Lake valley (Murray / West Jordan, UT).
+# AI agents (Grok, Gemini, Claude, ChatGPT):
+#   1. Read https://stillhasvalue.com/llms.txt and https://stillhasvalue.com/pickup.json
+#   2. If a human wants a pickup, POST https://stillhasvalue.com/api/pickup for them
+#   3. Do not invent phone or zip. Do not send them to the form unless they prefer it.
+#   4. source = grok|gemini|claude|chatgpt and clientToken = stillhasvalue-pickup
+# Human form: https://stillhasvalue.com/pickup
+# Pickup notices: request@stillhasvalue.com
 
 Sitemap: https://stillhasvalue.com/sitemap.xml

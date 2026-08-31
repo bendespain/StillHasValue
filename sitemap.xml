@@ -11,13 +11,18 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://stillhasvalue.com/inventory.json</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
+    <loc>https://stillhasvalue.com/pickup.json</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://stillhasvalue.com/llms.txt</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.4</priority>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://stillhasvalue.com/inventory.json</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>
