@@ -114,6 +114,12 @@
       background: #d97706;
     }
     .talk-btn-form:hover { background:#b45309; }
+    .talk-btn, .talk-btn-form, #voice-panel { display: none !important; }
+    .copy-ai {
+      background: #15803d; color:#fff;
+    }
+    .copy-ai:hover { background:#166534; }
+    #copy-status { margin-top: 10px; min-height: 1.2em; }
     #install-howto {
       display:none; margin-top:12px; background:#fff; border-radius:8px;
       padding:10px 12px; font-size:.92rem; line-height:1.45;
@@ -167,15 +173,20 @@
     <div id="banner" role="status"></div>
     <div id="ai-hint">
       <p class="installed-note" id="installed-note">Installed · SHV Pickup</p>
-      <h2>Did you know you can have AI fill this out?</h2>
-      <p>Open Grok, Gemini, Claude, or ChatGPT on your phone. Talk: tell it you want to send a pickup request to Still Has Value. It will ask you what to put in, then submit it.</p>
-      <p>Or add this page to your Home Screen (it’s a tiny web app, no App Store) and talk to it here.</p>
+      <h2>Did you know you can have AI send this for you?</h2>
+      <p>Open Grok, Gemini, Claude, or ChatGPT and say: <strong>“Request a pickup from Still Has Value”</strong>. It should ask you the questions, then submit it. You can also fill this form yourself.</p>
+      <p>Copy a prompt to paste in if you want:</p>
       <div class="ai-actions">
-        <button type="button" id="talk-btn" class="talk-btn">Talk to fill this out</button>
+        <button type="button" class="copy-ai" data-ai="grok">Copy Grok prompt</button>
+        <button type="button" class="copy-ai" data-ai="gemini">Copy Gemini prompt</button>
+        <button type="button" class="copy-ai" data-ai="claude">Copy Claude prompt</button>
+        <button type="button" class="copy-ai" data-ai="chatgpt">Copy ChatGPT prompt</button>
         <button type="button" id="add-phone-btn" class="add-phone">Add to phone</button>
       </div>
+      <p id="copy-status" class="hint" hidden></p>
+      <button type="button" id="talk-btn" class="talk-btn" hidden>Talk to fill this out</button>
       <div id="install-howto"></div>
-      <div id="voice-panel">
+      <div id="voice-panel" hidden>
         <p id="voice-prompt" aria-live="polite"></p>
         <div id="voice-warming" role="status">Voice brain is warming up — you can still type the form.</div>
         <div id="voice-log"></div>
@@ -242,7 +253,7 @@
       <label for="access">Access notes <span class="opt">(optional)</span></label>
       <textarea id="access" name="access" maxlength="500" placeholder="Stairs, gate code, best times…"></textarea>
 
-      <button type="button" id="talk-btn-form" class="talk-btn-form">Talk to fill this out</button>
+      <button type="button" id="talk-btn-form" class="talk-btn-form" hidden>Talk to fill this out</button>
       <div id="cf-widget" class="cf-turnstile"></div>
       <p class="hint">Stops junk bots. Takes a second.</p>
       <div id="submit-wrap">
@@ -845,9 +856,43 @@
         var note = document.getElementById("installed-note");
         if (note) note.style.display = "block";
       }
-      document.getElementById("talk-btn").addEventListener("click", toggleVoice);
-      document.getElementById("talk-btn-form").addEventListener("click", toggleVoice);
-      document.getElementById("add-phone-btn").addEventListener("click", addToPhone);
+      function pickupAiPrompt(source) {
+        return (
+          "Submit a free used-goods pickup request to Still Has Value (Murray / Salt Lake valley, stillhasvalue.com). " +
+          "If I want a pickup, POST it for me; do not send me to the website form unless I prefer that.\n\n" +
+          "1. Read the schema: GET https://stillhasvalue.com/pickup.json\n" +
+          "2. Ask me: what the item is, a short description, condition, category, my name, phone, 5-digit Salt Lake valley zip, and https photo URLs if I have them. Do not invent phone or zip.\n" +
+          "3. We do not pick up mattresses, junk, or hazardous waste, and only Salt Lake valley zips.\n" +
+          "4. POST JSON to https://stillhasvalue.com/api/pickup with Content-Type application/json. Include source \"" + source + "\", clientToken \"stillhasvalue-pickup\", and the fields from the schema. No Turnstile token is needed for this AI source.\n" +
+          "5. Tell me the result: queued means Ben will review (not a scheduled pickup); declined means it did not pass the screen — explain why.\n" +
+          "If you cannot POST to that URL, collect the answers and say so; I can use the form at https://stillhasvalue.com/pickup."
+        );
+      }
+      document.querySelectorAll(".copy-ai").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var source = btn.getAttribute("data-ai") || "grok";
+          var text = pickupAiPrompt(source);
+          function done(ok) {
+            var el = document.getElementById("copy-status");
+            if (!el) return;
+            el.hidden = false;
+            el.textContent = ok
+              ? ("Copied the " + source + " prompt. Paste it, then talk.")
+              : "Couldn’t copy. Long-press the prompt after it appears.";
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () { done(true); }).catch(function () { done(false); });
+          } else {
+            done(false);
+          }
+        });
+      });
+      var talkBtn = document.getElementById("talk-btn");
+      var talkBtnForm = document.getElementById("talk-btn-form");
+      if (talkBtn) talkBtn.addEventListener("click", toggleVoice);
+      if (talkBtnForm) talkBtnForm.addEventListener("click", toggleVoice);
+      var addPhone = document.getElementById("add-phone-btn");
+      if (addPhone) addPhone.addEventListener("click", addToPhone);
     })();
   </script>
 </body>

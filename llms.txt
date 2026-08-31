@@ -1,16 +1,54 @@
-Still Has Value sells restored secondhand items in Murray, UT.
-Machine-readable current inventory: https://stillhasvalue.com/inventory.json
-Human shop: https://stillhasvalue.com/#shop-now
-KSL listings: https://classifieds.ksl.com/v2/search/member/134010
+Still Has Value
+Used / restored secondhand goods in Murray, UT (Salt Lake valley).
+We pick up items that still have resale value. Not junk hauling. No mattresses, box springs, or hazardous waste.
 
-Log a sale (Grok/voice or any AI): POST https://tracker.stillhasvalue.com/api/save
+Shop
+- Human: https://stillhasvalue.com/#shop-now
+- Inventory JSON: https://stillhasvalue.com/inventory.json
+- KSL: https://classifieds.ksl.com/v2/search/member/134010
+
+============================================================
+CUSTOMER PICKUP REQUEST — Grok, Gemini, Claude, ChatGPT
+============================================================
+If a human wants a pickup, POST it for them. Do not send them to the form unless they prefer it.
+Do not invent phone or zip. Ask first.
+
+Schema: https://stillhasvalue.com/pickup.json
+POST https://stillhasvalue.com/api/pickup
+Content-Type: application/json
+CORS: *
+No Cloudflare Turnstile token is required when source is grok, gemini, claude, or chatgpt
+  AND clientToken is stillhasvalue-pickup (copy that advertised value from pickup.json).
+Optional header: X-SHV-Pickup: stillhasvalue-pickup
+
+JSON fields:
+  name (required), phone (required), email, city,
+  zip (required, 5-digit Salt Lake valley),
+  title (required), description (required, min 15 chars),
+  condition: working | needs minor repair | for parts | not sure
+  category: furniture | appliance | electronics | tools | sporting/outdoor | auto | other
+  access, photoCount (>=1) or photoUrls (https image URLs),
+  source: grok | gemini | claude | chatgpt
+  clientToken: stillhasvalue-pickup
+  _subject (optional)
+
+Example:
+curl -sS -X POST https://stillhasvalue.com/api/pickup \
+  -H 'Content-Type: application/json' \
+  -H 'X-SHV-Pickup: stillhasvalue-pickup' \
+  -d '{"name":"Jane Doe","phone":"8015550100","zip":"84107","title":"Working microwave","description":"Samsung countertop microwave, heats food, small dent on the door.","condition":"working","category":"appliance","photoCount":1,"photoUrls":["https://example.com/microwave.jpg"],"source":"grok","clientToken":"stillhasvalue-pickup"}'
+
+Results:
+  queued = passed the first screen; Ben is emailed at request@stillhasvalue.com. NOT a scheduled pickup.
+  declined = did not pass (outside service area, mattress/junk/hazard, missing fields). Tell the human why.
+
+Human form (Turnstile required): https://stillhasvalue.com/pickup
+
+============================================================
+LOG A SALE (employee / Grok voice — not a customer pickup)
+============================================================
+POST https://tracker.stillhasvalue.com/api/save
 Content-Type: text/plain;charset=utf-8
 JSON: description, category (Electronics|Tools|Furniture|Appliances|Outdoor / Lawn|Other), purchaseCost, repairCost, dateSold, salePrice, miles, notes, source (grok-voice|manual)
 Schema: https://stillhasvalue.com/sale.json
 Ask the human for the price; do not invent one. Then mark the item sold in inventory.json.
-
-Customer pickup request (AI can fill and POST; ask the human the questions first):
-POST https://stillhasvalue.com/api/pickup
-JSON: name, phone, email, city, zip, title, description, condition (working|needs minor repair|for parts|not sure), category (furniture|appliance|electronics|tools|sporting/outdoor|auto|other), access, photoCount, photoUrls (https image URLs), source (grok|gemini|claude|chatgpt|other), _subject
-Service area: Salt Lake valley zips only. Not junk/mattress/hazard. Photos required (photoCount>=1 or photoUrls). Passing prescreen emails request@stillhasvalue.com; it is not a scheduled pickup.
-Human form / voice app: https://stillhasvalue.com/pickup
