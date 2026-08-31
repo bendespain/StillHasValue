@@ -15,6 +15,16 @@
     h2 { color:#d97706; }
     .cta { background:#d97706; color:white; padding:16px 32px; border-radius:50px; text-decoration:none; display:inline-block; margin:30px 0; }
     footer { background:#000; color:#aaa; text-align:center; padding:40px; font-size:0.9em; }
+
+    #shop-now { margin: 40px 0 20px; }
+    .shop-cta {
+      background: #15803d; color: white; padding: 16px 32px; border-radius: 50px;
+      text-decoration: none; font-size: 1.2em; display: inline-block; margin: 20px 0 28px;
+    }
+    .collage { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 8px 0 28px; padding: 8px 4px 16px; -webkit-overflow-scrolling: touch; }
+    .collage a { flex: 0 0 220px; scroll-snap-align: start; display: block; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.18); }
+    .collage img { width: 220px; height: 165px; object-fit: cover; display: block; background: #e5e7eb; }
+
   </style>
 </head>
 <body>
@@ -39,16 +49,22 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Re
 Please help us declutter too by only offering to have us pickup items that merit the effort.</p>
 <section id="shop-now">
   <h2>Shop Our Current Inventory</h2>
-  <p>Browse and buy directly on KSL Classifieds — updated in real time.</p>
-  <a href="https://classifieds.ksl.com/v2/search/member/134010" target="_blank" style="background: #15803d; color: white; padding: 16px 32px; border-radius: 50px; text-decoration: none; font-size: 1.2em; display: inline-block;">View All Items for Sale</a>
+  <p>Swipe the photos, tap one to open that listing on KSL Classifieds.</p>
+  <a class="shop-cta" href="https://classifieds.ksl.com/v2/search/member/134010" target="_blank" rel="noopener">View All Items for Sale</a>
+      <div class="collage">
+          <a href="https://classifieds.ksl.com/listing/78756946" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/e42885c3-4f84-4ca1-8d25-930b99d07158.jpg?filter=marketplace/400x300_cropped" alt="Kids Razor Moped scooter electric 24v"></a>
+          <a href="https://classifieds.ksl.com/listing/78757003" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/8e529ad6-b63d-4cb6-8c4c-05115e53f771.jpg?filter=marketplace/400x300_cropped" alt="Razor electric motorcycle 24v"></a>
+          <a href="https://classifieds.ksl.com/listing/78757058" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/9649ff1b-de6c-4e4f-8e81-61dfc355caaa.jpg?filter=marketplace/400x300_cropped" alt="Razor Electric Moped scooter 12v"></a>
+          <a href="https://classifieds.ksl.com/listing/78757150" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/039624dc-ca2e-4057-a273-bace01f19f6c.jpg?filter=marketplace/400x300_cropped" alt="Razor 36v adult electric scooter"></a>
+          <a href="https://classifieds.ksl.com/listing/78757171" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/1966d625-b381-450c-8d8b-a64f27abf507.jpg?filter=marketplace/400x300_cropped" alt="Turboant Electric Scooter X7 Pro"></a>
+          <a href="https://classifieds.ksl.com/listing/78763081" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/8f2368ad-8ec7-45fd-8598-467fddfdb778.jpg?filter=marketplace/400x300_cropped" alt="2013 John Deere D140 Riding Mower"></a>
+          <a href="https://classifieds.ksl.com/listing/78763086" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/2d6eb6ae-c22e-4782-b19d-faa85cd74589.jpg?filter=marketplace/400x300_cropped" alt="tri wheel scooter"></a>
+          <a href="https://classifieds.ksl.com/listing/78796686" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/a9e70026-8d72-4c7b-9de3-def44fcf840c.jpg?filter=marketplace/400x300_cropped" alt="Pacific Hydrostar pressure washer"></a>
+          <a href="https://classifieds.ksl.com/listing/78991446" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/e277ce94-17a6-4a9b-8b70-85d56e9932fb.jpg?filter=marketplace/400x300_cropped" alt="Rascal wheelchair"></a>
+          <a href="https://classifieds.ksl.com/listing/79468027" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/7f9cf1ec-c5a2-4927-989f-36110831da24.jpg?filter=marketplace/400x300_cropped" alt="Dance studio lighting"></a>
+      </div>
 </section>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<!-- Then wrap your <ul> in <div class="swiper"><div class="swiper-wrapper">... each <li> as swiper-slide ...</div></div> -->
-<script>new Swiper('.swiper', { slidesPerView: 'auto', spaceBetween: 20, loop: true });</script>
-
-    <p> </p>
   </div>
 
   <footer>
