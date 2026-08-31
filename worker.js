@@ -1,4 +1,4 @@
-const FORMSUBMIT = "https://formsubmit.co/ajax/ben@noveltie.com";
+const FORMSUBMIT = "https://formsubmit.co/ajax/request@stillhasvalue.com";
 
 const SERVICE_ZIPS = new Set([
   // Salt Lake City and 84101–84129
