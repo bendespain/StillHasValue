@@ -25,74 +25,82 @@
   <style>
     :root { --hero: 0; --green: #15803d; --amber: #d97706; --bar: 64px; }
     html { scroll-behavior: smooth; }
-    body { margin:0; font-family: Arial, Helvetica, sans-serif; background:#f8f8f8; color:#1c1917; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f8f8f8;
+      color: #1c1917;
+      padding-top: var(--bar);
+    }
     .skip-link {
       position: absolute; left: -9999px; top: 8px; z-index: 100;
       background: var(--green); color: #fff; padding: 8px 14px;
       border-radius: 8px; font-weight: 700; text-decoration: none;
     }
     .skip-link:focus { left: 8px; }
-    #persist {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 48;
+    #topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 60;
       height: var(--bar);
       display: flex; align-items: center; gap: 10px;
       padding: 0 12px;
       background: #000;
       pointer-events: auto;
     }
-    #persist .persist-brand {
-      display: flex; align-items: center; gap: 8px;
-      color: #fff; text-decoration: none; font-weight: 700;
-      letter-spacing: .04em; font-size: .85rem;
-    }
-    #persist .persist-brand img { height: 36px; width: auto; }
-    #persist .persist-pickup {
-      margin-left: auto;
-      background: var(--green); color: #fff; text-decoration: none;
-      border-radius: 999px; padding: 8px 14px; font-weight: 700;
-      font-size: 14px; white-space: nowrap; pointer-events: auto;
-    }
-    #persist .persist-pickup:hover { background: #166534; }
-    #topbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-      height: var(--bar);
-      display: flex; align-items: center; gap: 10px;
-      padding: 0 12px;
-      background: #000;
-      transform: translateY(calc(-100% * (1 - var(--hero))));
-      opacity: var(--hero);
-      pointer-events: none;
-    }
-    #topbar.is-on { pointer-events: auto; }
     #topbar .bar-truck {
       visibility: hidden;
       height: 44px; width: auto; border-radius: 6px;
+      flex-shrink: 0;
     }
-    #topbar .bar-logo { height: 36px; width: auto; }
-    #topbar .bar-name { color:#fff; font-weight: 700; letter-spacing: .04em; font-size: .85rem; white-space: nowrap; }
-    #topbar form { margin-left: auto; display: flex; gap: 6px; min-width: 0; flex: 1; max-width: 340px; }
+    #topbar.is-landed .bar-truck { visibility: visible; }
+    #topbar .bar-brand {
+      display: flex; align-items: center; gap: 8px;
+      color: #fff; text-decoration: none;
+      flex-shrink: 0;
+    }
+    #topbar .bar-logo { height: 36px; width: auto; display: block; }
+    #topbar .bar-name {
+      color: #fff; font-weight: 700; letter-spacing: .04em;
+      font-size: .85rem; white-space: nowrap;
+    }
+    #topbar form {
+      display: flex; gap: 6px; min-width: 0; flex: 1;
+      opacity: var(--hero);
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #topbar.is-on form {
+      visibility: visible;
+      pointer-events: auto;
+    }
     #topbar input[type="search"] {
       flex: 1; min-width: 0; border: 0; border-radius: 999px; padding: 8px 14px; font-size: 14px;
     }
     #topbar button {
-      background: var(--green); color:#fff; border:0; border-radius: 999px; padding: 8px 14px; font-weight: 700; cursor: pointer;
+      background: var(--green); color: #fff; border: 0; border-radius: 999px;
+      padding: 8px 14px; font-weight: 700; cursor: pointer;
     }
     #topbar .bar-pickup {
       flex-shrink: 0;
-      background: var(--green); color:#fff; text-decoration: none;
+      background: var(--green); color: #fff; text-decoration: none;
       border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 14px; white-space: nowrap;
-      pointer-events: auto;
       position: relative;
       z-index: 61;
     }
     #topbar .bar-pickup:hover { background: #166534; }
     header.hero {
-      background:#000; color:#fff; text-align:center;
-      padding: 88px 20px 48px;
+      background: #000; color: #fff; text-align: center;
+      padding: 28px 20px 36px;
     }
-    header.hero .logo { width:180px; margin:0 auto 16px; display:block; }
-    header.hero h1 { margin: 0 0 4px; font-weight: 600; font-size: 1.17rem; }
-    .hero-tag { margin: 0 0 12px; font-weight: 600; }
+    header.hero .logo { width: 120px; margin: 0 auto 12px; display: block; }
+    header.hero h1 {
+      margin: 0 0 14px;
+      font-weight: 600;
+      font-size: 1.17rem;
+    }
+    header.hero h1 .tag {
+      color: var(--amber);
+      font-weight: 500;
+    }
     .hero-pickup {
       display: inline-block;
       background: var(--green); color: #fff;
@@ -104,10 +112,15 @@
       z-index: 45;
     }
     .hero-pickup:hover { background: #166534; }
+    .hero-ai-hint {
+      margin: 10px 0 0;
+      color: #a8a29e;
+      font-size: 0.95rem;
+    }
     .hero-truck-wrap {
       max-width: min(100%, 640px);
       width: 100%;
-      margin: 28px auto 8px;
+      margin: 20px auto 8px;
     }
     .hero-truck {
       width: 100%;
@@ -122,19 +135,30 @@
       top: 0;
       margin: 0;
       max-width: none;
-      z-index: 51;
+      z-index: 55;
       pointer-events: none;
       will-change: transform;
       transform-origin: top left;
     }
-    .hero-ai-hint {
-      margin: 10px 0 24px;
-      color: #a8a29e;
+    #topbar.is-landed ~ .hero .hero-truck.is-flying { opacity: 0; }
+    .hero-copy {
+      max-width: 640px;
+      margin: 12px auto 0;
+      text-align: left;
+      opacity: calc(1 - var(--hero));
+    }
+    .hero-copy h2 {
+      color: var(--amber);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 14px 0 4px;
+    }
+    .hero-copy p {
+      margin: 0;
+      line-height: 1.5;
+      color: #e7e5e4;
       font-size: 0.95rem;
     }
-    .hero-inner { max-width: 900px; margin: 0 auto; text-align: left; }
-    .hero-inner h2 { color: var(--amber); }
-    .hero-inner p { line-height: 1.55; color: #e7e5e4; }
     main { padding: 28px 16px 56px; max-width: 1280px; margin: 0 auto; }
     #shop-now h2 { color: var(--amber); margin: 0 0 8px; }
     .shop-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 14px; }
@@ -144,7 +168,7 @@
       flex: 1; border: 1px solid #d6d3d1; border-radius: 999px; padding: 10px 14px; font-size: 15px;
     }
     .shop-search button, .ksl-cta {
-      background: var(--green); color:#fff; border:0; border-radius: 999px; padding: 10px 18px;
+      background: var(--green); color: #fff; border: 0; border-radius: 999px; padding: 10px 18px;
       font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block;
     }
     .chips {
@@ -203,16 +227,15 @@
     }
     .card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.16); }
     .empty { display: none; color: #444; padding: 24px 0; }
-    footer { background:#000; color:#a8a29e; text-align:center; padding: 32px 16px; font-size:.9em; }
-    footer a { color:#e7e5e4; }
+    footer { background: #000; color: #a8a29e; text-align: center; padding: 32px 16px; font-size: .9em; }
+    footer a { color: #e7e5e4; }
     @media (max-width: 640px) {
       #topbar .bar-name { display: none; }
       #topbar form { max-width: none; }
       #topbar .bar-pickup { padding: 8px 12px; font-size: 13px; }
-      header.hero { padding: 80px 16px 32px; }
-      header.hero .logo { width: 140px; }
+      header.hero { padding: 24px 16px 28px; }
+      header.hero .logo { width: 96px; }
       .hero-pickup { padding: 12px 24px; font-size: 1rem; }
-      #persist .persist-brand span { display: none; }
       .chips {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -223,43 +246,32 @@
 </head>
 <body>
   <a class="skip-link" href="#shop-now">Skip to inventory</a>
-  <div id="persist">
-    <a class="persist-brand" href="/">
-      <img src="stillhasvalue_black_trans.png" alt="Still Has Value">
-      <span>STILL HAS VALUE</span>
-    </a>
-    <a class="persist-pickup" href="/pickup">Request a pickup</a>
-  </div>
   <div id="topbar">
     <img class="bar-truck" src="Cybee with logo.jpg" alt="">
-    <img class="bar-logo" src="stillhasvalue_black_trans.png" alt="">
-    <span class="bar-name">STILL HAS VALUE</span>
+    <a class="bar-brand" href="/">
+      <img class="bar-logo" src="stillhasvalue_black_trans.png" alt="Still Has Value">
+      <span class="bar-name">STILL HAS VALUE</span>
+    </a>
     <form id="bar-search" role="search">
       <input type="search" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off">
       <button type="submit">Search</button>
     </form>
-    <a class="bar-pickup" href="/pickup">Pickup</a>
+    <a class="bar-pickup" href="/pickup">Request a pickup</a>
   </div>
 
   <header class="hero" id="hero">
     <img src="stillhasvalue_black_trans.png" alt="Still Has Value Logo" class="logo">
-    <h1>Still Has Value</h1>
-    <p class="hero-tag">We Prove It</p>
+    <h1>Still Has Value <span class="tag">— We Prove It</span></h1>
     <a class="hero-pickup" href="/pickup">Request a pickup</a>
-    <p class="hero-ai-hint">Or tell Grok, Gemini, or Claude on your phone.</p>
-    <div class="hero-inner">
-      <h2>Our Fleet</h2>
-      <p>In 2026–2027, you'll see us rolling up in this: soon with autonomous pickups (eh Elon?), free removal of prescreened items you want gone.</p>
-      <div class="hero-truck-wrap" id="hero-truck-wrap">
-        <img src="Cybee with logo.jpg" alt="Still Has Value Cybertruck" class="hero-truck" id="hero-truck">
-      </div>
-      <h2>What We Do</h2>
-      <p><b>Still Has Value</b> turns your no-longer-needed items into someone else's perfect find—without the hassle, guilt, or waste.
-For you (the seller): Schedule a free, quick pickup at your convenience. We get it out of your way fast and you can feel great knowing your unwanted item isn't heading to a landfill.
-Instead, we revive it and help put it into the hands of someone in different circumstances. No more worrying about it sitting unappreciated or ending up as trash.
-For buyers: Discover real deals on quality, estranged items that have plenty of value to the right person. We only list pieces worth keeping—cleaned,
-repaired if needed, and honestly described—so you shop with confidence. No junk, no surprises—just great value that saves you money and keeps good things in circulation.
-It's simple sustainability: one happy goodbye, one excited hello, zero waste. Please help us declutter too by only offering to have us pickup items that merit the effort.</p>
+    <p class="hero-ai-hint">Or talk it in with Grok on your phone.</p>
+    <div class="hero-truck-wrap" id="hero-truck-wrap">
+      <img src="Cybee with logo.jpg" alt="Still Has Value Cybertruck" class="hero-truck" id="hero-truck">
+    </div>
+    <div class="hero-copy">
+      <h2>Our fleet</h2>
+      <p>Free Salt Lake valley pickup of items that still have value — we come to you.</p>
+      <h2>What we do</h2>
+      <p>Sellers: free pickup, we revive it. Buyers: real deals on cleaned, honestly listed pieces — no junk. Please only offer items worth the trip.</p>
     </div>
   </header>
 
@@ -292,7 +304,6 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
       var CAT_ORDER = ["Mobility", "Lawn & outdoor", "Appliances", "Electronics", "Power & tools", "Powersports", "Home", "Sporting", "Other"];
       var root = document.documentElement;
       var bar = document.getElementById("topbar");
-      var hero = document.getElementById("hero");
       var truck = document.getElementById("hero-truck");
       var truckWrap = document.getElementById("hero-truck-wrap");
       var barTruck = document.querySelector("#topbar .bar-truck");
@@ -341,11 +352,12 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
         truck.style.borderRadius = (12 + (6 - 12) * p) + "px";
       }
       function onScroll() {
-        var h = hero.offsetHeight || 1;
-        var t = Math.min(1, Math.max(0, window.scrollY / Math.max(120, h - 80)));
+        var t = Math.min(1, Math.max(0, window.scrollY / 280));
         root.style.setProperty("--hero", String(t));
         if (t > 0.55) bar.classList.add("is-on");
         else bar.classList.remove("is-on");
+        if (t > 0.85) bar.classList.add("is-landed");
+        else bar.classList.remove("is-landed");
         flyTruck(t);
       }
       function requestTick() {
