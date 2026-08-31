@@ -1,0 +1,54 @@
+{
+  "name": "Still Has Value sales tracker",
+  "endpoint": "https://tracker.stillhasvalue.com/api/save",
+  "method": "POST",
+  "contentType": "text/plain;charset=utf-8",
+  "notes": "Grok/voice should set source to grok-voice. Do not invent a sale price. After a confirmed sale, set the matching item status to sold in https://stillhasvalue.com/inventory.json so it drops off the shop.",
+  "humanForm": "https://tracker.stillhasvalue.com",
+  "sheet": "Still Has Value Tracker, Sales tab",
+  "fields": {
+    "description": {
+      "type": "string",
+      "required": true,
+      "description": "What sold"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Electronics",
+        "Tools",
+        "Furniture",
+        "Appliances",
+        "Outdoor / Lawn",
+        "Other"
+      ]
+    },
+    "purchaseCost": {
+      "type": "number"
+    },
+    "repairCost": {
+      "type": "number"
+    },
+    "dateSold": {
+      "type": "string",
+      "format": "date"
+    },
+    "salePrice": {
+      "type": "number"
+    },
+    "miles": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "grok-voice",
+        "manual"
+      ],
+      "description": "Use grok-voice when an AI logs it"
+    }
+  }
+}
