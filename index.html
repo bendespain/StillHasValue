@@ -21,9 +21,9 @@
       background: #15803d; color: white; padding: 16px 32px; border-radius: 50px;
       text-decoration: none; font-size: 1.2em; display: inline-block; margin: 20px 0 28px;
     }
-    .collage { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin: 8px 0 28px; }
-    .collage a { display: block; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.18); }
-    .collage img { width: 100%; height: 130px; object-fit: cover; display: block; background: #e5e7eb; }
+    .collage { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 8px 0 28px; padding: 8px 4px 16px; -webkit-overflow-scrolling: touch; }
+    .collage a { flex: 0 0 220px; scroll-snap-align: start; display: block; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.18); }
+    .collage img { width: 220px; height: 165px; object-fit: cover; display: block; background: #e5e7eb; }
 
   </style>
 </head>
@@ -49,7 +49,7 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Re
 Please help us declutter too by only offering to have us pickup items that merit the effort.</p>
 <section id="shop-now">
   <h2>Shop Our Current Inventory</h2>
-  <p>Tap a photo to open that listing on KSL Classifieds.</p>
+  <p>Swipe the photos, tap one to open that listing on KSL Classifieds.</p>
   <a class="shop-cta" href="https://classifieds.ksl.com/v2/search/member/134010" target="_blank" rel="noopener">View All Items for Sale</a>
       <div class="collage">
           <a href="https://classifieds.ksl.com/listing/78756946" target="_blank" rel="noopener"><img src="https://image.ksldigital.com/e42885c3-4f84-4ca1-8d25-930b99d07158.jpg?filter=marketplace/400x300_cropped" alt="Kids Razor Moped scooter electric 24v"></a>
