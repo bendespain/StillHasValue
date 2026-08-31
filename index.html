@@ -25,19 +25,34 @@
     #topbar .bar-truck { height: 44px; width: auto; border-radius: 6px; }
     #topbar .bar-logo { height: 36px; width: auto; }
     #topbar .bar-name { color:#fff; font-weight: 700; letter-spacing: .04em; font-size: .85rem; white-space: nowrap; }
-    #topbar form { margin-left: auto; display: flex; gap: 6px; min-width: 0; flex: 1; max-width: 420px; }
+    #topbar form { margin-left: auto; display: flex; gap: 6px; min-width: 0; flex: 1; max-width: 340px; }
     #topbar input[type="search"] {
       flex: 1; min-width: 0; border: 0; border-radius: 999px; padding: 8px 14px; font-size: 14px;
     }
     #topbar button {
       background: var(--green); color:#fff; border:0; border-radius: 999px; padding: 8px 14px; font-weight: 700; cursor: pointer;
     }
+    #topbar .bar-pickup {
+      flex-shrink: 0;
+      background: var(--green); color:#fff; text-decoration: none;
+      border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 14px; white-space: nowrap;
+    }
+    #topbar .bar-pickup:hover { background: #166534; }
     header.hero {
       background:#000; color:#fff; text-align:center;
       padding: 72px 20px 48px;
     }
     header.hero .logo { width:180px; margin:0 auto 16px; display:block; }
-    header.hero h3 { margin: 0 0 28px; font-weight: 600; }
+    header.hero h3 { margin: 0 0 12px; font-weight: 600; }
+    .hero-pickup {
+      display: inline-block;
+      background: var(--green); color: #fff;
+      border-radius: 999px; padding: 14px 32px;
+      font-weight: 700; text-decoration: none; font-size: 1.1rem;
+      margin: 0 0 28px;
+      box-shadow: 0 4px 16px rgba(21,128,61,.45);
+    }
+    .hero-pickup:hover { background: #166534; }
     .hero-inner { max-width: 900px; margin: 0 auto; text-align: left; }
     .hero-inner h2 { color: var(--amber); }
     .hero-inner p { line-height: 1.55; color: #e7e5e4; }
@@ -91,8 +106,11 @@
     footer a { color:#e7e5e4; }
     @media (max-width: 640px) {
       #topbar .bar-name { display: none; }
+      #topbar form { max-width: none; }
+      #topbar .bar-pickup { padding: 8px 12px; font-size: 13px; }
       header.hero { padding: 48px 16px 32px; }
       header.hero .logo { width: 140px; }
+      .hero-pickup { padding: 12px 24px; font-size: 1rem; }
     }
   </style>
 </head>
@@ -105,11 +123,13 @@
       <input type="search" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off">
       <button type="submit">Search</button>
     </form>
+    <a class="bar-pickup" href="/pickup.html">Pickup</a>
   </div>
 
   <header class="hero" id="hero">
     <img src="stillhasvalue_black_trans.png" alt="Still Has Value Logo" class="logo">
     <h3>Still Has Value - We Prove It</h3>
+    <a class="hero-pickup" href="/pickup.html">Request a pickup</a>
     <div class="hero-inner">
       <h2>Our Fleet</h2>
       <p>In 2026–2027, you'll see us rolling up in this: soon with autonomous pickups (eh Elon?), free removal of prescreened items you want gone.</p>
@@ -142,6 +162,7 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
 
   <footer>
     &copy; 2026 Still Has Value | Murray, UT | @StillHasValue |
+    <a href="/pickup.html">Request a pickup</a> |
     <a href="https://tracker.stillhasvalue.com">tracker</a>
   </footer>
 

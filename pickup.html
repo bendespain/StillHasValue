@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request a pickup - Still Has Value</title>
+  <style>
+    :root { --green: #15803d; --amber: #d97706; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; background:#f8f8f8; color:#1c1917; }
+    header.top {
+      background:#000; color:#fff;
+      display:flex; align-items:center; gap:12px;
+      padding: 12px 16px;
+    }
+    header.top a.brand { display:flex; align-items:center; gap:10px; color:#fff; text-decoration:none; font-weight:700; letter-spacing:.04em; }
+    header.top img { height:40px; width:auto; }
+    header.top .shop {
+      margin-left:auto; color:#fff; text-decoration:none; font-weight:700;
+      border:1px solid #444; border-radius:999px; padding:8px 16px; font-size:14px;
+    }
+    header.top .shop:hover { border-color:#fff; }
+    main { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { margin: 0 0 10px; font-size: 1.7rem; }
+    .lead { color:#444; line-height:1.55; margin: 0 0 22px; }
+    form {
+      background:#fff; border-radius:14px; padding:20px 18px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+    label { display:block; font-weight:700; margin: 14px 0 6px; font-size: .95rem; }
+    label .req { color: var(--green); }
+    label .opt { color:#78716c; font-weight:500; font-size:.85rem; }
+    input[type="text"], input[type="email"], input[type="tel"], select, textarea {
+      width:100%; padding:11px 12px; border:1px solid #d6d3d1; border-radius:8px; font-size:16px;
+      font-family: inherit;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    input[type="file"] { display:block; width:100%; font-size:15px; }
+    .hint { color:#57534e; font-size:.85rem; margin: 4px 0 0; }
+    .previews { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .previews img { width:88px; height:88px; object-fit:cover; border-radius:8px; background:#e7e5e4; }
+    .row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    button[type="submit"] {
+      display:block; width:100%; margin-top: 22px;
+      background: var(--green); color:#fff; border:0; border-radius:999px;
+      padding: 14px 20px; font-size:1.1rem; font-weight:700; cursor:pointer;
+    }
+    button[type="submit"]:hover { background:#166534; }
+    button[type="submit"]:disabled { opacity:.6; cursor:wait; }
+    #banner {
+      display:none; border-radius:12px; padding:16px 16px; margin-bottom:18px; line-height:1.5;
+    }
+    #banner.show { display:block; }
+    #banner.no {
+      background:#fef3c7; border:1px solid #f59e0b; color:#78350f;
+    }
+    #banner.ok {
+      background:#ecfdf5; border:1px solid #15803d; color:#14532d;
+    }
+    #banner a { color: var(--green); font-weight:700; }
+    footer { background:#000; color:#a8a29e; text-align:center; padding: 28px 16px; font-size:.9em; }
+    footer a { color:#e7e5e4; }
+    @media (max-width: 520px) {
+      .row { grid-template-columns: 1fr; }
+      header.top .brand span { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">
+      <img src="stillhasvalue_black_trans.png" alt="Still Has Value">
+      <span>Still Has Value</span>
+    </a>
+    <a class="shop" href="/">Shop</a>
+  </header>
+
+  <main>
+    <div id="banner" role="status"></div>
+    <h1>Request a free pickup</h1>
+    <p class="lead">We pick up items that still have value in the Salt Lake valley (Murray / West Jordan and nearby). Not junk hauling. A quick screen happens first; if it looks worth the trip, Ben reviews and will contact you.</p>
+
+    <form id="pickup-form" novalidate>
+      <label for="photos">Photos <span class="req">*</span></label>
+      <input id="photos" name="photos" type="file" accept="image/*" multiple required>
+      <p class="hint">1–4 photos. We’ll shrink them on your phone before sending.</p>
+      <div class="previews" id="previews"></div>
+
+      <label for="title">What is it? <span class="req">*</span></label>
+      <input id="title" name="title" type="text" required maxlength="120" placeholder="e.g. Mid-century dresser, working microwave">
+
+      <label for="description">Condition, brand, size, what’s wrong <span class="req">*</span></label>
+      <textarea id="description" name="description" required maxlength="2000" placeholder="Brand, dimensions, does it work, scratches, missing parts…"></textarea>
+      <p class="hint">A little detail helps. At least a sentence.</p>
+
+      <label for="condition">Condition <span class="req">*</span></label>
+      <select id="condition" name="condition" required>
+        <option value="">Select condition</option>
+        <option value="working">Working</option>
+        <option value="needs minor repair">Needs minor repair</option>
+        <option value="for parts">For parts</option>
+        <option value="not sure">Not sure</option>
+      </select>
+
+      <label for="category">Category <span class="req">*</span></label>
+      <select id="category" name="category" required>
+        <option value="">Select category</option>
+        <option value="furniture">Furniture</option>
+        <option value="appliance">Appliance</option>
+        <option value="electronics">Electronics</option>
+        <option value="tools">Tools</option>
+        <option value="sporting/outdoor">Sporting / outdoor</option>
+        <option value="auto">Auto</option>
+        <option value="other">Other</option>
+      </select>
+
+      <div class="row">
+        <div>
+          <label for="city">City</label>
+          <input id="city" name="city" type="text" maxlength="80" placeholder="Murray">
+        </div>
+        <div>
+          <label for="zip">Zip <span class="req">*</span></label>
+          <input id="zip" name="zip" type="text" inputmode="numeric" required maxlength="10" placeholder="84107">
+        </div>
+      </div>
+
+      <label for="name">Your name <span class="req">*</span></label>
+      <input id="name" name="name" type="text" required maxlength="80" autocomplete="name">
+
+      <label for="phone">Phone <span class="req">*</span></label>
+      <input id="phone" name="phone" type="tel" required maxlength="30" autocomplete="tel">
+
+      <label for="email">Email <span class="opt">(optional)</span></label>
+      <input id="email" name="email" type="email" maxlength="120" autocomplete="email">
+
+      <label for="access">Access notes <span class="opt">(optional)</span></label>
+      <textarea id="access" name="access" maxlength="500" placeholder="Stairs, gate code, best times…"></textarea>
+
+      <button type="submit" id="submit-btn">Request pickup</button>
+    </form>
+  </main>
+
+  <footer>
+    &copy; 2026 Still Has Value | Murray, UT |
+    <a href="/">Shop</a> |
+    <a href="/pickup.html">Request a pickup</a>
+  </footer>
+
+  <script>
+    (function () {
+      var SERVICE_ZIPS = {
+        "84101":1,"84102":1,"84103":1,"84104":1,"84105":1,"84106":1,"84107":1,"84108":1,"84109":1,
+        "84110":1,"84111":1,"84112":1,"84113":1,"84114":1,"84115":1,"84116":1,"84117":1,"84118":1,
+        "84119":1,"84120":1,"84121":1,"84122":1,"84123":1,"84124":1,"84125":1,"84126":1,"84127":1,
+        "84128":1,"84129":1,
+        "84132":1,"84138":1,"84143":1,"84144":1,"84145":1,"84147":1,"84148":1,"84150":1,"84152":1,
+        "84157":1,"84158":1,"84165":1,"84170":1,"84171":1,"84180":1,"84184":1,"84189":1,"84190":1,"84199":1,
+        "84006":1,"84009":1,"84020":1,"84044":1,"84047":1,"84065":1,"84070":1,
+        "84081":1,"84084":1,"84088":1,"84092":1,"84093":1,"84094":1,"84095":1,"84096":1
+      };
+      var JUNK_PHRASES = [
+        "mattress","box spring","boxspring","hazardous","chemicals","paint cans","paint can",
+        "used oil","garbage","trash bag","trash bags","construction debris","medical waste",
+        "hoarder","just junk","landfill"
+      ];
+      var JUNK_WORDS = ["food","dirt","rocks","animal"];
+      var FALSE_POS = /dirt\s*bikes?|food\s*processors?|food\s*savers?|foodsaver|rocking\s*chairs?/g;
+
+      var photoUrls = [];
+      var form = document.getElementById("pickup-form");
+      var banner = document.getElementById("banner");
+      var btn = document.getElementById("submit-btn");
+      var previews = document.getElementById("previews");
+
+      function zipOf(raw) {
+        return String(raw || "").replace(/\D/g, "").slice(0, 5);
+      }
+      function hasJunk(title, description) {
+        var text = ((title || "") + " " + (description || "")).toLowerCase();
+        text = text.replace(FALSE_POS, " ");
+        var i, p, w;
+        for (i = 0; i < JUNK_PHRASES.length; i++) {
+          p = JUNK_PHRASES[i];
+          if (text.indexOf(p) !== -1) return p;
+        }
+        for (i = 0; i < JUNK_WORDS.length; i++) {
+          w = JUNK_WORDS[i];
+          if (new RegExp("\\b" + w + "\\b").test(text)) return w;
+        }
+        return null;
+      }
+      function showBanner(kind, html) {
+        banner.className = "show " + kind;
+        banner.innerHTML = html;
+        banner.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      function declineMsg() {
+        showBanner("no",
+          "This doesn’t look like a fit for a free value pickup. We aren’t a junk-haul service — we only pick up items that still have resale value in the Salt Lake valley. You’re welcome to <a href=\"/\">shop the site</a> instead.");
+      }
+      function resizeOne(file) {
+        return new Promise(function (resolve, reject) {
+          var url = URL.createObjectURL(file);
+          var img = new Image();
+          img.onload = function () {
+            var w = img.width, h = img.height, max = 1280;
+            if (w > max || h > max) {
+              if (w > h) { h = Math.round(h * max / w); w = max; }
+              else { w = Math.round(w * max / h); h = max; }
+            }
+            var canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+            URL.revokeObjectURL(url);
+            try {
+              resolve(canvas.toDataURL("image/jpeg", 0.7));
+            } catch (e) {
+              reject(e);
+            }
+          };
+          img.onerror = function () {
+            URL.revokeObjectURL(url);
+            var reader = new FileReader();
+            reader.onload = function () { resolve(reader.result); };
+            reader.onerror = reject;
+            if (file.size < 400000) reader.readAsDataURL(file);
+            else reject(new Error("Could not read photo"));
+          };
+          img.src = url;
+        });
+      }
+      document.getElementById("photos").addEventListener("change", function (e) {
+        var files = Array.prototype.slice.call(e.target.files || [], 0, 4);
+        photoUrls = [];
+        previews.innerHTML = "";
+        files.forEach(function (f) {
+          resizeOne(f).then(function (dataUrl) {
+            photoUrls.push(dataUrl);
+            var img = document.createElement("img");
+            img.src = dataUrl;
+            img.alt = "Photo preview";
+            previews.appendChild(img);
+          }).catch(function () {});
+        });
+      });
+
+      function sendPayload(payload) {
+        btn.disabled = true;
+        btn.textContent = "Sending…";
+        fetch("/api/pickup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify(payload)
+        }).then(function (r) { return r.json().catch(function () { return {}; }); })
+          .then(function (data) {
+            if (data && data.ok && data.status === "queued") {
+              form.style.display = "none";
+              document.querySelector("h1").textContent = "Request received";
+              document.querySelector(".lead").style.display = "none";
+              showBanner("ok", "Thanks. It passed the first screen. Ben will review and contact you if we’re coming.");
+            } else {
+              declineMsg();
+            }
+          })
+          .catch(function () {
+            showBanner("no", "Couldn’t send the request just now. Check your connection and try again.");
+          })
+          .then(function () {
+            btn.disabled = false;
+            btn.textContent = "Request pickup";
+          });
+      }
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        banner.className = "";
+        banner.innerHTML = "";
+
+        var files = Array.prototype.slice.call(document.getElementById("photos").files || [], 0, 4);
+        if (!files.length) {
+          declineMsg();
+          return;
+        }
+        var title = document.getElementById("title").value.trim();
+        var description = document.getElementById("description").value.trim();
+        var condition = document.getElementById("condition").value;
+        var category = document.getElementById("category").value;
+        var city = document.getElementById("city").value.trim();
+        var zip = zipOf(document.getElementById("zip").value);
+        var name = document.getElementById("name").value.trim();
+        var phone = document.getElementById("phone").value.trim();
+        var email = document.getElementById("email").value.trim();
+        var access = document.getElementById("access").value.trim();
+
+        if (!title || !name || !phone || !condition || !category) {
+          showBanner("no", "Please fill in what it is, condition, category, your name, and phone.");
+          return;
+        }
+        if (description.length < 15) {
+          showBanner("no", "Please add a bit more about the item (brand, size, what’s wrong, whether it works). Then try again.");
+          return;
+        }
+        if (zip.length !== 5 || !SERVICE_ZIPS[zip]) {
+          declineMsg();
+          return;
+        }
+        if (hasJunk(title, description)) {
+          declineMsg();
+          return;
+        }
+
+        function buildAndSend(photos) {
+          if (!photos.length) {
+            declineMsg();
+            return;
+          }
+          var payload = {
+            name: name,
+            phone: phone,
+            email: email,
+            city: city,
+            zip: zip,
+            title: title,
+            description: description,
+            condition: condition,
+            category: category,
+            access: access,
+            photoCount: photos.length,
+            _subject: "SHV pickup request: " + title + " (" + zip + ")"
+          };
+          var total = 0;
+          var small = [];
+          photos.forEach(function (p) {
+            total += (p || "").length;
+            if ((p || "").length < 90000) small.push(p);
+          });
+          if (total < 280000 && small.length === photos.length) {
+            payload.photos = small;
+          }
+          sendPayload(payload);
+        }
+
+        if (photoUrls.length >= files.length) {
+          buildAndSend(photoUrls.slice(0, 4));
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "Preparing photos…";
+        Promise.all(files.map(resizeOne)).then(function (urls) {
+          photoUrls = urls;
+          buildAndSend(urls);
+        }).catch(function () {
+          btn.disabled = false;
+          btn.textContent = "Request pickup";
+          declineMsg();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
