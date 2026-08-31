@@ -2,10 +2,15 @@ Still Has Value sells restored secondhand items in Murray, UT.
 Machine-readable current inventory: https://stillhasvalue.com/inventory.json
 Human shop: https://stillhasvalue.com/#shop-now
 KSL listings: https://classifieds.ksl.com/v2/search/member/134010
-Log a sale (Grok/voice): POST https://tracker.stillhasvalue.com/api/save
+
+Log a sale (Grok/voice or any AI): POST https://tracker.stillhasvalue.com/api/save
+Content-Type: text/plain;charset=utf-8
+JSON: description, category (Electronics|Tools|Furniture|Appliances|Outdoor / Lawn|Other), purchaseCost, repairCost, dateSold, salePrice, miles, notes, source (grok-voice|manual)
+Schema: https://stillhasvalue.com/sale.json
+Ask the human for the price; do not invent one. Then mark the item sold in inventory.json.
 
 Customer pickup request (AI can fill and POST; ask the human the questions first):
 POST https://stillhasvalue.com/api/pickup
 JSON: name, phone, email, city, zip, title, description, condition (working|needs minor repair|for parts|not sure), category (furniture|appliance|electronics|tools|sporting/outdoor|auto|other), access, photoCount, photoUrls (https image URLs), source (grok|gemini|claude|chatgpt|other), _subject
-Service area: Salt Lake valley zips only. Not junk/mattress/hazard. Photos required (photoCount>=1 or photoUrls). Passing prescreen emails Ben; it is not a scheduled pickup.
+Service area: Salt Lake valley zips only. Not junk/mattress/hazard. Photos required (photoCount>=1 or photoUrls). Passing prescreen emails request@stillhasvalue.com; it is not a scheduled pickup.
 Human form / voice app: https://stillhasvalue.com/pickup
