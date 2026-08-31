@@ -458,10 +458,15 @@ async function handleSearch(request, env, url) {
 }
 
 
-const VOICE_MISS = { speak: "Say that again?", fields: {}, ready: false };
+const VOICE_MISS = { speak: "Say that again?", fields: {}, ready: false, mode: "lexical" };
 const VOICE_FIELD_KEYS = ["title", "description", "condition", "category", "city", "zip", "name", "phone", "email", "access"];
 const VOICE_CONDITIONS = ["working", "needs minor repair", "for parts", "not sure"];
 const VOICE_CATEGORIES = ["furniture", "appliance", "electronics", "tools", "sporting/outdoor", "auto", "other"];
+const VOICE_MODELS = [
+  "@cf/meta/llama-3.2-3b-instruct",
+  "@cf/meta/llama-3.1-8b-instruct",
+  "@cf/qwen/qwen1.5-0.5b-chat",
+];
 
 function extractJson(text) {
   if (!text) return null;
@@ -469,8 +474,29 @@ function extractJson(text) {
   const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fence) s = fence[1].trim();
   const start = s.indexOf("{");
-  const end = s.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) return null;
+  if (start === -1) return null;
+  // Prefer balanced first object; fall back to last closing brace.
+  let depth = 0;
+  let end = -1;
+  let inStr = false;
+  let esc = false;
+  for (let i = start; i < s.length; i++) {
+    const ch = s[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === "\\") esc = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') { inStr = true; continue; }
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) { end = i; break; }
+    }
+  }
+  if (end < 0) end = s.lastIndexOf("}");
+  if (end <= start) return null;
   try {
     return JSON.parse(s.slice(start, end + 1));
   } catch (e) {
@@ -498,6 +524,12 @@ function pickVoiceFields(obj) {
     if (k === "zip") {
       const z = zipOf(obj[k]);
       if (z.length === 5) out[k] = z;
+      continue;
+    }
+    if (k === "phone") {
+      let nd = String(obj[k]).replace(/\D/g, "");
+      if (nd.length === 11 && nd.charAt(0) === "1") nd = nd.slice(1);
+      if (nd.length >= 7) out[k] = nd;
       continue;
     }
     out[k] = String(obj[k]).trim();
@@ -528,6 +560,123 @@ function dropInventedContact(extracted, incoming, transcript) {
   return out;
 }
 
+function fieldsUseful(obj) {
+  if (!obj || typeof obj !== "object") return false;
+  for (const k of VOICE_FIELD_KEYS) {
+    if (obj[k] != null && String(obj[k]).trim()) return true;
+  }
+  return false;
+}
+
+function nextMissingSpeak(merged) {
+  const title = String(merged.title || "").trim();
+  const desc = String(merged.description || "").trim();
+  const z = zipOf(merged.zip);
+  const name = String(merged.name || "").trim();
+  const phone = String(merged.phone || "").trim();
+  if (!title) return "What is the item?";
+  if (desc.length < 15) return "Tell me a bit more about the condition or details.";
+  if (z.length !== 5) return "What is your five-digit zip code?";
+  if (!name) return "What is your name?";
+  if (!phone) return "What phone number should we use?";
+  return "I have what I need. Add photos if you haven't, then say send it.";
+}
+
+function lexicalPickupExtract(transcript, fields) {
+  const incoming = pickVoiceFields(fields);
+  const t = String(transcript || "").trim();
+  const lower = t.toLowerCase();
+  const out = {};
+  if (!t) {
+    return { fields: {}, speak: nextMissingSpeak(incoming), ready: voiceReady(incoming) };
+  }
+
+  const zipMatch = t.match(/\b(\d{5})\b/);
+  if (zipMatch) out.zip = zipMatch[1];
+
+  const phoneMatch = t.match(/(?:\+?1[\s\-.]?)?(?:\(?\d{3}\)?[\s\-.]?\d{3}[\s\-.]?\d{4}|\d{7,10})\b/);
+  if (phoneMatch) {
+    let nd = phoneMatch[0].replace(/\D/g, "");
+    if (nd.length === 11 && nd.charAt(0) === "1") nd = nd.slice(1);
+    if (nd.length >= 7) out.phone = nd;
+  }
+
+  const nameMatch = t.match(/\b(?:my name is|name is|i am|i'm)\s+([A-Za-z][A-Za-z .'-]{1,60}?)(?=[,.]|\s+(?:and|phone|zip|at|in|my|the|it)\b|$)/i);
+  if (nameMatch) out.name = nameMatch[1].trim().replace(/\s+/g, " ").slice(0, 80);
+
+  if (/\bfor parts\b/i.test(lower)) out.condition = "for parts";
+  else if (/\bneeds?\s+minor\s+repair\b|\bminor\s+repair\b/i.test(lower)) out.condition = "needs minor repair";
+  else if (/\bnot sure\b/i.test(lower)) out.condition = "not sure";
+  else if (/\bworking\b|\bworks\b|\bheats?\b|\bruns?\b/i.test(lower)) out.condition = "working";
+
+  const catRules = [
+    ["appliance", /\b(microwave|fridge|refrigerator|freezer|washer|dryer|oven|stove|dishwasher|appliance)\b/i],
+    ["furniture", /\b(sofa|couch|dresser|table|chair|desk|bed|furniture|bookshelf|cabinet)\b/i],
+    ["electronics", /\b(tv|television|laptop|computer|monitor|speaker|electronics|stereo|console)\b/i],
+    ["tools", /\b(drill|saw|wrench|tools?|compressor)\b/i],
+    ["sporting/outdoor", /\b(bike|bicycle|treadmill|kayak|tent|camping|sporting|outdoor)\b/i],
+    ["auto", /\b(car|truck|tire|auto|vehicle|bumper)\b/i],
+  ];
+  for (const [cat, re] of catRules) {
+    if (re.test(t)) { out.category = cat; break; }
+  }
+
+  if (!incoming.description || String(incoming.description).trim().length < 15) {
+    if (t.length >= 15) out.description = t.slice(0, 2000);
+  }
+
+  if (!incoming.title) {
+    let title = "";
+    const item = t.match(/\b(?:a|an|the)\s+((?:working|used|old|new)\s+)?([a-z][a-z0-9 \-]{2,40}?)(?=\s+(?:in|at|for|with|that|which|zip|my|phone|,|\.))/i);
+    if (item) title = ((item[1] || "") + item[2]).trim();
+    if (!title) {
+      const words = t.replace(/[^\w\s'-]/g, " ").trim().split(/\s+/).filter(Boolean).slice(0, 8);
+      title = words.join(" ");
+    }
+    if (title) out.title = title.slice(0, 120);
+  }
+
+  const extracted = dropInventedContact(pickVoiceFields(out), incoming, t);
+  const merged = Object.assign({}, incoming, extracted);
+  const junk = hasJunk(merged.title, merged.description);
+  if (junk) {
+    return {
+      fields: {},
+      speak: "This doesn’t look like a fit for a free value pickup. We don’t haul junk, mattresses, or hazardous stuff.",
+      ready: false,
+    };
+  }
+  const ready = voiceReady(merged);
+  return {
+    fields: extracted,
+    speak: ready
+      ? ("Got it: " + merged.title + ". Add photos if needed, then say send it.")
+      : nextMissingSpeak(merged),
+    ready,
+  };
+}
+
+async function runVoiceModels(env, messages) {
+  if (!env || !env.AI || typeof env.AI.run !== "function") return "";
+  for (const model of VOICE_MODELS) {
+    try {
+      const result = await env.AI.run(model, {
+        messages,
+        max_tokens: 400,
+        temperature: 0.2,
+      });
+      const text = typeof result === "string"
+        ? result
+        : (result && (result.response || result.result || result.text)) || "";
+      const raw = String(text || "").trim();
+      if (raw) return raw;
+    } catch (e) {
+      // try next model; do not log transcript or PII
+    }
+  }
+  return "";
+}
+
 async function handleVoice(request, env) {
   const headers = Object.assign({ "Content-Type": "application/json; charset=utf-8" }, corsHeaders());
   if (request.method === "OPTIONS") {
@@ -536,55 +685,76 @@ async function handleVoice(request, env) {
   if (request.method !== "POST") {
     return new Response("method not allowed", { status: 405, headers: corsHeaders() });
   }
+  let body;
   try {
-    const body = await request.json();
-    const transcript = String((body && body.transcript) || "").trim();
-    const fields = (body && body.fields && typeof body.fields === "object") ? body.fields : {};
-    const history = Array.isArray(body && body.history) ? body.history.slice(-6) : [];
-
-    const system =
-      "You help people request a FREE pickup from Still Has Value in the Salt Lake valley. We pick up items that still have resale value. Not junk hauling. Extract what they said into JSON. Never invent a phone number or zip. Only set phone or zip if they clearly said the digits. condition must be one of: working, needs minor repair, for parts, not sure. category must be one of: furniture, appliance, electronics, tools, sporting/outdoor, auto, other.\nKnown fields so far: " +
-      JSON.stringify(pickVoiceFields(fields)) +
-      '\nReply ONLY JSON: {"fields":{...only keys you are confident about...},"speak":"one short spoken question or recap","ready":false}\nSet ready true only when title, description (at least 15 characters), zip, name, and phone are present (in incoming fields or newly extracted). When ready, speak a one-sentence recap and ask them to confirm they want to send it.\nIf they said yes/submit/send it and ready, {"fields":{},"speak":"Sending your pickup request.","ready":true,"submit":true}\nIf the item is junk, a mattress, box spring, hazardous, chemicals, trash, or similar, speak that it is not a fit for free value pickup, set ready false, and do not set submit.';
-
-    const messages = [{ role: "system", content: system }];
-    for (const h of history) {
-      if (!h) continue;
-      const role = (h.role === "assistant" || h.role === "agent") ? "assistant" : "user";
-      const text = String(h.text || h.content || "").trim();
-      if (text) messages.push({ role, content: text });
-    }
-    messages.push({ role: "user", content: transcript || "(no speech)" });
-
-    const result = await env.AI.run("@cf/meta/llama-3.2-3b-instruct", {
-      messages,
-      max_tokens: 400,
-      temperature: 0.2,
-    });
-    const raw = typeof result === "string" ? result : (result && (result.response || result.result)) || "";
-    const parsed = extractJson(raw);
-    if (!parsed || typeof parsed !== "object") {
-      return new Response(JSON.stringify(VOICE_MISS), { status: 200, headers });
-    }
-    const extracted = dropInventedContact(pickVoiceFields(parsed.fields), fields, transcript);
-    const merged = Object.assign({}, pickVoiceFields(fields), extracted);
-    const junk = hasJunk(merged.title, merged.description);
-    const ready = !junk && voiceReady(merged);
-    const out = {
-      fields: extracted,
-      speak: String(parsed.speak || "Got it. What else?"),
-      ready,
-    };
-    if (junk) {
-      out.speak = "This doesn’t look like a fit for a free value pickup. We don’t haul junk, mattresses, or hazardous stuff.";
-      out.ready = false;
-    } else if (parsed.submit && ready) {
-      out.submit = true;
-    }
-    return new Response(JSON.stringify(out), { status: 200, headers });
+    body = await request.json();
   } catch (e) {
-    return new Response(JSON.stringify(VOICE_MISS), { status: 200, headers });
+    return new Response(JSON.stringify(Object.assign({}, VOICE_MISS, { ok: false, reason: "invalid json" })), { status: 400, headers });
   }
+  const transcript = String((body && body.transcript) || "").trim();
+  if (!transcript) {
+    return new Response(JSON.stringify({ ok: false, reason: "transcript required", speak: "Say that again?", fields: {}, ready: false, mode: "lexical" }), { status: 400, headers });
+  }
+  const fields = (body && body.fields && typeof body.fields === "object") ? body.fields : {};
+  const history = Array.isArray(body && body.history) ? body.history.slice(-6) : [];
+
+  const system =
+    "You help people request a FREE pickup from Still Has Value in the Salt Lake valley. We pick up items that still have resale value. Not junk hauling. Extract what they said into JSON. Never invent a phone number or zip. Only set phone or zip if they clearly said the digits. condition must be one of: working, needs minor repair, for parts, not sure. category must be one of: furniture, appliance, electronics, tools, sporting/outdoor, auto, other.\nKnown fields so far: " +
+    JSON.stringify(pickVoiceFields(fields)) +
+    '\nReply ONLY JSON: {"fields":{...only keys you are confident about...},"speak":"one short spoken question or recap","ready":false}\nSet ready true only when title, description (at least 15 characters), zip, name, and phone are present (in incoming fields or newly extracted). When ready, speak a one-sentence recap and ask them to confirm they want to send it.\nIf they said yes/submit/send it and ready, {"fields":{},"speak":"Sending your pickup request.","ready":true,"submit":true}\nIf the item is junk, a mattress, box spring, hazardous, chemicals, trash, or similar, speak that it is not a fit for free value pickup, set ready false, and do not set submit.';
+
+  const messages = [{ role: "system", content: system }];
+  for (const h of history) {
+    if (!h) continue;
+    const role = (h.role === "assistant" || h.role === "agent") ? "assistant" : "user";
+    const text = String(h.text || h.content || "").trim();
+    if (text) messages.push({ role, content: text.slice(0, 800) });
+  }
+  messages.push({ role: "user", content: transcript });
+
+  let raw = "";
+  try {
+    raw = await runVoiceModels(env, messages);
+  } catch (e) {
+    raw = "";
+  }
+
+  const parsed = extractJson(raw);
+  let extracted = {};
+  let speak = "";
+  let submit = false;
+  let mode = "ai";
+
+  if (parsed && typeof parsed === "object") {
+    extracted = dropInventedContact(pickVoiceFields(parsed.fields), fields, transcript);
+    speak = String(parsed.speak || "").trim();
+    submit = parsed.submit === true;
+  }
+
+  if (!fieldsUseful(extracted)) {
+    const lex = lexicalPickupExtract(transcript, fields);
+    extracted = lex.fields || {};
+    speak = lex.speak || speak;
+    mode = "lexical";
+    submit = false;
+  }
+
+  const merged = Object.assign({}, pickVoiceFields(fields), extracted);
+  const junk = hasJunk(merged.title, merged.description);
+  if (junk) {
+    return new Response(JSON.stringify({
+      fields: {},
+      speak: "This doesn’t look like a fit for a free value pickup. We don’t haul junk, mattresses, or hazardous stuff.",
+      ready: false,
+      mode,
+    }), { status: 200, headers });
+  }
+
+  const ready = voiceReady(merged);
+  if (!speak) speak = nextMissingSpeak(merged);
+  const out = { fields: extracted, speak, ready, mode };
+  if (submit && ready && mode === "ai") out.submit = true;
+  return new Response(JSON.stringify(out), { status: 200, headers });
 }
 
 export default {
