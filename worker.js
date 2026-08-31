@@ -1,4 +1,4 @@
-const FORMSUBMIT = "https://formsubmit.co/ajax/request@stillhasvalue.com";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjeUVzMIbR1Mg3orxMoQ8AiVWQbiP91ABsRrZmfisUYvUMXJvsR-3MukhjSJk8ZGGy4g/exec";
 
 const SERVICE_ZIPS = new Set([
   // Salt Lake City and 84101–84129
@@ -169,28 +169,24 @@ export default {
         source: String(data.source || "").trim(),
         _subject: data._subject || ("SHV pickup request: " + title + " (" + zip + ")"),
       };
-      if (urls.length) payload.photoUrls = urls.join("\n");
+      payload.kind = "pickup";
+      if (urls.length) payload.photoUrls = urls;
       try {
-        const r = await fetch(FORMSUBMIT, {
+        const r = await fetch(SCRIPT_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload),
+          redirect: "follow",
         });
         const text = await r.text();
-        let ok = r.ok;
-        try {
-          const parsed = JSON.parse(text);
-          if (parsed && (parsed.success === true || parsed.success === "true")) ok = true;
-        } catch (e) {}
-        if (ok) {
-          return json({ ok: true, status: "queued", notify: "email" });
+        let parsed = {};
+        try { parsed = JSON.parse(text); } catch (e) {}
+        if (r.ok && parsed && parsed.ok) {
+          return json({ ok: true, status: "queued", notify: parsed.notify || "email" });
         }
-        return json({ ok: true, status: "queued", notify: "email-pending" });
+        return json({ ok: false, status: "error", reason: "could not save pickup" }, 502);
       } catch (e) {
-        return json({ ok: true, status: "queued", notify: "email-pending" });
+        return json({ ok: false, status: "error", reason: "could not save pickup" }, 502);
       }
     }
     return env.ASSETS.fetch(request);
