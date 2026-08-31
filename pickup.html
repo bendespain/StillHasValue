@@ -121,6 +121,12 @@
     #install-howto.show { display:block; }
     #voice-panel { display:none; margin-top:12px; }
     #voice-panel.show { display:block; }
+    #voice-warming {
+      display:none; margin:10px 0 0; padding:10px 12px; border-radius:8px;
+      background:#fff7ed; border:1px solid #fdba74; color:#9a3412;
+      font-size:.92rem; font-weight:600; line-height:1.4;
+    }
+    #voice-warming.show { display:block; }
     #voice-prompt { margin:0; font-size:1.05rem; font-weight:700; }
     #voice-log { margin:8px 0 0; }
     #voice-log p { margin:4px 0 0; color:#57534e; font-size:.9rem; }
@@ -171,6 +177,7 @@
       <div id="install-howto"></div>
       <div id="voice-panel">
         <p id="voice-prompt" aria-live="polite"></p>
+        <div id="voice-warming" role="status">Voice brain is warming up — you can still type the form.</div>
         <div id="voice-log"></div>
         <p id="voice-listen"><span class="dot"></span> Listening…</p>
       </div>
@@ -556,6 +563,7 @@
       var voiceHistory = [];
       var voiceQueue = [];
       var voiceBusy = false;
+      var sayAgainStreak = 0;
       var deferredInstall = null;
       var FIELD_IDS = ["title","description","condition","category","city","zip","name","phone","email","access"];
 
@@ -637,6 +645,9 @@
         waitingForPhotos = false;
         voiceQueue = [];
         voiceBusy = false;
+        sayAgainStreak = 0;
+        var warm = document.getElementById("voice-warming");
+        if (warm) warm.classList.remove("show");
         stopRecOnly();
         if (window.speechSynthesis) window.speechSynthesis.cancel();
         voiceSpeaking = false;
@@ -744,6 +755,15 @@
             if (!voiceArmed) break;
             mergeFields(data.fields);
             var line = (data && data.speak) ? data.speak : "";
+            if (line === "Say that again?") {
+              sayAgainStreak++;
+              if (sayAgainStreak >= 2) {
+                var warm = document.getElementById("voice-warming");
+                if (warm) warm.classList.add("show");
+              }
+            } else {
+              sayAgainStreak = 0;
+            }
             if (line) {
               addTranscript("agent", line);
               voiceHistory.push({ role: "assistant", text: line });
