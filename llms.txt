@@ -1,0 +1,5 @@
+Still Has Value sells restored secondhand items in Murray, UT.
+Machine-readable current inventory: https://stillhasvalue.com/inventory.json
+Human shop: https://stillhasvalue.com/#shop-now
+KSL listings: https://classifieds.ksl.com/v2/search/member/134010
+Log a sale (Grok/voice): POST https://tracker.stillhasvalue.com/api/save
