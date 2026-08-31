@@ -3,8 +3,13 @@
 <head>
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="alternate" type="application/json" href="/pickup.json" title="Pickup request API">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SHV Pickup">
+  <meta name="theme-color" content="#000000">
   <title>Request a pickup - Still Has Value</title>
   <style>
     :root { --green: #15803d; --amber: #d97706; }
@@ -43,7 +48,7 @@
     .previews img { width:88px; height:88px; object-fit:cover; border-radius:8px; background:#e7e5e4; }
     .row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
     button[type="submit"] {
-      display:block; width:100%; margin-top: 22px;
+      display:block; width:100%; margin-top: 10px;
       background: var(--green); color:#fff; border:0; border-radius:999px;
       padding: 14px 20px; font-size:1.1rem; font-weight:700; cursor:pointer;
     }
@@ -60,6 +65,70 @@
       background:#ecfdf5; border:1px solid #15803d; color:#14532d;
     }
     #banner a { color: var(--green); font-weight:700; }
+    #ai-hint {
+      background: linear-gradient(180deg, #fffbeb 0%, #ecfdf5 100%);
+      border: 2px solid #d97706;
+      border-left: 8px solid #15803d;
+      border-radius: 14px;
+      padding: 16px 16px 14px;
+      margin-bottom: 20px;
+    }
+    #ai-hint h2 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+      color: #15803d;
+    }
+    #ai-hint > p { margin: 0 0 8px; line-height: 1.45; font-size: .95rem; }
+    .installed-note {
+      display: none;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #15803d;
+      margin: 0 0 8px;
+    }
+    @media (display-mode: standalone) {
+      .installed-note { display: block; }
+    }
+    .ai-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top: 12px; }
+    .ai-actions button, .talk-btn-form {
+      border:0; border-radius:999px; padding:10px 16px; font-weight:700; cursor:pointer; font-size:.95rem;
+    }
+    .talk-btn, .talk-btn-form { background: #15803d; color:#fff; }
+    .talk-btn:hover, .talk-btn-form:hover { background:#166534; }
+    .add-phone { background: #d97706; color:#fff; }
+    .add-phone:hover { background:#b45309; }
+    .talk-btn-form {
+      display:block; width:100%; margin-top: 22px; padding: 12px 20px; font-size:1rem;
+      background: #d97706;
+    }
+    .talk-btn-form:hover { background:#b45309; }
+    #install-howto {
+      display:none; margin-top:12px; background:#fff; border-radius:8px;
+      padding:10px 12px; font-size:.92rem; line-height:1.45;
+    }
+    #install-howto.show { display:block; }
+    #voice-panel { display:none; margin-top:12px; }
+    #voice-panel.show { display:block; }
+    #voice-prompt { margin:0; font-size:1.05rem; font-weight:700; }
+    #voice-heard { margin:6px 0 0; color:#57534e; font-size:.9rem; }
+    #voice-listen {
+      display:none; align-items:center; gap:8px;
+      margin:10px 0 0; font-weight:700; color:#15803d;
+    }
+    #voice-listen.on { display:flex; }
+    #voice-listen .dot {
+      width:12px; height:12px; border-radius:50%; background:#15803d;
+      animation: pulse 1.1s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform:scale(1); box-shadow: 0 0 0 0 rgba(21,128,61,.55); }
+      50% { transform:scale(1.15); box-shadow: 0 0 0 10px rgba(21,128,61,0); }
+    }
+    label.need-photos, #photos.need-photos {
+      outline: 3px solid #d97706; outline-offset: 4px; border-radius: 8px;
+    }
     footer { background:#000; color:#a8a29e; text-align:center; padding: 28px 16px; font-size:.9em; }
     footer a { color:#e7e5e4; }
     @media (max-width: 520px) {
@@ -71,7 +140,7 @@
 <body>
   <header class="top">
     <a class="brand" href="/">
-      <img src="stillhasvalue_black_trans.png" alt="Still Has Value">
+      <img src="/stillhasvalue_black_trans.png" alt="Still Has Value">
       <span>Still Has Value</span>
     </a>
     <a class="shop" href="/">Shop</a>
@@ -79,6 +148,22 @@
 
   <main>
     <div id="banner" role="status"></div>
+    <div id="ai-hint">
+      <p class="installed-note" id="installed-note">Installed · SHV Pickup</p>
+      <h2>Did you know you can have AI fill this out?</h2>
+      <p>Open Grok, Gemini, Claude, or ChatGPT on your phone. Talk: tell it you want to send a pickup request to Still Has Value. It will ask you what to put in, then submit it.</p>
+      <p>Or add this page to your Home Screen (it’s a tiny web app, no App Store) and talk to it here.</p>
+      <div class="ai-actions">
+        <button type="button" id="talk-btn" class="talk-btn">Talk to fill this out</button>
+        <button type="button" id="add-phone-btn" class="add-phone">Add to phone</button>
+      </div>
+      <div id="install-howto"></div>
+      <div id="voice-panel">
+        <p id="voice-prompt" aria-live="polite"></p>
+        <p id="voice-heard"></p>
+        <p id="voice-listen"><span class="dot"></span> Listening…</p>
+      </div>
+    </div>
     <h1>Request a free pickup</h1>
     <p class="lead">We pick up items that still have value in the Salt Lake valley (Murray / West Jordan and nearby). Not junk hauling. A quick screen happens first; if it looks worth the trip, Ben reviews and will contact you.</p>
 
@@ -139,6 +224,7 @@
       <label for="access">Access notes <span class="opt">(optional)</span></label>
       <textarea id="access" name="access" maxlength="500" placeholder="Stairs, gate code, best times…"></textarea>
 
+      <button type="button" id="talk-btn-form" class="talk-btn-form">Talk to fill this out</button>
       <button type="submit" id="submit-btn">Request pickup</button>
     </form>
   </main>
@@ -174,6 +260,7 @@
       var banner = document.getElementById("banner");
       var btn = document.getElementById("submit-btn");
       var previews = document.getElementById("previews");
+      var voiceFilled = false;
 
       function zipOf(raw) {
         return String(raw || "").replace(/\D/g, "").slice(0, 5);
@@ -244,6 +331,7 @@
             img.src = dataUrl;
             img.alt = "Photo preview";
             previews.appendChild(img);
+            if (typeof onPhotoResized === "function") onPhotoResized();
           }).catch(function () {});
         });
       });
@@ -259,6 +347,8 @@
           .then(function (data) {
             if (data && data.ok && data.status === "queued") {
               form.style.display = "none";
+              var hint = document.getElementById("ai-hint");
+              if (hint) hint.style.display = "none";
               document.querySelector("h1").textContent = "Request received";
               document.querySelector(".lead").style.display = "none";
               showBanner("ok", "Thanks. It passed the first screen. Ben will review and contact you if we’re coming.");
@@ -330,6 +420,7 @@
             category: category,
             access: access,
             photoCount: photos.length,
+            source: voiceFilled ? "pwa-voice" : "form",
             _subject: "SHV pickup request: " + title + " (" + zip + ")"
           };
           var total = 0;
@@ -359,6 +450,330 @@
           declineMsg();
         });
       });
+
+      var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      var interviewActive = false;
+      var waitingForPhotos = false;
+      var activeRec = null;
+      var deferredInstall = null;
+      var NUM_WORDS = { zero:"0", oh:"0", o:"0", one:"1", two:"2", three:"3", four:"4", five:"5", six:"6", seven:"7", eight:"8", nine:"9" };
+
+      function spokenDigits(s) {
+        var parts = String(s || "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/);
+        var out = "", i, w;
+        for (i = 0; i < parts.length; i++) {
+          w = parts[i];
+          if (!w) continue;
+          if (/^\d+$/.test(w)) out += w;
+          else if (NUM_WORDS[w] != null) out += NUM_WORDS[w];
+        }
+        return out;
+      }
+      function mapCondition(s) {
+        s = (s || "").toLowerCase();
+        if (/not sure|unsure|don'?t know|no idea|unknown/.test(s)) return "not sure";
+        if (/parts|doesn'?t work|does not work|not working|for scrap/.test(s)) return "for parts";
+        if (/repair|fix|broken|needs work|minor/.test(s)) return "needs minor repair";
+        if (/work|good|fine|great|excellent|like new/.test(s)) return "working";
+        return "";
+      }
+      function mapCategory(s) {
+        s = (s || "").toLowerCase();
+        if (/furn|couch|sofa|table|dresser|chair|desk|cabinet|shelf/.test(s)) return "furniture";
+        if (/applian|fridge|refrigerat|washer|dryer|microwave|oven|stove|dishwasher|freezer/.test(s)) return "appliance";
+        if (/electron|\btv\b|television|computer|laptop|stereo|speaker|console|camera/.test(s)) return "electronics";
+        if (/\btools?\b|drill|saw|wrench|mower|compressor/.test(s)) return "tools";
+        if (/sport|outdoor|bike|bicycle|golf|ski|kayak|tent/.test(s)) return "sporting/outdoor";
+        if (/\bauto\b|\bcar\b|vehicle|\btire|truck/.test(s)) return "auto";
+        if (/other/.test(s)) return "other";
+        return "";
+      }
+      function parseCityZip(s) {
+        var zip = (String(s).match(/\b(\d{5})\b/) || [])[1] || "";
+        if (!zip) {
+          var d = spokenDigits(s).match(/(\d{5})/);
+          if (d) zip = d[1];
+        }
+        var city = String(s).replace(/\b\d{5}\b/g, " ").replace(/\bzip\b/ig, " ").replace(/[.,]/g, " ").replace(/\s+/g, " ").trim();
+        return { city: city, zip: zip };
+      }
+      function parsePhone(s) {
+        var digits = String(s || "").replace(/\D/g, "");
+        if (digits.length < 7) digits = spokenDigits(s);
+        if (digits.length === 11 && digits.charAt(0) === "1") digits = digits.slice(1);
+        if (digits.length === 10) {
+          return "(" + digits.slice(0,3) + ") " + digits.slice(3,6) + "-" + digits.slice(6);
+        }
+        return digits || String(s || "").trim();
+      }
+      function setField(id, val) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.value = val;
+        voiceFilled = true;
+      }
+      function showListening(on) {
+        var el = document.getElementById("voice-listen");
+        if (!el) return;
+        if (on) el.classList.add("on");
+        else el.classList.remove("on");
+      }
+      function setVoicePrompt(text) {
+        var el = document.getElementById("voice-prompt");
+        if (el) el.textContent = text || "";
+      }
+      function setVoiceHeard(text) {
+        var el = document.getElementById("voice-heard");
+        if (el) el.textContent = text ? ("Heard: " + text) : "";
+      }
+      function setTalkLabel(label) {
+        ["talk-btn", "talk-btn-form"].forEach(function (id) {
+          var b = document.getElementById(id);
+          if (b) b.textContent = label;
+        });
+      }
+      function speak(text, then) {
+        if (!window.speechSynthesis) {
+          if (then) then();
+          return;
+        }
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        u.rate = 1;
+        var done = false;
+        function go() {
+          if (done) return;
+          done = true;
+          if (then) then();
+        }
+        u.onend = go;
+        u.onerror = go;
+        window.speechSynthesis.speak(u);
+        setTimeout(go, Math.min(14000, 900 + String(text).length * 70));
+      }
+      function noSpeechFallback() {
+        var panel = document.getElementById("voice-panel");
+        if (panel) panel.classList.add("show");
+        setVoicePrompt("This phone’s browser can’t listen here. Open Grok, Gemini, or Claude on your phone and tell it you want to send a pickup request to Still Has Value.");
+      }
+      function clearPhotoHighlight() {
+        var photos = document.getElementById("photos");
+        var lab = document.querySelector("label[for=photos]");
+        if (photos) photos.classList.remove("need-photos");
+        if (lab) lab.classList.remove("need-photos");
+      }
+      function stopInterview() {
+        interviewActive = false;
+        waitingForPhotos = false;
+        try { if (activeRec) activeRec.abort(); } catch (err) {}
+        activeRec = null;
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        showListening(false);
+        setTalkLabel("Talk to fill this out");
+        clearPhotoHighlight();
+      }
+      function listenOnce(cb) {
+        if (!SpeechRec || !interviewActive) return;
+        try { if (activeRec) activeRec.abort(); } catch (err) {}
+        var r = new SpeechRec();
+        activeRec = r;
+        r.lang = "en-US";
+        r.interimResults = false;
+        r.continuous = false;
+        r.maxAlternatives = 1;
+        r.onstart = function () { showListening(true); };
+        r.onend = function () {
+          showListening(false);
+          if (activeRec === r) activeRec = null;
+        };
+        r.onerror = function (ev) {
+          showListening(false);
+          if (!interviewActive) return;
+          if (ev.error === "not-allowed" || ev.error === "service-not-allowed") {
+            stopInterview();
+            noSpeechFallback();
+          }
+        };
+        r.onresult = function (ev) {
+          var t = "";
+          try { t = ev.results[0][0].transcript; } catch (err) {}
+          t = (t || "").trim();
+          if (t && interviewActive) cb(t);
+        };
+        try { r.start(); } catch (err) { showListening(false); }
+      }
+      function ask(step) {
+        if (!interviewActive && step !== 8) return;
+        var panel = document.getElementById("voice-panel");
+        if (panel) panel.classList.add("show");
+        if (step === 0) {
+          setVoicePrompt("What are you giving us?");
+          speak("What are you giving us?", function () {
+            listenOnce(function (t) { setVoiceHeard(t); setField("title", t); ask(1); });
+          });
+          return;
+        }
+        if (step === 1) {
+          setVoicePrompt("Tell me about it: brand, size, does it work, what’s wrong.");
+          speak("Tell me about it. Brand, size, does it work, what's wrong.", function () {
+            listenOnce(function (t) { setVoiceHeard(t); setField("description", t); ask(2); });
+          });
+          return;
+        }
+        if (step === 2) {
+          setVoicePrompt("Is it working, needs a small repair, for parts, or not sure?");
+          speak("Is it working, needs a small repair, for parts, or not sure?", function () {
+            listenOnce(function (t) {
+              setVoiceHeard(t);
+              var v = mapCondition(t);
+              if (v) setField("condition", v);
+              else voiceFilled = true;
+              ask(3);
+            });
+          });
+          return;
+        }
+        if (step === 3) {
+          setVoicePrompt("Furniture, appliance, electronics, tools, sporting, auto, or other?");
+          speak("Is it furniture, appliance, electronics, tools, sporting, auto, or other?", function () {
+            listenOnce(function (t) {
+              setVoiceHeard(t);
+              var v = mapCategory(t);
+              if (v) setField("category", v);
+              else voiceFilled = true;
+              ask(4);
+            });
+          });
+          return;
+        }
+        if (step === 4) {
+          setVoicePrompt("What city and zip?");
+          speak("What city and zip?", function () {
+            listenOnce(function (t) {
+              setVoiceHeard(t);
+              var p = parseCityZip(t);
+              if (p.city) setField("city", p.city);
+              if (p.zip) setField("zip", p.zip);
+              voiceFilled = true;
+              ask(5);
+            });
+          });
+          return;
+        }
+        if (step === 5) {
+          setVoicePrompt("Your name?");
+          speak("What's your name?", function () {
+            listenOnce(function (t) { setVoiceHeard(t); setField("name", t); ask(6); });
+          });
+          return;
+        }
+        if (step === 6) {
+          setVoicePrompt("Phone number? You can fix the digits on the form if they look off.");
+          speak("What's your phone number? You can fix the digits on the form if they look off.", function () {
+            listenOnce(function (t) { setVoiceHeard(t); setField("phone", parsePhone(t)); ask(7); });
+          });
+          return;
+        }
+        if (step === 7) {
+          if (photoUrls.length >= 1) { ask(8); return; }
+          setVoicePrompt("Now add 1–4 photos of the item. Photos are required — tap the photo box.");
+          waitingForPhotos = true;
+          interviewActive = true;
+          var photos = document.getElementById("photos");
+          var lab = document.querySelector("label[for=photos]");
+          if (photos) photos.classList.add("need-photos");
+          if (lab) lab.classList.add("need-photos");
+          photos.scrollIntoView({ behavior: "smooth", block: "center" });
+          speak("Now add 1 to 4 photos of the item.", function () {
+            try {
+              photos.setAttribute("capture", "environment");
+              photos.focus();
+              photos.click();
+            } catch (err) {}
+          });
+          return;
+        }
+        if (step === 8) {
+          waitingForPhotos = false;
+          clearPhotoHighlight();
+          interviewActive = true;
+          var title = document.getElementById("title").value.trim();
+          var city = document.getElementById("city").value.trim();
+          var zipv = document.getElementById("zip").value.trim();
+          var name = document.getElementById("name").value.trim();
+          var recap = "Here's what I have: " + title + (city || zipv ? " in " + (city + " " + zipv).trim() : "") + (name ? ", for " + name : "") + ". Say yes send it, or tap Request pickup.";
+          setVoicePrompt(recap);
+          speak(recap, function () {
+            listenOnce(function (t) {
+              setVoiceHeard(t);
+              var s = t.toLowerCase();
+              if (/yes send|send it|submit|request pickup|\byes\b/.test(s)) {
+                stopInterview();
+                if (form.requestSubmit) form.requestSubmit();
+                else form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+              } else {
+                setVoicePrompt("Okay — fix anything on the form, then tap Request pickup.");
+                stopInterview();
+              }
+            });
+          });
+        }
+      }
+      function onPhotoResized() {
+        if (waitingForPhotos && photoUrls.length >= 1) {
+          waitingForPhotos = false;
+          clearPhotoHighlight();
+          ask(8);
+        }
+      }
+      function toggleVoice() {
+        if (interviewActive || waitingForPhotos) {
+          stopInterview();
+          setVoicePrompt("Stopped. You can type the rest, or tap Talk to start again.");
+          return;
+        }
+        if (!SpeechRec) {
+          noSpeechFallback();
+          document.getElementById("ai-hint").scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+        interviewActive = true;
+        setTalkLabel("Stop");
+        setVoiceHeard("");
+        document.getElementById("voice-panel").classList.add("show");
+        ask(0);
+      }
+      function addToPhone() {
+        if (deferredInstall) {
+          deferredInstall.prompt();
+          deferredInstall.userChoice.then(function () { deferredInstall = null; });
+          return;
+        }
+        var el = document.getElementById("install-howto");
+        el.classList.add("show");
+        var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        if (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone) {
+          el.innerHTML = "You’re already using the Home Screen app.";
+        } else if (ios) {
+          el.innerHTML = "<strong>iPhone:</strong> tap the Share button, then <strong>Add to Home Screen</strong>. No App Store.";
+        } else {
+          el.innerHTML = "<strong>Android:</strong> open the browser menu, then <strong>Install app</strong> or <strong>Add to Home Screen</strong>. No App Store.";
+        }
+      }
+      window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault();
+        deferredInstall = e;
+      });
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js").catch(function () {});
+      }
+      if (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone) {
+        var note = document.getElementById("installed-note");
+        if (note) note.style.display = "block";
+      }
+      document.getElementById("talk-btn").addEventListener("click", toggleVoice);
+      document.getElementById("talk-btn-form").addEventListener("click", toggleVoice);
+      document.getElementById("add-phone-btn").addEventListener("click", addToPhone);
     })();
   </script>
 </body>

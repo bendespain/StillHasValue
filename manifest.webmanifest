@@ -1,0 +1,21 @@
+{
+  "id": "/pickup",
+  "name": "Still Has Value Pickup",
+  "short_name": "SHV Pickup",
+  "start_url": "/pickup",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/stillhasvalue_logo1024x1024_black.jpg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg"
+    }
+  ]
+}
