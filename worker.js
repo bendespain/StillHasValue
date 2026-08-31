@@ -161,11 +161,11 @@ async function verifyTurnstile(request, env, data) {
 
 // --- lexical search (client may mirror) ---
 const SYN_GROUPS = [
-  ["mower", "lawnmower", "lawn mower", "riding mower", "tractor", "deere", "grass", "yard", "cut grass"],
+  ["mower", "lawnmower", "lawn mower", "riding mower", "tractor", "deere"],
   ["scooter", "moped", "ebike", "e-bike", "electric bike", "mobility", "razor", "wheelchair", "jazzy"],
   ["washer", "dryer", "laundry", "washing machine"],
   ["ac", "air conditioner", "aircon", "cooling", "hvac", "swamp cooler", "evaporative"],
-  ["generator", "inverter", "power"],
+  ["generator", "inverter", "genset"],
   ["tv", "television", "monitor", "display"],
   ["printer", "scanner", "copier"],
   ["vacuum", "mop", "tineco", "bissell", "shark", "floor cleaner"],
@@ -450,8 +450,8 @@ async function handleSearch(request, env, url) {
     const row = lexicalRows[i];
     let score = Math.max(row.sem, row.lex);
     // Drop weak embedding-only hits with no word/synonym overlap.
-    if (row.lex <= 0 && row.sem < 0.48) score = 0;
-    if (score >= 0.22) outItems.push({ id: row.id, score: Math.round(score * 1000) / 1000 });
+    if (row.lex <= 0 && row.sem < 0.55) score = 0;
+    if (score >= 0.35) outItems.push({ id: row.id, score: Math.round(score * 1000) / 1000 });
   }
   outItems.sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : 1));
   return json({ q: q, mode: mode, items: outItems });
