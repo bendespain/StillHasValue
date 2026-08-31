@@ -131,6 +131,34 @@ function json(body, status) {
   });
 }
 
+async function verifyTurnstile(request, env, data) {
+  if (!env.TURNSTILE_SECRET_KEY) {
+    return json({ ok: false, status: "error", reason: "bot check not configured" }, 503);
+  }
+  const token = String((data && (data.turnstileToken || data["cf-turnstile-response"])) || "").trim();
+  if (!token) {
+    return json({ ok: false, status: "declined", reason: "bot check required" }, 401);
+  }
+  try {
+    const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: env.TURNSTILE_SECRET_KEY,
+        response: token,
+        remoteip: request.headers.get("CF-Connecting-IP") || undefined,
+      }),
+    });
+    const verify = await verifyRes.json();
+    if (!verify || !verify.success) {
+      return json({ ok: false, status: "declined", reason: "bot check failed" }, 401);
+    }
+  } catch (e) {
+    return json({ ok: false, status: "declined", reason: "bot check failed" }, 401);
+  }
+  return null;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -147,7 +175,10 @@ export default {
       } catch (e) {
         return json({ ok: false, status: "declined", reason: "invalid json" });
       }
-      const check = prescreen(data || {});
+      data = data || {};
+      const bot = await verifyTurnstile(request, env, data);
+      if (bot) return bot;
+      const check = prescreen(data);
       if (!check.ok) {
         return json({ ok: false, status: "declined", reason: check.reason });
       }
