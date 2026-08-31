@@ -66,8 +66,21 @@ function hasJunk(title, description) {
   return null;
 }
 
+function httpPhotoUrls(data) {
+  const raw = data && data.photoUrls;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((u) => String(u || "").trim())
+    .filter((u) => /^https?:\/\//i.test(u));
+}
+
+function photoCountOf(data) {
+  const n = Number(data && data.photoCount) || 0;
+  return Math.max(n, httpPhotoUrls(data).length);
+}
+
 function prescreen(data) {
-  const photoCount = Number(data.photoCount) || 0;
+  const photoCount = photoCountOf(data);
   if (photoCount < 1) {
     return { ok: false, reason: "photos required" };
   }
@@ -140,6 +153,7 @@ export default {
       }
       const title = String(data.title || "").trim();
       const zip = zipOf(data.zip);
+      const urls = httpPhotoUrls(data);
       const payload = {
         name: String(data.name || "").trim(),
         phone: String(data.phone || "").trim(),
@@ -151,9 +165,11 @@ export default {
         condition: String(data.condition || "").trim(),
         category: String(data.category || "").trim(),
         access: String(data.access || "").trim(),
-        photoCount: Number(data.photoCount) || 0,
+        photoCount: Math.max(Number(data.photoCount) || 0, urls.length),
+        source: String(data.source || "").trim(),
         _subject: data._subject || ("SHV pickup request: " + title + " (" + zip + ")"),
       };
+      if (urls.length) payload.photoUrls = urls.join("\n");
       try {
         const r = await fetch(FORMSUBMIT, {
           method: "POST",
