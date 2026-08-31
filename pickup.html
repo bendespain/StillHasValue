@@ -10,7 +10,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="SHV Pickup">
   <meta name="theme-color" content="#000000">
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script>
+    window.__tsToken = "";
+    window.onTurnstileLoad = function () {
+      if (typeof window.__renderTurnstile === "function") window.__renderTurnstile();
+      else window.__tsApiReady = true;
+    };
+  </script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
   <title>Request a pickup - Still Has Value</title>
   <style>
     :root { --green: #15803d; --amber: #d97706; }
@@ -54,7 +61,8 @@
       padding: 14px 20px; font-size:1.1rem; font-weight:700; cursor:pointer;
     }
     button[type="submit"]:hover { background:#166534; }
-    button[type="submit"]:disabled { opacity:.6; cursor:wait; }
+    button[type="submit"]:disabled { opacity:.6; cursor:not-allowed; }
+    button[type="submit"].sending { cursor:wait; }
     .cf-turnstile { margin-top: 16px; }
     #banner {
       display:none; border-radius:12px; padding:16px 16px; margin-bottom:18px; line-height:1.5;
@@ -227,16 +235,18 @@
       <textarea id="access" name="access" maxlength="500" placeholder="Stairs, gate code, best times…"></textarea>
 
       <button type="button" id="talk-btn-form" class="talk-btn-form">Talk to fill this out</button>
-      <div class="cf-turnstile" data-sitekey="0x4AAAAAAEjTojQDWUWsg5en"></div>
+      <div id="cf-widget" class="cf-turnstile"></div>
       <p class="hint">Stops junk bots. Takes a second.</p>
-      <button type="submit" id="submit-btn">Request pickup</button>
+      <div id="submit-wrap">
+        <button type="submit" id="submit-btn" disabled>Request pickup</button>
+      </div>
     </form>
   </main>
 
   <footer>
     &copy; 2026 Still Has Value | Murray, UT |
     <a href="/">Shop</a> |
-    <a href="/pickup.html">Request a pickup</a>
+    <a href="/pickup">Request a pickup</a>
   </footer>
 
   <script>
@@ -341,24 +351,77 @@
       });
 
       function getTurnstileToken() {
+        if (window.__tsToken) return String(window.__tsToken);
         var el = document.querySelector('[name="cf-turnstile-response"]');
         return (el && el.value) ? String(el.value) : "";
       }
+      function setSubmitEnabled(on) {
+        if (btn.classList.contains("sending")) return;
+        btn.disabled = !on;
+        btn.textContent = "Request pickup";
+      }
+      function showCheckBanner() {
+        showBanner("no", "Please complete the check (the widget is right above the button).");
+        var w = document.getElementById("cf-widget");
+        if (w) w.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       function resetTurnstile() {
+        window.__tsToken = "";
+        btn.classList.remove("sending");
+        setSubmitEnabled(false);
         try {
-          if (window.turnstile) window.turnstile.reset();
+          if (window.turnstile) {
+            if (window.__tsWidgetId != null) window.turnstile.reset(window.__tsWidgetId);
+            else window.turnstile.reset();
+          }
         } catch (err) {}
       }
+      function renderTurnstile() {
+        if (!window.turnstile || !window.turnstile.render) return;
+        if (window.__tsWidgetId != null) return;
+        var el = document.getElementById("cf-widget");
+        if (!el) return;
+        try {
+          window.__tsWidgetId = window.turnstile.render(el, {
+            sitekey: "0x4AAAAAAEjTojQDWUWsg5en",
+            appearance: "always",
+            size: "normal",
+            callback: function (token) {
+              window.__tsToken = token || "";
+              setSubmitEnabled(!!window.__tsToken);
+            },
+            "error-callback": function () {
+              window.__tsToken = "";
+              setSubmitEnabled(false);
+              showBanner("no", "The check didn’t load. Please complete the widget above the button, or refresh and try again.");
+            },
+            "expired-callback": function () {
+              window.__tsToken = "";
+              setSubmitEnabled(false);
+            }
+          });
+        } catch (err) {
+          showBanner("no", "The check didn’t load. Please refresh and try again.");
+        }
+      }
+      window.__renderTurnstile = renderTurnstile;
+      if (window.__tsApiReady || (window.turnstile && window.turnstile.render)) {
+        renderTurnstile();
+      }
+      document.getElementById("submit-wrap").addEventListener("click", function () {
+        if (!getTurnstileToken()) showCheckBanner();
+      });
       function sendPayload(payload) {
         var token = getTurnstileToken();
         if (!token) {
-          showBanner("no", "Please complete the check so we know you're a person.");
-          btn.disabled = false;
-          btn.textContent = "Request pickup";
+          showCheckBanner();
+          btn.classList.remove("sending");
+          setSubmitEnabled(false);
           return;
         }
         payload.turnstileToken = token;
         btn.disabled = true;
+        btn.classList.add("sending");
         btn.textContent = "Sending…";
         fetch("/api/pickup", {
           method: "POST",
@@ -381,7 +444,7 @@
             showBanner("no", "Couldn’t send the request just now. Check your connection and try again.");
           })
           .then(function () {
-            btn.disabled = false;
+            btn.classList.remove("sending");
             btn.textContent = "Request pickup";
             resetTurnstile();
           });
@@ -393,7 +456,7 @@
         banner.innerHTML = "";
 
         if (!getTurnstileToken()) {
-          showBanner("no", "Please complete the check so we know you're a person.");
+          showCheckBanner();
           return;
         }
 
@@ -467,13 +530,15 @@
           return;
         }
         btn.disabled = true;
+        btn.classList.add("sending");
         btn.textContent = "Preparing photos…";
         Promise.all(files.map(resizeOne)).then(function (urls) {
           photoUrls = urls;
           buildAndSend(urls);
         }).catch(function () {
-          btn.disabled = false;
+          btn.classList.remove("sending");
           btn.textContent = "Request pickup";
+          setSubmitEnabled(!!getTurnstileToken());
           declineMsg();
         });
       });
@@ -736,6 +801,10 @@
               var s = t.toLowerCase();
               if (/yes send|send it|submit|request pickup|\byes\b/.test(s)) {
                 stopInterview();
+                if (!getTurnstileToken()) {
+                  showCheckBanner();
+                  return;
+                }
                 if (form.requestSubmit) form.requestSubmit();
                 else form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
               } else {
