@@ -435,7 +435,8 @@ async function handleSearch(request, env, url) {
         for (let i = 0; i < lexicalRows.length; i++) {
           const v = vecs[lexicalRows[i].id];
           const c = cosine(qVec, v);
-          lexicalRows[i].sem = c >= 0.28 ? c : 0;
+          // 0.28 was too loose and ranked almost everything; require a real match.
+          lexicalRows[i].sem = c >= 0.42 ? c : 0;
         }
         mode = "hybrid";
       }
@@ -447,8 +448,10 @@ async function handleSearch(request, env, url) {
   const outItems = [];
   for (let i = 0; i < lexicalRows.length; i++) {
     const row = lexicalRows[i];
-    const score = Math.max(row.sem, row.lex);
-    if (score > 0) outItems.push({ id: row.id, score: Math.round(score * 1000) / 1000 });
+    let score = Math.max(row.sem, row.lex);
+    // Drop weak embedding-only hits with no word/synonym overlap.
+    if (row.lex <= 0 && row.sem < 0.48) score = 0;
+    if (score >= 0.22) outItems.push({ id: row.id, score: Math.round(score * 1000) / 1000 });
   }
   outItems.sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : 1));
   return json({ q: q, mode: mode, items: outItems });
