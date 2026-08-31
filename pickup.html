@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="SHV Pickup">
   <meta name="theme-color" content="#000000">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <title>Request a pickup - Still Has Value</title>
   <style>
     :root { --green: #15803d; --amber: #d97706; }
@@ -54,6 +55,7 @@
     }
     button[type="submit"]:hover { background:#166534; }
     button[type="submit"]:disabled { opacity:.6; cursor:wait; }
+    .cf-turnstile { margin-top: 16px; }
     #banner {
       display:none; border-radius:12px; padding:16px 16px; margin-bottom:18px; line-height:1.5;
     }
@@ -225,6 +227,8 @@
       <textarea id="access" name="access" maxlength="500" placeholder="Stairs, gate code, best times…"></textarea>
 
       <button type="button" id="talk-btn-form" class="talk-btn-form">Talk to fill this out</button>
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAEjTojQDWUWsg5en"></div>
+      <p class="hint">Stops junk bots. Takes a second.</p>
       <button type="submit" id="submit-btn">Request pickup</button>
     </form>
   </main>
@@ -336,7 +340,24 @@
         });
       });
 
+      function getTurnstileToken() {
+        var el = document.querySelector('[name="cf-turnstile-response"]');
+        return (el && el.value) ? String(el.value) : "";
+      }
+      function resetTurnstile() {
+        try {
+          if (window.turnstile) window.turnstile.reset();
+        } catch (err) {}
+      }
       function sendPayload(payload) {
+        var token = getTurnstileToken();
+        if (!token) {
+          showBanner("no", "Please complete the check so we know you're a person.");
+          btn.disabled = false;
+          btn.textContent = "Request pickup";
+          return;
+        }
+        payload.turnstileToken = token;
         btn.disabled = true;
         btn.textContent = "Sending…";
         fetch("/api/pickup", {
@@ -362,6 +383,7 @@
           .then(function () {
             btn.disabled = false;
             btn.textContent = "Request pickup";
+            resetTurnstile();
           });
       }
 
@@ -369,6 +391,11 @@
         e.preventDefault();
         banner.className = "";
         banner.innerHTML = "";
+
+        if (!getTurnstileToken()) {
+          showBanner("no", "Please complete the check so we know you're a person.");
+          return;
+        }
 
         var files = Array.prototype.slice.call(document.getElementById("photos").files || [], 0, 4);
         if (!files.length) {
