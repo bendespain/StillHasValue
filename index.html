@@ -89,7 +89,7 @@
     #topbar .bar-pickup:hover { background: #166534; }
     header.hero {
       background: #000; color: #fff; text-align: center;
-      padding: 28px 20px 36px;
+      padding: 28px 20px calc(36px * (1 - var(--hero)));
     }
     header.hero .logo { width: 120px; margin: 0 auto 12px; display: block; }
     header.hero h1 {
@@ -113,14 +113,18 @@
     }
     .hero-pickup:hover { background: #166534; }
     .hero-ai-hint {
-      margin: 10px 0 0;
+      margin: calc(10px * (1 - var(--hero))) 0 0;
       color: #a8a29e;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      opacity: calc(1 - var(--hero));
+      max-height: calc(1.6em * (1 - var(--hero)));
+      overflow: hidden;
     }
     .hero-truck-wrap {
       max-width: min(100%, 640px);
       width: 100%;
-      margin: 20px auto 8px;
+      margin: calc(20px * (1 - var(--hero))) auto calc(8px * (1 - var(--hero)));
+      overflow: hidden;
     }
     .hero-truck {
       width: 100%;
@@ -143,9 +147,11 @@
     #topbar.is-landed ~ .hero .hero-truck.is-flying { opacity: 0; }
     .hero-copy {
       max-width: 640px;
-      margin: 12px auto 0;
+      margin: calc(12px * (1 - var(--hero))) auto 0;
       text-align: left;
       opacity: calc(1 - var(--hero));
+      max-height: calc(280px * (1 - var(--hero)));
+      overflow: hidden;
     }
     .hero-copy h2 {
       color: var(--amber);
@@ -233,7 +239,7 @@
       #topbar .bar-name { display: none; }
       #topbar form { max-width: none; }
       #topbar .bar-pickup { padding: 8px 12px; font-size: 13px; }
-      header.hero { padding: 24px 16px 28px; }
+      header.hero { padding: 24px 16px calc(28px * (1 - var(--hero))); }
       header.hero .logo { width: 96px; }
       .hero-pickup { padding: 12px 24px; font-size: 1rem; }
       .chips {
@@ -310,6 +316,8 @@
       var flying = false;
       var tickScheduled = false;
       var truckAspect = 0;
+      var fromW = 0;
+      var fromH = 0;
 
       function easeOutCubic(x) {
         return 1 - Math.pow(1 - x, 3);
@@ -326,20 +334,21 @@
             truck.style.borderRadius = "";
             truckWrap.style.height = "";
             flying = false;
+            fromW = 0;
+            fromH = 0;
           }
           return;
         }
         if (truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
-        if (truckAspect) truckWrap.style.height = (truckWrap.clientWidth * truckAspect) + "px";
         var wrapRect = truckWrap.getBoundingClientRect();
         if (!flying) {
-          if (!truckWrap.style.height) truckWrap.style.height = wrapRect.height + "px";
+          fromW = wrapRect.width;
+          fromH = wrapRect.height || (truckAspect ? wrapRect.width * truckAspect : 1);
           truck.classList.add("is-flying");
           flying = true;
-          wrapRect = truckWrap.getBoundingClientRect();
         }
-        var fromW = wrapRect.width;
-        var fromH = wrapRect.height || 1;
+        truckWrap.style.height = (fromH * (1 - p)) + "px";
+        wrapRect = truckWrap.getBoundingClientRect();
         var dest = barTruck.getBoundingClientRect();
         var scale = dest.height / fromH;
         var x = wrapRect.left + (dest.left - wrapRect.left) * p;
@@ -370,7 +379,16 @@
       }
       onScroll();
       window.addEventListener("scroll", requestTick, { passive: true });
-      window.addEventListener("resize", requestTick);
+      window.addEventListener("resize", function () {
+        if (flying && truckWrap) {
+          var w = truckWrap.clientWidth;
+          if (w && truckAspect) {
+            fromW = w;
+            fromH = w * truckAspect;
+          }
+        }
+        requestTick();
+      });
       if (truck) {
         if (truck.complete && truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
         truck.addEventListener("load", function () {
