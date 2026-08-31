@@ -1,0 +1,25 @@
+{
+  "name": "Still Has Value customer pickup request",
+  "endpoint": "https://stillhasvalue.com/api/pickup",
+  "method": "POST",
+  "contentType": "application/json",
+  "cors": "*",
+  "humanForm": "https://stillhasvalue.com/pickup",
+  "notes": "Ask the human the questions first, then POST. Service area: Salt Lake valley zips only. Not junk, mattress, or hazardous. Photos required (photoCount >= 1 or photoUrls). Passing prescreen emails Ben; it is not a scheduled pickup. Do not send huge data-URL photos; https image URLs are enough.",
+  "fields": {
+    "name": { "type": "string", "required": true },
+    "phone": { "type": "string", "required": true },
+    "email": { "type": "string", "required": false },
+    "city": { "type": "string" },
+    "zip": { "type": "string", "required": true, "description": "5-digit Salt Lake valley zip" },
+    "title": { "type": "string", "required": true, "description": "What is the item" },
+    "description": { "type": "string", "required": true, "minLength": 15 },
+    "condition": { "type": "string", "enum": ["working", "needs minor repair", "for parts", "not sure"] },
+    "category": { "type": "string", "enum": ["furniture", "appliance", "electronics", "tools", "sporting/outdoor", "auto", "other"] },
+    "access": { "type": "string", "required": false },
+    "photoCount": { "type": "number", "minimum": 1 },
+    "photoUrls": { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "https image URLs; counted as photos for prescreen" },
+    "source": { "type": "string", "description": "grok, gemini, claude, chatgpt, other, pwa-voice, or form" },
+    "_subject": { "type": "string" }
+  }
+}
