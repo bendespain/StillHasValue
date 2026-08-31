@@ -122,7 +122,8 @@
     #voice-panel { display:none; margin-top:12px; }
     #voice-panel.show { display:block; }
     #voice-prompt { margin:0; font-size:1.05rem; font-weight:700; }
-    #voice-heard { margin:6px 0 0; color:#57534e; font-size:.9rem; }
+    #voice-log { margin:8px 0 0; }
+    #voice-log p { margin:4px 0 0; color:#57534e; font-size:.9rem; }
     #voice-listen {
       display:none; align-items:center; gap:8px;
       margin:10px 0 0; font-weight:700; color:#15803d;
@@ -170,7 +171,7 @@
       <div id="install-howto"></div>
       <div id="voice-panel">
         <p id="voice-prompt" aria-live="polite"></p>
-        <p id="voice-heard"></p>
+        <div id="voice-log"></div>
         <p id="voice-listen"><span class="dot"></span> Listening…</p>
       </div>
     </div>
@@ -548,66 +549,16 @@
       });
 
       var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      var interviewActive = false;
+      var voiceArmed = false;
+      var voiceSpeaking = false;
       var waitingForPhotos = false;
       var activeRec = null;
+      var voiceHistory = [];
+      var voiceQueue = [];
+      var voiceBusy = false;
       var deferredInstall = null;
-      var NUM_WORDS = { zero:"0", oh:"0", o:"0", one:"1", two:"2", three:"3", four:"4", five:"5", six:"6", seven:"7", eight:"8", nine:"9" };
+      var FIELD_IDS = ["title","description","condition","category","city","zip","name","phone","email","access"];
 
-      function spokenDigits(s) {
-        var parts = String(s || "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/);
-        var out = "", i, w;
-        for (i = 0; i < parts.length; i++) {
-          w = parts[i];
-          if (!w) continue;
-          if (/^\d+$/.test(w)) out += w;
-          else if (NUM_WORDS[w] != null) out += NUM_WORDS[w];
-        }
-        return out;
-      }
-      function mapCondition(s) {
-        s = (s || "").toLowerCase();
-        if (/not sure|unsure|don'?t know|no idea|unknown/.test(s)) return "not sure";
-        if (/parts|doesn'?t work|does not work|not working|for scrap/.test(s)) return "for parts";
-        if (/repair|fix|broken|needs work|minor/.test(s)) return "needs minor repair";
-        if (/work|good|fine|great|excellent|like new/.test(s)) return "working";
-        return "";
-      }
-      function mapCategory(s) {
-        s = (s || "").toLowerCase();
-        if (/furn|couch|sofa|table|dresser|chair|desk|cabinet|shelf/.test(s)) return "furniture";
-        if (/applian|fridge|refrigerat|washer|dryer|microwave|oven|stove|dishwasher|freezer/.test(s)) return "appliance";
-        if (/electron|\btv\b|television|computer|laptop|stereo|speaker|console|camera/.test(s)) return "electronics";
-        if (/\btools?\b|drill|saw|wrench|mower|compressor/.test(s)) return "tools";
-        if (/sport|outdoor|bike|bicycle|golf|ski|kayak|tent/.test(s)) return "sporting/outdoor";
-        if (/\bauto\b|\bcar\b|vehicle|\btire|truck/.test(s)) return "auto";
-        if (/other/.test(s)) return "other";
-        return "";
-      }
-      function parseCityZip(s) {
-        var zip = (String(s).match(/\b(\d{5})\b/) || [])[1] || "";
-        if (!zip) {
-          var d = spokenDigits(s).match(/(\d{5})/);
-          if (d) zip = d[1];
-        }
-        var city = String(s).replace(/\b\d{5}\b/g, " ").replace(/\bzip\b/ig, " ").replace(/[.,]/g, " ").replace(/\s+/g, " ").trim();
-        return { city: city, zip: zip };
-      }
-      function parsePhone(s) {
-        var digits = String(s || "").replace(/\D/g, "");
-        if (digits.length < 7) digits = spokenDigits(s);
-        if (digits.length === 11 && digits.charAt(0) === "1") digits = digits.slice(1);
-        if (digits.length === 10) {
-          return "(" + digits.slice(0,3) + ") " + digits.slice(3,6) + "-" + digits.slice(6);
-        }
-        return digits || String(s || "").trim();
-      }
-      function setField(id, val) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        el.value = val;
-        voiceFilled = true;
-      }
       function showListening(on) {
         var el = document.getElementById("voice-listen");
         if (!el) return;
@@ -618,34 +569,53 @@
         var el = document.getElementById("voice-prompt");
         if (el) el.textContent = text || "";
       }
-      function setVoiceHeard(text) {
-        var el = document.getElementById("voice-heard");
-        if (el) el.textContent = text ? ("Heard: " + text) : "";
-      }
       function setTalkLabel(label) {
         ["talk-btn", "talk-btn-form"].forEach(function (id) {
           var b = document.getElementById(id);
           if (b) b.textContent = label;
         });
       }
-      function speak(text, then) {
-        if (!window.speechSynthesis) {
-          if (then) then();
-          return;
-        }
+      function addTranscript(who, text) {
+        var log = document.getElementById("voice-log");
+        if (!log || !text) return;
+        var p = document.createElement("p");
+        p.textContent = (who === "user" ? "You said " : "Agent ") + text;
+        log.appendChild(p);
+        while (log.children.length > 8) log.removeChild(log.firstChild);
+      }
+      function getFormFields() {
+        var o = {};
+        FIELD_IDS.forEach(function (id) {
+          var el = document.getElementById(id);
+          o[id] = el ? el.value : "";
+        });
+        return o;
+      }
+      function mergeFields(f) {
+        if (!f) return;
+        FIELD_IDS.forEach(function (id) {
+          if (f[id] === undefined || f[id] === null || f[id] === "") return;
+          var el = document.getElementById(id);
+          if (!el) return;
+          el.value = f[id];
+          voiceFilled = true;
+        });
+      }
+      function speak(text) {
+        if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
+        if (!text) return;
+        voiceSpeaking = true;
+        stopRecOnly();
         var u = new SpeechSynthesisUtterance(text);
         u.rate = 1;
-        var done = false;
-        function go() {
-          if (done) return;
-          done = true;
-          if (then) then();
+        function done() {
+          voiceSpeaking = false;
+          if (voiceArmed) startListening();
         }
-        u.onend = go;
-        u.onerror = go;
+        u.onend = done;
+        u.onerror = done;
         window.speechSynthesis.speak(u);
-        setTimeout(go, Math.min(14000, 900 + String(text).length * 70));
       }
       function noSpeechFallback() {
         var panel = document.getElementById("voice-panel");
@@ -658,177 +628,152 @@
         if (photos) photos.classList.remove("need-photos");
         if (lab) lab.classList.remove("need-photos");
       }
-      function stopInterview() {
-        interviewActive = false;
-        waitingForPhotos = false;
+      function stopRecOnly() {
         try { if (activeRec) activeRec.abort(); } catch (err) {}
         activeRec = null;
+      }
+      function stopVoice() {
+        voiceArmed = false;
+        waitingForPhotos = false;
+        voiceQueue = [];
+        voiceBusy = false;
+        stopRecOnly();
         if (window.speechSynthesis) window.speechSynthesis.cancel();
+        voiceSpeaking = false;
         showListening(false);
         setTalkLabel("Talk to fill this out");
         clearPhotoHighlight();
       }
-      function listenOnce(cb) {
-        if (!SpeechRec || !interviewActive) return;
-        try { if (activeRec) activeRec.abort(); } catch (err) {}
+      function hasPhotos() {
+        if (photoUrls.length >= 1) return true;
+        var files = document.getElementById("photos").files;
+        return !!(files && files.length);
+      }
+      function askForPhotos() {
+        waitingForPhotos = true;
+        var photos = document.getElementById("photos");
+        var lab = document.querySelector("label[for=photos]");
+        if (photos) photos.classList.add("need-photos");
+        if (lab) lab.classList.add("need-photos");
+        if (photos) photos.scrollIntoView({ behavior: "smooth", block: "center" });
+        var line = "Add 1 to 4 photos of the item, then say send it.";
+        setVoicePrompt(line);
+        addTranscript("agent", line);
+        voiceHistory.push({ role: "assistant", text: line });
+        speak(line);
+        try {
+          photos.setAttribute("capture", "environment");
+          photos.focus();
+          photos.click();
+        } catch (err) {}
+      }
+      function tryVoiceSubmit() {
+        if (!hasPhotos()) {
+          askForPhotos();
+          return;
+        }
+        if (!window.__tsToken) {
+          var line = "Please complete the check, then say send it.";
+          setVoicePrompt(line);
+          addTranscript("agent", line);
+          voiceHistory.push({ role: "assistant", text: line });
+          speak(line);
+          showCheckBanner();
+          return;
+        }
+        stopVoice();
+        if (form.requestSubmit) form.requestSubmit();
+        else form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+      }
+      function startListening() {
+        if (!SpeechRec || !voiceArmed || voiceSpeaking) return;
+        stopRecOnly();
         var r = new SpeechRec();
         activeRec = r;
         r.lang = "en-US";
         r.interimResults = false;
-        r.continuous = false;
+        r.continuous = true;
         r.maxAlternatives = 1;
-        r.onstart = function () { showListening(true); };
+        r.onstart = function () {
+          if (voiceArmed) showListening(true);
+        };
         r.onend = function () {
-          showListening(false);
           if (activeRec === r) activeRec = null;
+          if (voiceArmed && !voiceSpeaking) setTimeout(startListening, 250);
         };
         r.onerror = function (ev) {
-          showListening(false);
-          if (!interviewActive) return;
+          if (!voiceArmed) return;
           if (ev.error === "not-allowed" || ev.error === "service-not-allowed") {
-            stopInterview();
+            stopVoice();
             noSpeechFallback();
           }
         };
         r.onresult = function (ev) {
-          var t = "";
-          try { t = ev.results[0][0].transcript; } catch (err) {}
-          t = (t || "").trim();
-          if (t && interviewActive) cb(t);
+          for (var i = ev.resultIndex; i < ev.results.length; i++) {
+            if (!ev.results[i].isFinal) continue;
+            var t = "";
+            try { t = ev.results[i][0].transcript; } catch (err) {}
+            t = (t || "").trim();
+            if (t && voiceArmed) onFinalTranscript(t);
+          }
         };
-        try { r.start(); } catch (err) { showListening(false); }
+        try { r.start(); } catch (err) {}
       }
-      function ask(step) {
-        if (!interviewActive && step !== 8) return;
-        var panel = document.getElementById("voice-panel");
-        if (panel) panel.classList.add("show");
-        if (step === 0) {
-          setVoicePrompt("What are you giving us?");
-          speak("What are you giving us?", function () {
-            listenOnce(function (t) { setVoiceHeard(t); setField("title", t); ask(1); });
-          });
-          return;
-        }
-        if (step === 1) {
-          setVoicePrompt("Tell me about it: brand, size, does it work, what’s wrong.");
-          speak("Tell me about it. Brand, size, does it work, what's wrong.", function () {
-            listenOnce(function (t) { setVoiceHeard(t); setField("description", t); ask(2); });
-          });
-          return;
-        }
-        if (step === 2) {
-          setVoicePrompt("Is it working, needs a small repair, for parts, or not sure?");
-          speak("Is it working, needs a small repair, for parts, or not sure?", function () {
-            listenOnce(function (t) {
-              setVoiceHeard(t);
-              var v = mapCondition(t);
-              if (v) setField("condition", v);
-              else voiceFilled = true;
-              ask(3);
+      function onFinalTranscript(t) {
+        addTranscript("user", t);
+        voiceHistory.push({ role: "user", text: t });
+        voiceQueue.push(t);
+        drainVoice();
+      }
+      async function drainVoice() {
+        if (voiceBusy) return;
+        voiceBusy = true;
+        while (voiceQueue.length && voiceArmed) {
+          var t = voiceQueue.shift();
+          try {
+            var res = await fetch("/api/voice", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                transcript: t,
+                fields: getFormFields(),
+                history: voiceHistory.slice(-6)
+              })
             });
-          });
-          return;
+            var data = await res.json();
+            if (!voiceArmed) break;
+            mergeFields(data.fields);
+            var line = (data && data.speak) ? data.speak : "";
+            if (line) {
+              addTranscript("agent", line);
+              voiceHistory.push({ role: "assistant", text: line });
+              setVoicePrompt(line);
+              speak(line);
+            }
+            if (data && data.submit === true) {
+              tryVoiceSubmit();
+              break;
+            }
+          } catch (err) {
+            setVoicePrompt("Say that again?");
+          }
         }
-        if (step === 3) {
-          setVoicePrompt("Furniture, appliance, electronics, tools, sporting, auto, or other?");
-          speak("Is it furniture, appliance, electronics, tools, sporting, auto, or other?", function () {
-            listenOnce(function (t) {
-              setVoiceHeard(t);
-              var v = mapCategory(t);
-              if (v) setField("category", v);
-              else voiceFilled = true;
-              ask(4);
-            });
-          });
-          return;
-        }
-        if (step === 4) {
-          setVoicePrompt("What city and zip?");
-          speak("What city and zip?", function () {
-            listenOnce(function (t) {
-              setVoiceHeard(t);
-              var p = parseCityZip(t);
-              if (p.city) setField("city", p.city);
-              if (p.zip) setField("zip", p.zip);
-              voiceFilled = true;
-              ask(5);
-            });
-          });
-          return;
-        }
-        if (step === 5) {
-          setVoicePrompt("Your name?");
-          speak("What's your name?", function () {
-            listenOnce(function (t) { setVoiceHeard(t); setField("name", t); ask(6); });
-          });
-          return;
-        }
-        if (step === 6) {
-          setVoicePrompt("Phone number? You can fix the digits on the form if they look off.");
-          speak("What's your phone number? You can fix the digits on the form if they look off.", function () {
-            listenOnce(function (t) { setVoiceHeard(t); setField("phone", parsePhone(t)); ask(7); });
-          });
-          return;
-        }
-        if (step === 7) {
-          if (photoUrls.length >= 1) { ask(8); return; }
-          setVoicePrompt("Now add 1–4 photos of the item. Photos are required — tap the photo box.");
-          waitingForPhotos = true;
-          interviewActive = true;
-          var photos = document.getElementById("photos");
-          var lab = document.querySelector("label[for=photos]");
-          if (photos) photos.classList.add("need-photos");
-          if (lab) lab.classList.add("need-photos");
-          photos.scrollIntoView({ behavior: "smooth", block: "center" });
-          speak("Now add 1 to 4 photos of the item.", function () {
-            try {
-              photos.setAttribute("capture", "environment");
-              photos.focus();
-              photos.click();
-            } catch (err) {}
-          });
-          return;
-        }
-        if (step === 8) {
-          waitingForPhotos = false;
-          clearPhotoHighlight();
-          interviewActive = true;
-          var title = document.getElementById("title").value.trim();
-          var city = document.getElementById("city").value.trim();
-          var zipv = document.getElementById("zip").value.trim();
-          var name = document.getElementById("name").value.trim();
-          var recap = "Here's what I have: " + title + (city || zipv ? " in " + (city + " " + zipv).trim() : "") + (name ? ", for " + name : "") + ". Say yes send it, or tap Request pickup.";
-          setVoicePrompt(recap);
-          speak(recap, function () {
-            listenOnce(function (t) {
-              setVoiceHeard(t);
-              var s = t.toLowerCase();
-              if (/yes send|send it|submit|request pickup|\byes\b/.test(s)) {
-                stopInterview();
-                if (!getTurnstileToken()) {
-                  showCheckBanner();
-                  return;
-                }
-                if (form.requestSubmit) form.requestSubmit();
-                else form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-              } else {
-                setVoicePrompt("Okay — fix anything on the form, then tap Request pickup.");
-                stopInterview();
-              }
-            });
-          });
-        }
+        voiceBusy = false;
       }
       function onPhotoResized() {
         if (waitingForPhotos && photoUrls.length >= 1) {
           waitingForPhotos = false;
           clearPhotoHighlight();
-          ask(8);
+          var line = "Photos added. Say send it when you’re ready.";
+          setVoicePrompt(line);
+          addTranscript("agent", line);
+          voiceHistory.push({ role: "assistant", text: line });
+          speak(line);
         }
       }
       function toggleVoice() {
-        if (interviewActive || waitingForPhotos) {
-          stopInterview();
+        if (voiceArmed || waitingForPhotos) {
+          stopVoice();
           setVoicePrompt("Stopped. You can type the rest, or tap Talk to start again.");
           return;
         }
@@ -837,11 +782,20 @@
           document.getElementById("ai-hint").scrollIntoView({ behavior: "smooth", block: "start" });
           return;
         }
-        interviewActive = true;
-        setTalkLabel("Stop");
-        setVoiceHeard("");
+        voiceArmed = true;
+        waitingForPhotos = false;
+        voiceHistory = [];
+        voiceQueue = [];
+        var log = document.getElementById("voice-log");
+        if (log) log.innerHTML = "";
         document.getElementById("voice-panel").classList.add("show");
-        ask(0);
+        setTalkLabel("Stop");
+        showListening(true);
+        var hello = "Go ahead — tell me what you want picked up.";
+        setVoicePrompt(hello);
+        addTranscript("agent", hello);
+        voiceHistory.push({ role: "assistant", text: hello });
+        speak(hello);
       }
       function addToPhone() {
         if (deferredInstall) {
