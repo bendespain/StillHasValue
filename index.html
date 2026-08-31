@@ -71,7 +71,7 @@
     }
     main { padding: 28px 16px 56px; max-width: 1280px; margin: 0 auto; }
     #shop-now h2 { color: var(--amber); margin: 0 0 8px; }
-    .shop-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 18px; }
+    .shop-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 14px; }
     .shop-head p { margin: 0; color: #292524; flex: 1 1 200px; }
     .shop-search { display: flex; gap: 8px; flex: 1 1 240px; max-width: 480px; }
     .shop-search input {
@@ -80,6 +80,36 @@
     .shop-search button, .ksl-cta {
       background: var(--green); color:#fff; border:0; border-radius: 999px; padding: 10px 18px;
       font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block;
+    }
+    .chips {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin: 0 0 18px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .chip {
+      appearance: none; -webkit-appearance: none;
+      border: 1.5px solid var(--green);
+      background: #fff; color: var(--green);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px; font-weight: 700; font-family: inherit;
+      cursor: pointer; white-space: nowrap;
+    }
+    .chip.is-on { background: var(--green); color: #fff; }
+    .chip:hover { box-shadow: 0 0 0 2px rgba(21,128,61,.25); }
+    #grid { display: block; }
+    .cat-group { margin: 0 0 28px; }
+    .cat-heading {
+      position: sticky;
+      top: var(--bar);
+      z-index: 4;
+      margin: 0 0 10px;
+      padding: 8px 0 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--amber);
+      background: #f8f8f8;
+      letter-spacing: .02em;
     }
     .grid {
       display: grid;
@@ -116,6 +146,11 @@
       header.hero { padding: 48px 16px 32px; }
       header.hero .logo { width: 140px; }
       .hero-pickup { padding: 12px 24px; font-size: 1rem; }
+      .chips {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
     }
   </style>
 </head>
@@ -161,7 +196,8 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
         </form>
         <a class="ksl-cta" href="https://classifieds.ksl.com/v2/search/member/134010" target="_blank" rel="noopener">View on KSL</a>
       </div>
-      <div class="grid" id="grid"></div>
+      <div class="chips" id="chips" role="toolbar" aria-label="Filter by category"></div>
+      <div id="grid"></div>
       <p class="empty" id="empty">No items match that search.</p>
     </section>
   </main>
@@ -174,6 +210,7 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
 
   <script>
     (function () {
+      var CAT_ORDER = ["Mobility", "Lawn & outdoor", "Appliances", "Electronics", "Power & tools", "Powersports", "Home", "Sporting", "Other"];
       var root = document.documentElement;
       var bar = document.getElementById("topbar");
       var hero = document.getElementById("hero");
@@ -188,17 +225,49 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
       window.addEventListener("scroll", onScroll, { passive: true });
 
       var inputs = document.querySelectorAll("#bar-search input, #shop-search input");
-      function apply(q) {
-        q = (q || "").trim().toLowerCase();
+      var currentCat = "";
+      var totalAvailable = 0;
+      var inventoryReady = false;
+
+      function apply(query, category) {
+        var raw = (query == null)
+          ? ((document.querySelector("#shop-search input") || {}).value
+            || (document.querySelector("#bar-search input") || {}).value
+            || "")
+          : String(query);
+        if (category !== undefined) currentCat = category || "";
+        var q = raw.trim().toLowerCase();
+        var words = q.split(/\s+/).filter(Boolean);
         var n = 0;
-        document.querySelectorAll("#grid .card").forEach(function (c) {
-          var show = !q || (c.getAttribute("data-title") || "").indexOf(q) !== -1;
-          c.hidden = !show;
-          if (show) n++;
+        document.querySelectorAll("#grid .cat-group").forEach(function (g) {
+          var gcat = g.getAttribute("data-category") || "";
+          var catOk = !currentCat || gcat === currentCat;
+          var vis = 0;
+          g.querySelectorAll(".card").forEach(function (c) {
+            var hay = c.getAttribute("data-search") || "";
+            var match = !words.length || words.every(function (w) { return hay.indexOf(w) !== -1; });
+            var show = catOk && match;
+            c.hidden = !show;
+            if (show) vis++;
+          });
+          g.hidden = !catOk || vis === 0;
+          n += vis;
         });
-        document.getElementById("empty").style.display = n ? "none" : "block";
-        inputs.forEach(function (i) { if (i.value !== q) i.value = q; });
+        var el = document.getElementById("count-line");
+        if (el && inventoryReady) {
+          if (currentCat) el.textContent = n + " in " + currentCat;
+          else if (words.length) el.textContent = n + " of " + totalAvailable + " items";
+          else el.textContent = totalAvailable + " items for sale. This site is the catalog.";
+        }
+        var empty = document.getElementById("empty");
+        if (empty) empty.style.display = (inventoryReady && n === 0) ? "block" : "none";
+        inputs.forEach(function (i) { if (i.value !== raw) i.value = raw; });
+        document.querySelectorAll("#chips .chip").forEach(function (b) {
+          var on = (b.getAttribute("data-category") || "") === currentCat;
+          b.classList.toggle("is-on", on);
+        });
       }
+
       function bind(form) {
         form.addEventListener("submit", function (e) {
           e.preventDefault();
@@ -211,6 +280,12 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
       bind(document.getElementById("bar-search"));
       bind(document.getElementById("shop-search"));
 
+      document.getElementById("chips").addEventListener("click", function (e) {
+        var b = e.target.closest(".chip");
+        if (!b) return;
+        apply(null, b.getAttribute("data-category") || "");
+      });
+
       function esc(s) {
         return String(s || "").replace(/[&<>"']/g, function (c) {
           return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
@@ -220,20 +295,53 @@ It's simple sustainability: one happy goodbye, one excited hello, zero waste. Pl
         .then(function (r) { return r.json(); })
         .then(function (data) {
           var items = (data.items || []).filter(function (it) { return it.status !== "sold"; });
+          totalAvailable = items.length;
+          var byCat = {};
+          var catCounts = {};
+          items.forEach(function (it) {
+            var c = it.category || "Other";
+            if (CAT_ORDER.indexOf(c) === -1) c = "Other";
+            it._cat = c;
+            byCat[c] = byCat[c] || [];
+            byCat[c].push(it);
+            catCounts[c] = (catCounts[c] || 0) + 1;
+          });
+          var chips = document.getElementById("chips");
+          var chipsHtml = '<button type="button" class="chip is-on" data-category="">All (' + items.length + ")</button>";
+          CAT_ORDER.forEach(function (c) {
+            if (!catCounts[c]) return;
+            chipsHtml += '<button type="button" class="chip" data-category="' + esc(c) + '">' + esc(c) + " (" + catCounts[c] + ")</button>";
+          });
+          chips.innerHTML = chipsHtml;
+
           var grid = document.getElementById("grid");
           var html = "";
-          items.forEach(function (it, i) {
-            var title = it.title || "Item";
-            var href = (it.channels && it.channels.ksl) || it.url || "#";
-            var img = it.image || "";
-            var lazy = i < 18 ? "eager" : "lazy";
-            html += '<a class="card" href="' + esc(href) + '" target="_blank" rel="noopener" data-title="' + esc(title.toLowerCase()) + '">'
-              + '<img src="' + esc(img) + '" alt="' + esc(title) + '" loading="' + lazy + '" decoding="async" width="400" height="300">'
-              + '<span class="title">' + esc(title) + "</span></a>";
+          var cardIndex = 0;
+          CAT_ORDER.forEach(function (c) {
+            var list = byCat[c];
+            if (!list || !list.length) return;
+            html += '<section class="cat-group" data-category="' + esc(c) + '">';
+            html += '<h3 class="cat-heading">' + esc(c) + "</h3>";
+            html += '<div class="grid">';
+            list.forEach(function (it) {
+              var title = it.title || "Item";
+              var cat = it._cat || "Other";
+              var href = (it.channels && it.channels.ksl) || it.url || "#";
+              var img = it.image || "";
+              var lazy = cardIndex < 18 ? "eager" : "lazy";
+              var search = (title + " " + cat).toLowerCase();
+              html += '<a class="card" href="' + esc(href) + '" target="_blank" rel="noopener" data-search="' + esc(search) + '" data-category="' + esc(cat) + '">'
+                + '<img src="' + esc(img) + '" alt="' + esc(title) + '" loading="' + lazy + '" decoding="async" width="400" height="300">'
+                + '<span class="title">' + esc(title) + "</span></a>";
+              cardIndex++;
+            });
+            html += "</div></section>";
           });
           grid.innerHTML = html;
-          var el = document.getElementById("count-line");
-          if (el) el.textContent = items.length + " items for sale. This site is the catalog.";
+          inventoryReady = true;
+          apply((document.querySelector("#shop-search input") || {}).value
+            || (document.querySelector("#bar-search input") || {}).value
+            || "", currentCat);
         })
         .catch(function () {
           var el = document.getElementById("count-line");
