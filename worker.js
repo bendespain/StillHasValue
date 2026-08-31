@@ -454,9 +454,142 @@ async function handleSearch(request, env, url) {
   return json({ q: q, mode: mode, items: outItems });
 }
 
+
+const VOICE_MISS = { speak: "Say that again?", fields: {}, ready: false };
+const VOICE_FIELD_KEYS = ["title", "description", "condition", "category", "city", "zip", "name", "phone", "email", "access"];
+const VOICE_CONDITIONS = ["working", "needs minor repair", "for parts", "not sure"];
+const VOICE_CATEGORIES = ["furniture", "appliance", "electronics", "tools", "sporting/outdoor", "auto", "other"];
+
+function extractJson(text) {
+  if (!text) return null;
+  let s = String(text).trim();
+  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) s = fence[1].trim();
+  const start = s.indexOf("{");
+  const end = s.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) return null;
+  try {
+    return JSON.parse(s.slice(start, end + 1));
+  } catch (e) {
+    return null;
+  }
+}
+
+function pickVoiceFields(obj) {
+  const out = {};
+  if (!obj || typeof obj !== "object") return out;
+  for (const k of VOICE_FIELD_KEYS) {
+    if (obj[k] === undefined || obj[k] === null || obj[k] === "") continue;
+    if (k === "condition") {
+      const hit = VOICE_CONDITIONS.find((c) => c.toLowerCase() === String(obj[k]).trim().toLowerCase());
+      if (hit) out[k] = hit;
+      continue;
+    }
+    if (k === "category") {
+      const raw = String(obj[k]).trim().toLowerCase().replace(/\s+/g, " ");
+      const compact = raw.replace(/\s*\/\s*/g, "/");
+      const hit = VOICE_CATEGORIES.find((c) => c === compact || c === raw);
+      if (hit) out[k] = hit;
+      continue;
+    }
+    if (k === "zip") {
+      const z = zipOf(obj[k]);
+      if (z.length === 5) out[k] = z;
+      continue;
+    }
+    out[k] = String(obj[k]).trim();
+  }
+  return out;
+}
+
+function voiceReady(fields) {
+  const title = String(fields.title || "").trim();
+  const desc = String(fields.description || "").trim();
+  const z = zipOf(fields.zip);
+  const name = String(fields.name || "").trim();
+  const phone = String(fields.phone || "").trim();
+  return !!(title && desc.length >= 15 && z.length === 5 && name && phone);
+}
+
+function dropInventedContact(extracted, incoming, transcript) {
+  const tDigits = String(transcript || "").replace(/\D/g, "");
+  const out = Object.assign({}, extracted);
+  if (out.zip && !zipOf(incoming.zip)) {
+    const z = zipOf(out.zip);
+    if (!tDigits.includes(z)) delete out.zip;
+  }
+  if (out.phone && !String(incoming.phone || "").trim()) {
+    const p = String(out.phone).replace(/\D/g, "");
+    if (p.length < 7 || !tDigits.includes(p)) delete out.phone;
+  }
+  return out;
+}
+
+async function handleVoice(request, env) {
+  const headers = Object.assign({ "Content-Type": "application/json; charset=utf-8" }, corsHeaders());
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders() });
+  }
+  if (request.method !== "POST") {
+    return new Response("method not allowed", { status: 405, headers: corsHeaders() });
+  }
+  try {
+    const body = await request.json();
+    const transcript = String((body && body.transcript) || "").trim();
+    const fields = (body && body.fields && typeof body.fields === "object") ? body.fields : {};
+    const history = Array.isArray(body && body.history) ? body.history.slice(-6) : [];
+
+    const system =
+      "You help people request a FREE pickup from Still Has Value in the Salt Lake valley. We pick up items that still have resale value. Not junk hauling. Extract what they said into JSON. Never invent a phone number or zip. Only set phone or zip if they clearly said the digits. condition must be one of: working, needs minor repair, for parts, not sure. category must be one of: furniture, appliance, electronics, tools, sporting/outdoor, auto, other.\nKnown fields so far: " +
+      JSON.stringify(pickVoiceFields(fields)) +
+      '\nReply ONLY JSON: {"fields":{...only keys you are confident about...},"speak":"one short spoken question or recap","ready":false}\nSet ready true only when title, description (at least 15 characters), zip, name, and phone are present (in incoming fields or newly extracted). When ready, speak a one-sentence recap and ask them to confirm they want to send it.\nIf they said yes/submit/send it and ready, {"fields":{},"speak":"Sending your pickup request.","ready":true,"submit":true}\nIf the item is junk, a mattress, box spring, hazardous, chemicals, trash, or similar, speak that it is not a fit for free value pickup, set ready false, and do not set submit.';
+
+    const messages = [{ role: "system", content: system }];
+    for (const h of history) {
+      if (!h) continue;
+      const role = (h.role === "assistant" || h.role === "agent") ? "assistant" : "user";
+      const text = String(h.text || h.content || "").trim();
+      if (text) messages.push({ role, content: text });
+    }
+    messages.push({ role: "user", content: transcript || "(no speech)" });
+
+    const result = await env.AI.run("@cf/meta/llama-3.2-3b-instruct", {
+      messages,
+      max_tokens: 400,
+      temperature: 0.2,
+    });
+    const raw = typeof result === "string" ? result : (result && (result.response || result.result)) || "";
+    const parsed = extractJson(raw);
+    if (!parsed || typeof parsed !== "object") {
+      return new Response(JSON.stringify(VOICE_MISS), { status: 200, headers });
+    }
+    const extracted = dropInventedContact(pickVoiceFields(parsed.fields), fields, transcript);
+    const merged = Object.assign({}, pickVoiceFields(fields), extracted);
+    const junk = hasJunk(merged.title, merged.description);
+    const ready = !junk && voiceReady(merged);
+    const out = {
+      fields: extracted,
+      speak: String(parsed.speak || "Got it. What else?"),
+      ready,
+    };
+    if (junk) {
+      out.speak = "This doesn’t look like a fit for a free value pickup. We don’t haul junk, mattresses, or hazardous stuff.";
+      out.ready = false;
+    } else if (parsed.submit && ready) {
+      out.submit = true;
+    }
+    return new Response(JSON.stringify(out), { status: 200, headers });
+  } catch (e) {
+    return new Response(JSON.stringify(VOICE_MISS), { status: 200, headers });
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/voice") {
+      return handleVoice(request, env);
+    }
     if (url.pathname === "/api/search") {
       return handleSearch(request, env, url);
     }
