@@ -979,8 +979,16 @@ export default {
         return json({ ok: false, status: "error", reason: "could not save pickup" }, 502);
       }
     }
-    const assetRes = await env.ASSETS.fetch(request);
-    if (/\.(png|svg|ico|webmanifest|json)$/i.test(url.pathname) || /icon/i.test(url.pathname)) {
+    let assetRes = await env.ASSETS.fetch(request);
+    if (assetRes.status === 404 && url.pathname.startsWith("/shop/") && url.pathname.length > 6) {
+      const rest = url.pathname.slice(5);
+      if (rest && rest !== "/" && rest !== "/index.html") {
+        const fallback = new URL(request.url);
+        fallback.pathname = rest;
+        assetRes = await env.ASSETS.fetch(new Request(fallback.toString(), request));
+      }
+    }
+    if (/\.(png|svg|ico|jpe?g|webmanifest|json)$/i.test(url.pathname) || /icon/i.test(url.pathname)) {
       const headers = new Headers(assetRes.headers);
       headers.set("Access-Control-Allow-Origin", "*");
       return new Response(assetRes.body, { status: assetRes.status, headers });

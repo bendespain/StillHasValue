@@ -30,9 +30,10 @@
   </script>
   <style>
     :root { --hero: 0; --green: #15803d; --amber: #d97706; --bar: 64px; }
-    html { scroll-behavior: auto; overflow-x: hidden; }
+    html { scroll-behavior: auto; }
     body {
       margin: 0;
+      overflow-x: hidden;
       font-family: Arial, Helvetica, sans-serif;
       background: #f8f8f8;
       color: #1c1917;
@@ -223,7 +224,7 @@
     .cat-group { margin: 0 0 28px; }
     .cat-heading {
       position: sticky;
-      top: var(--bar);
+      top: 0;
       z-index: 4;
       margin: 0 0 10px;
       padding: 8px 0 6px;
@@ -233,6 +234,7 @@
       background: #f8f8f8;
       letter-spacing: .02em;
     }
+    #topbar.is-landed ~ main .cat-heading { top: var(--bar); }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
@@ -243,10 +245,8 @@
       background: #fff; border-radius: 12px; overflow: hidden;
       box-shadow: 0 2px 10px rgba(0,0,0,.1);
       color: inherit; text-decoration: none;
-      content-visibility: auto;
-      contain-intrinsic-size: 190px 210px;
     }
-    .card[hidden], .card.is-out { display: none !important; content-visibility: hidden !important; }
+    .card[hidden], .card.is-out { display: none !important; }
     .cat-group[hidden], .cat-group.is-out { display: none !important; }
     .card-media { position: relative; display: block; }
     .card img { width: 100%; height: 150px; object-fit: cover; display: block; background: #e7e5e4; }
@@ -303,6 +303,7 @@
         margin: 0 -16px calc(12px * (1 - var(--hero)));
       }
       .hero-truck { border-radius: 0; box-shadow: none; }
+      .cat-heading { position: static; }
       .chips {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -319,9 +320,9 @@
 <body>
   <a class="skip-link" href="#shop-now">Skip to inventory</a>
   <div id="topbar" inert aria-hidden="true">
-    <img class="bar-truck" src="Cybee with logo.jpg" alt="">
+    <img class="bar-truck" src="/Cybee with logo.jpg" alt="">
     <a class="bar-brand" href="/shop/">
-      <img class="bar-logo" src="stillhasvalue_black_trans.png" alt="Still Has Value">
+      <img class="bar-logo" src="/stillhasvalue_black_trans.png" alt="Still Has Value">
       <span class="bar-name">STILL HAS VALUE</span>
     </a>
     <form id="bar-search" role="search" action="/" method="get" onsubmit="return false;">
@@ -333,13 +334,13 @@
 
   <header class="hero" id="hero">
     <div class="hero-brand">
-      <img src="stillhasvalue_black_trans.png" alt="Still Has Value Logo" class="logo">
+      <img src="/stillhasvalue_black_trans.png" alt="Still Has Value Logo" class="logo">
       <h1>Still Has Value <span class="tag">— We Prove It</span></h1>
       <a class="hero-pickup" href="/pickup">Request a pickup</a>
       <p class="hero-ai-hint">Or talk it in with AI on your phone.</p>
     </div>
     <div class="hero-truck-wrap" id="hero-truck-wrap">
-      <img src="Cybee with logo.jpg" alt="Still Has Value Cybertruck" class="hero-truck" id="hero-truck">
+      <img src="/Cybee with logo.jpg" alt="Still Has Value Cybertruck" class="hero-truck" id="hero-truck">
     </div>
     <div class="hero-copy">
       <h2>Our fleet</h2>
@@ -925,7 +926,7 @@
               var cat = it._cat || "Other";
               var href = (it.channels && it.channels.ksl) || it.url || "#";
               var img = it.image || "";
-              var lazy = cardIndex < 18 ? "eager" : "lazy";
+              var eager = cardIndex < 24;
               var nPrice = Number(it.price);
               var hasPrice = it.price != null && it.price !== "" && isFinite(nPrice) && nPrice > 0;
               var priceLabel = "";
@@ -939,7 +940,7 @@
               var dataTitle = title + (priceLabel ? " " + priceLabel : "");
               html += '<a class="card" href="' + esc(href) + '" target="_blank" rel="noopener" data-id="' + esc(String(it.id)) + '" data-ord="' + cardIndex + '" data-title="' + esc(dataTitle) + '" data-search="' + esc(search) + '" data-category="' + esc(cat) + '">'
                 + '<span class="card-media">'
-                + '<img src="' + esc(img) + '" alt="' + esc(title) + '" loading="' + lazy + '" decoding="async" width="400" height="300">'
+                + '<img src="' + esc(img) + '" alt="' + esc(title) + '" loading="eager"' + (eager ? ' fetchpriority="high"' : "") + ' decoding="async" referrerpolicy="no-referrer" width="400" height="300">'
                 + (hasPrice ? '<span class="price">' + esc(priceLabel) + "</span>" : "")
                 + "</span>"
                 + '<span class="title">' + esc(title) + "</span>"
@@ -949,6 +950,15 @@
             html += "</div></section>";
           });
           grid.innerHTML = html;
+          grid.addEventListener("error", function (e) {
+            var img = e.target;
+            if (!img || img.tagName !== "IMG" || img.dataset.retried) return;
+            img.dataset.retried = "1";
+            var src = img.getAttribute("src") || "";
+            if (!src) return;
+            img.referrerPolicy = "no-referrer";
+            img.src = src;
+          }, true);
           inventoryReady = true;
           var initial = liveSearchValue();
           if (initial.trim().length < 2) {
