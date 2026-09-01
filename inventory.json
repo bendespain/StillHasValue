@@ -17,6 +17,7 @@
     {
       "id": "78756946",
       "title": "Kids Razor Moped scooter electric 24v",
+      "price": 150,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/e42885c3-4f84-4ca1-8d25-930b99d07158.jpg?filter=marketplace/400x300_cropped",
@@ -30,6 +31,7 @@
     {
       "id": "78757003",
       "title": "Razor electric motorcycle 24v",
+      "price": 150,
       "category": "Powersports",
       "status": "available",
       "image": "https://image.ksldigital.com/8e529ad6-b63d-4cb6-8c4c-05115e53f771.jpg?filter=marketplace/400x300_cropped",
@@ -43,6 +45,7 @@
     {
       "id": "78757058",
       "title": "Razor Electric Moped scooter 12v",
+      "price": 125,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/9649ff1b-de6c-4e4f-8e81-61dfc355caaa.jpg?filter=marketplace/400x300_cropped",
@@ -56,6 +59,7 @@
     {
       "id": "78757150",
       "title": "Razor 36v adult electric scooter",
+      "price": 245,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/039624dc-ca2e-4057-a273-bace01f19f6c.jpg?filter=marketplace/400x300_cropped",
@@ -69,6 +73,7 @@
     {
       "id": "78757171",
       "title": "Turboant Electric Scooter X7 Pro model X8",
+      "price": 275,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/1966d625-b381-450c-8d8b-a64f27abf507.jpg?filter=marketplace/400x300_cropped",
@@ -82,6 +87,7 @@
     {
       "id": "78763081",
       "title": "2013 John Deere D140 Riding Mower (low 142hrs)",
+      "price": 1825,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/8f2368ad-8ec7-45fd-8598-467fddfdb778.jpg?filter=marketplace/400x300_cropped",
@@ -238,6 +244,7 @@
     {
       "id": "79962054",
       "title": "4000 watt Dayton Honda generator",
+      "price": 400,
       "category": "Power & tools",
       "status": "available",
       "image": "https://image.ksldigital.com/5a386695-25f5-4793-940f-51137c6edd42.jpg?filter=marketplace/400x300_cropped",
@@ -316,6 +323,7 @@
     {
       "id": "80345040",
       "title": "X Hover Pioneer Electric Scooter",
+      "price": 255,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/84b2b3ef-a7d7-4b38-9fbf-9c1f53a8b12c.jpg?filter=marketplace/400x300_cropped",
@@ -342,6 +350,7 @@
     {
       "id": "80369066",
       "title": "80s 33ft Camp Trailer, title in hand.",
+      "price": 3500,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/8da99c30-81bf-42ca-867d-d49aca166d54.jpg?filter=marketplace/400x300_cropped",
@@ -394,6 +403,7 @@
     {
       "id": "80419320",
       "title": "2015 iMac 27in with boot up issues",
+      "price": 275,
       "category": "Electronics",
       "status": "available",
       "image": "https://image.ksldigital.com/edab7a36-27c0-4061-8f43-80e18adeab3a.jpg?filter=marketplace/400x300_cropped",
@@ -407,6 +417,7 @@
     {
       "id": "80440817",
       "title": "2020 150cc Mountopz ATV 4 Wheeler",
+      "price": 1850,
       "category": "Powersports",
       "status": "available",
       "image": "https://image.ksldigital.com/35986c25-018e-4409-8fb6-0cbc14b9a3aa.jpg?filter=marketplace/400x300_cropped",
@@ -615,6 +626,7 @@
     {
       "id": "80715531",
       "title": "2024 Goodman Furnace and AC",
+      "price": 2480,
       "category": "Appliances",
       "status": "available",
       "image": "https://image.ksldigital.com/c9a51266-5bf2-4643-a07a-dc9b2d426ce2.jpg?filter=marketplace/400x300_cropped",
@@ -654,6 +666,7 @@
     {
       "id": "80737543",
       "title": "Yamaha 4hp outboard",
+      "price": 1100,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/edc79626-d12b-43ec-b9a0-1316326eca82.jpg?filter=marketplace/400x300_cropped",
@@ -823,6 +836,7 @@
     {
       "id": "76290681",
       "title": "Honda Generator EM 5000 IS",
+      "price": 2250,
       "category": "Power & tools",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1722455436-36837.jpg?filter=marketplace/400x300_cropped",
@@ -862,6 +876,7 @@
     {
       "id": "77567434",
       "title": "50\" Seiki LED-backlit 4K HDTV",
+      "price": 175,
       "category": "Electronics",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1734837408-405048.jpg?filter=marketplace/400x300_cropped",
@@ -875,6 +890,7 @@
     {
       "id": "77860471",
       "title": "Shop Smith Mark V (ShopSmith Mark 5)",
+      "price": 550,
       "category": "Power & tools",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1738440820-816437.jpg?filter=marketplace/400x300_cropped",
@@ -953,6 +969,7 @@
     {
       "id": "78675703",
       "title": "Small and quiet GP2200i Generac Generator",
+      "price": 465,
       "category": "Power & tools",
       "status": "available",
       "image": "https://image.ksldigital.com/905fc557-f0a3-44c7-9b0c-db6fa35b7161.jpg?filter=marketplace/400x300_cropped",
@@ -966,6 +983,7 @@
     {
       "id": "78696028",
       "title": "2005 John Deere L100 Riding Mower, no hood",
+      "price": 1150,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/7308693b-7114-4de2-9dee-105660e4f72f.jpg?filter=marketplace/400x300_cropped",
@@ -1018,6 +1036,7 @@
     {
       "id": "79574140",
       "title": "John Deere LT155 42in Freedom Mulcher",
+      "price": 1100,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/3b401f5d-ba05-4024-ad2a-c59f29517502.jpg?filter=marketplace/400x300_cropped",
@@ -1070,6 +1089,7 @@
     {
       "id": "80618930",
       "title": "1992 Club Car Golf Cart 36v Lead Acid",
+      "price": 2500,
       "category": "Home",
       "status": "available",
       "image": "https://image.ksldigital.com/b6bdfd28-6019-4353-b52a-0a4580cd7fe7.jpg?filter=marketplace/400x300_cropped",
@@ -1213,6 +1233,7 @@
     {
       "id": "73499657",
       "title": "2004 skidoo summit 800 snowmobile",
+      "price": 1500,
       "category": "Powersports",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1697319957-900556.jpg?filter=marketplace/400x300_cropped",
@@ -1356,6 +1377,7 @@
     {
       "id": "74809317",
       "title": "Massage chair, ijoy like, Relax@home",
+      "price": 400,
       "category": "Home",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1709584997-659849.jpg?filter=marketplace/400x300_cropped",
@@ -1525,6 +1547,7 @@
     {
       "id": "77838943",
       "title": "iJoy-320 massage chair with dual leg functions",
+      "price": 450,
       "category": "Home",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1738189695-693319.jpg?filter=marketplace/400x300_cropped",
@@ -1538,6 +1561,7 @@
     {
       "id": "77972672",
       "title": "Electric Start Sno-Tek by Ariens 24 in StormForce",
+      "price": 320,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1739818132-230689.jpg?filter=marketplace/400x300_cropped",
@@ -1668,6 +1692,7 @@
     {
       "id": "78639480",
       "title": "Osim UComfort massage chair",
+      "price": 475,
       "category": "Home",
       "status": "available",
       "image": "https://image.ksldigital.com/8c9b5d69-e8b5-4413-b790-f0e39f9da2da.jpg?filter=marketplace/400x300_cropped",
