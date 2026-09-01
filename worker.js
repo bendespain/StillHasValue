@@ -227,7 +227,7 @@ function pickupSchemaInfo() {
 // --- lexical search (client may mirror) ---
 const SYN_GROUPS = [
   ["mower", "lawnmower", "lawn mower", "riding mower", "tractor", "deere", "cut grass"],
-  ["scooter", "moped", "ebike", "e-bike", "electric bike", "mobility", "razor", "wheelchair", "jazzy"],
+  ["mobile", "mobility", "vehicle", "vehicles", "rideable", "rideables", "ride", "powersports", "scooter", "moped", "ebike", "e-bike", "electric bike", "razor", "wheelchair", "jazzy", "atv", "quad", "four wheeler", "4wheeler", "motorcycle", "dirt bike", "moto", "go kart", "go-kart", "gokart", "go cart", "go-cart", "gocart", "golf cart", "cart", "snowmobile", "tricycle", "hover"],
   ["washer", "dryer", "laundry", "washing machine"],
   ["ac", "air conditioner", "aircon", "cooling", "hvac", "swamp cooler", "evaporative"],
   ["generator", "inverter", "genset"],
@@ -237,12 +237,12 @@ const SYN_GROUPS = [
   ["snowblower", "snow blower", "snow thrower"],
   ["pressure washer", "power washer"],
   ["trailer", "camper", "rv", "fifth wheel"],
-  ["atv", "quad", "four wheeler", "4wheeler"],
-  ["motorcycle", "dirt bike", "moto"],
   ["microwave", "oven"],
   ["chair", "recliner", "massage chair"],
   ["computer", "pc", "imac", "desktop", "laptop"],
 ];
+
+const EXPAND_GENERIC = { electric:1, machine:1, machines:1, powered:1, start:1, four:1, go:1, lawn:1, golf:1, dirt:1, bike:1 };
 
 function tokenize(s) {
   const lower = String(s || "").toLowerCase();
@@ -331,9 +331,8 @@ function expandTokens(tokens, rawText) {
     if (synGroupMatches(group, tokens, rawText)) {
       for (let i = 0; i < group.length; i++) {
         const parts = group[i].replace(/-/g, " ").replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/);
-        const GENERIC = { electric:1, machine:1, machines:1, powered:1, start:1 };
         for (let j = 0; j < parts.length; j++) {
-          if (parts[j] && !GENERIC[parts[j]]) set[parts[j]] = 1;
+          if (parts[j] && !EXPAND_GENERIC[parts[j]]) set[parts[j]] = 1;
         }
         const collapsed = group[i].replace(/-/g, "").replace(/[^a-z0-9]+/g, "");
         if (collapsed) set[collapsed] = 1;
@@ -353,8 +352,9 @@ const STOP = { to:1, the:1, a:1, an:1, of:1, for:1, and:1, or:1, in:1, on:1, at:
 function lexicalScore(q, title, category) {
   const qTokens = tokenize(q).filter((t) => t.length > 1 && !STOP[t]);
   if (!qTokens.length) return 0;
-  const titleTokens = tokenize(title);
-  const titleExp = expandTokens(titleTokens, title);
+  const blob = (String(title || "") + " " + String(category || "")).trim();
+  const titleTokens = tokenize(blob);
+  const titleExp = expandTokens(titleTokens, blob);
   const titleExpSet = Object.create(null);
   for (let i = 0; i < titleExp.length; i++) titleExpSet[titleExp[i]] = 1;
   let matched = 0;
@@ -394,12 +394,57 @@ function lexicalScore(q, title, category) {
   }
   // Phrase synonym: "cut grass" shares the mower group even if no single token matched.
   for (let g = 0; g < SYN_GROUPS.length; g++) {
-    if (synGroupMatches(SYN_GROUPS[g], qTokens, q) && synGroupMatches(SYN_GROUPS[g], titleTokens, title)) {
+    if (synGroupMatches(SYN_GROUPS[g], qTokens, q) && synGroupMatches(SYN_GROUPS[g], titleTokens, blob)) {
       score = Math.max(score, 0.72);
       break;
     }
   }
   return score;
+}
+
+
+function searchExplain(q) {
+  const qDisplay = String(q || "").trim();
+  if (!qDisplay) return "";
+  const qTokens = tokenize(qDisplay).filter((t) => t.length > 1 && !STOP[t]);
+  if (!qTokens.length) return "";
+  const qSet = Object.create(null);
+  for (let i = 0; i < qTokens.length; i++) qSet[qTokens[i]] = 1;
+  const ql = qDisplay.toLowerCase();
+  const hitGroups = [];
+  for (let g = 0; g < SYN_GROUPS.length; g++) {
+    if (synGroupMatches(SYN_GROUPS[g], qTokens, qDisplay)) hitGroups.push(SYN_GROUPS[g]);
+  }
+  if (hitGroups.length) {
+    const seen = Object.create(null);
+    const examples = [];
+    for (let h = 0; h < hitGroups.length; h++) {
+      const group = hitGroups[h];
+      for (let i = 0; i < group.length; i++) {
+        const phrase = group[i];
+        if (!phrase || phrase === ql || qSet[phrase] || seen[phrase] || EXPAND_GENERIC[phrase]) continue;
+        if (phrase.indexOf(ql) === 0 || ql.indexOf(phrase) === 0) continue;
+        seen[phrase] = 1;
+        examples.push(phrase);
+        if (examples.length >= 4) break;
+      }
+      if (examples.length >= 4) break;
+    }
+    let isRide = false;
+    for (let h = 0; h < hitGroups.length; h++) {
+      const g = hitGroups[h];
+      if (g.indexOf("moped") !== -1 && g.indexOf("scooter") !== -1) { isRide = true; break; }
+    }
+    if (isRide) {
+      return "Showing rideables and small vehicles related to “" + qDisplay + "” — mopeds, scooters, carts, and similar — even when the title doesn’t say “" + qDisplay + "”.";
+    }
+    const extra = examples.length ? " like " + examples.slice(0, 3).join(", ") : "";
+    return "Including related listings" + extra + " even if the title doesn’t say “" + qDisplay + "”.";
+  }
+  if (qTokens.length <= 1) {
+    return "Only items that are actually “" + qDisplay + "” — the title or category needs to match that word, not a loose guess.";
+  }
+  return "Matching “" + qDisplay + "” by the words you typed and close meaning, not the whole catalog.";
 }
 
 function cosine(a, b) {
@@ -442,7 +487,7 @@ async function ensureItemVecs(ai, items) {
   const texts = items.map((it) => {
     const title = String(it.title || "");
     const cat = String(it.category || "");
-    return title + " " + cat + " " + aliasBlob(title);
+    return title + " " + cat + " " + aliasBlob(title + " " + cat);
   });
   const vecs = await embedTexts(ai, texts);
   const map = Object.create(null);
@@ -480,7 +525,7 @@ async function handleSearch(request, env, url) {
   try {
     items = await loadInventory(env, request);
   } catch (e) {
-    return json({ q: q, mode: "lexical", items: [] }, 200);
+    return json({ q: q, mode: "lexical", items: [], explain: "" }, 200);
   }
   if (category) {
     items = items.filter((it) => String(it.category || "") === category);
@@ -491,6 +536,7 @@ async function handleSearch(request, env, url) {
       q: q,
       mode: "lexical",
       items: items.map((it) => ({ id: String(it.id), score: 1 })),
+      explain: "",
     });
   }
 
@@ -545,7 +591,7 @@ async function handleSearch(request, env, url) {
     if (keep && score > 0) outItems.push({ id: row.id, score: Math.round(score * 1000) / 1000 });
   }
   outItems.sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : 1));
-  return json({ q: q, mode: mode, items: outItems });
+  return json({ q: q, mode: mode, items: outItems, explain: searchExplain(q) });
 }
 
 

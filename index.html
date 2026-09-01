@@ -169,7 +169,10 @@
     main { padding: 28px 16px 56px; max-width: 1280px; margin: 0 auto; }
     #shop-now h2 { color: var(--amber); margin: 0 0 8px; }
     .shop-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 14px; }
-    .shop-head p { margin: 0; color: #292524; flex: 1 1 200px; }
+    .count-block { flex: 1 1 220px; min-width: 0; }
+    #count-line { margin: 0; color: #292524; }
+    .search-explain { margin: 6px 0 0; color: #57534e; font-size: 0.88rem; line-height: 1.45; }
+    .search-explain[hidden] { display: none !important; }
     .shop-search { display: flex; gap: 8px; flex: 1 1 240px; max-width: 480px; }
     .shop-search input {
       flex: 1; border: 1px solid #d6d3d1; border-radius: 999px; padding: 10px 14px; font-size: 15px;
@@ -310,7 +313,10 @@
     <section id="shop-now">
       <h2>Shop Our Current Inventory</h2>
       <div class="shop-head">
-        <p id="count-line">Loading inventory…</p>
+        <div class="count-block">
+          <p id="count-line">Loading inventory…</p>
+          <p id="search-explain" class="search-explain" hidden></p>
+        </div>
         <form class="shop-search" id="shop-search" role="search" action="/" method="get" onsubmit="return false;">
           <input type="search" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off">
           <button type="submit">Search</button>
@@ -503,7 +509,7 @@
 
       var SYN_GROUPS = [
         ["mower", "lawnmower", "lawn mower", "riding mower", "tractor", "deere", "grass", "yard", "cut grass"],
-        ["scooter", "moped", "ebike", "e-bike", "electric bike", "mobility", "razor", "wheelchair", "jazzy"],
+        ["mobile", "mobility", "vehicle", "vehicles", "rideable", "rideables", "ride", "powersports", "scooter", "moped", "ebike", "e-bike", "electric bike", "razor", "wheelchair", "jazzy", "atv", "quad", "four wheeler", "4wheeler", "motorcycle", "dirt bike", "moto", "go kart", "go-kart", "gokart", "go cart", "go-cart", "gocart", "golf cart", "cart", "snowmobile", "tricycle", "hover"],
         ["washer", "dryer", "laundry", "washing machine"],
         ["ac", "air conditioner", "aircon", "cooling", "hvac", "swamp cooler", "evaporative"],
         ["generator", "inverter", "power"],
@@ -513,14 +519,12 @@
         ["snowblower", "snow blower", "snow thrower"],
         ["pressure washer", "power washer"],
         ["trailer", "camper", "rv", "fifth wheel"],
-        ["atv", "quad", "four wheeler", "4wheeler"],
-        ["motorcycle", "dirt bike", "moto"],
         ["microwave", "oven"],
         ["chair", "recliner", "massage chair"],
         ["computer", "pc", "imac", "desktop", "laptop"]
       ];
       var STOP = { to:1, the:1, a:1, an:1, of:1, for:1, and:1, or:1, in:1, on:1, at:1, is:1, it:1, something:1, some:1, any:1, please:1, with:1, this:1, that:1, from:1 };
-      var GENERIC = { electric:1, machine:1, machines:1, powered:1, start:1 };
+      var GENERIC = { electric:1, machine:1, machines:1, powered:1, start:1, four:1, go:1, lawn:1, golf:1, dirt:1, bike:1 };
 
       function tokenize(s) {
         var lower = String(s || "").toLowerCase();
@@ -564,19 +568,25 @@
         for (var i = 0; i < bag.length; i++) if (tokenMatch(token, bag[i])) return true;
         return false;
       }
-      function expandTokens(tokens, rawText) {
-        var set = {}, i, g, phrase, parts, collapsed, hit, j;
+      function synGroupMatches(group, tokens, rawText) {
+        var set = {}, i, phrase;
         for (i = 0; i < tokens.length; i++) set[tokens[i]] = 1;
         var hay = " " + String(rawText || tokens.join(" ")).toLowerCase().replace(/[^a-z0-9]+/g, " ") + " ";
-        for (g = 0; g < SYN_GROUPS.length; g++) {
-          hit = false;
-          for (i = 0; i < SYN_GROUPS[g].length; i++) {
-            phrase = SYN_GROUPS[g][i];
-            if (phrase.indexOf(" ") !== -1) {
-              if (hay.indexOf(" " + phrase + " ") !== -1) { hit = true; break; }
-            } else if (set[phrase]) { hit = true; break; }
+        for (i = 0; i < group.length; i++) {
+          phrase = group[i];
+          if (phrase.indexOf(" ") !== -1) {
+            if (hay.indexOf(" " + phrase + " ") !== -1) return true;
+          } else if (set[phrase] || (phrase.length >= 4 && set[phrase + "s"]) || (phrase.length >= 5 && phrase.charAt(phrase.length - 1) === "s" && set[phrase.slice(0, -1)])) {
+            return true;
           }
-          if (!hit) continue;
+        }
+        return false;
+      }
+      function expandTokens(tokens, rawText) {
+        var set = {}, i, g, parts, collapsed, j;
+        for (i = 0; i < tokens.length; i++) set[tokens[i]] = 1;
+        for (g = 0; g < SYN_GROUPS.length; g++) {
+          if (!synGroupMatches(SYN_GROUPS[g], tokens, rawText)) continue;
           for (i = 0; i < SYN_GROUPS[g].length; i++) {
             parts = SYN_GROUPS[g][i].replace(/-/g, " ").replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/);
             for (j = 0; j < parts.length; j++) if (parts[j] && !GENERIC[parts[j]]) set[parts[j]] = 1;
@@ -589,11 +599,12 @@
       function lexicalScore(q, title, category) {
         var qTokens = tokenize(q).filter(function (t) { return t.length > 1 && !STOP[t]; });
         if (!qTokens.length) return 0;
-        var titleTokens = tokenize(title);
-        var titleExp = expandTokens(titleTokens, title);
+        var blob = (String(title || "") + " " + String(category || "")).trim();
+        var titleTokens = tokenize(blob);
+        var titleExp = expandTokens(titleTokens, blob);
         var titleExpSet = {};
         titleExp.forEach(function (t) { titleExpSet[t] = 1; });
-        var matched = 0, direct = 0, i, j, qt, ok, isDirect, alts;
+        var matched = 0, direct = 0, i, j, qt, ok, isDirect, alts, g, score;
         for (i = 0; i < qTokens.length; i++) {
           qt = qTokens[i];
           isDirect = false;
@@ -608,13 +619,72 @@
           if (ok) matched++;
           if (isDirect) direct++;
         }
-        if (!matched) return 0;
-        var score = (direct * 1 + (matched - direct) * 0.72) / qTokens.length;
-        var catTok = tokenize(category);
-        for (i = 0; i < qTokens.length; i++) {
-          if (anyTokenMatch(qTokens[i], catTok)) { score = Math.min(1, score + 0.12); break; }
+        score = 0;
+        if (matched) {
+          score = (direct * 1 + (matched - direct) * 0.72) / qTokens.length;
+          var catTok = tokenize(category);
+          for (i = 0; i < qTokens.length; i++) {
+            if (anyTokenMatch(qTokens[i], catTok)) { score = Math.min(1, score + 0.12); break; }
+          }
+        }
+        for (g = 0; g < SYN_GROUPS.length; g++) {
+          if (synGroupMatches(SYN_GROUPS[g], qTokens, q) && synGroupMatches(SYN_GROUPS[g], titleTokens, blob)) {
+            score = Math.max(score, 0.72);
+            break;
+          }
         }
         return score;
+      }
+      function searchExplain(q) {
+        var qDisplay = String(q || "").trim();
+        if (!qDisplay) return "";
+        var qTokens = tokenize(qDisplay).filter(function (t) { return t.length > 1 && !STOP[t]; });
+        if (!qTokens.length) return "";
+        var qSet = {}, i, g, h, phrase, ql = qDisplay.toLowerCase();
+        for (i = 0; i < qTokens.length; i++) qSet[qTokens[i]] = 1;
+        var hitGroups = [];
+        for (g = 0; g < SYN_GROUPS.length; g++) {
+          if (synGroupMatches(SYN_GROUPS[g], qTokens, qDisplay)) hitGroups.push(SYN_GROUPS[g]);
+        }
+        if (hitGroups.length) {
+          var seen = {}, examples = [], isRide = false;
+          for (h = 0; h < hitGroups.length; h++) {
+            var group = hitGroups[h];
+            if (group.indexOf("moped") !== -1 && group.indexOf("scooter") !== -1) isRide = true;
+            for (i = 0; i < group.length; i++) {
+              phrase = group[i];
+              if (!phrase || phrase === ql || qSet[phrase] || seen[phrase] || GENERIC[phrase]) continue;
+              if (phrase.indexOf(ql) === 0 || ql.indexOf(phrase) === 0) continue;
+              seen[phrase] = 1;
+              examples.push(phrase);
+              if (examples.length >= 4) break;
+            }
+            if (examples.length >= 4) break;
+          }
+          if (isRide) {
+            return "Showing rideables and small vehicles related to \u201c" + qDisplay + "\u201d \u2014 mopeds, scooters, carts, and similar \u2014 even when the title doesn\u2019t say \u201c" + qDisplay + "\u201d.";
+          }
+          var extra = examples.length ? " like " + examples.slice(0, 3).join(", ") : "";
+          return "Including related listings" + extra + " even if the title doesn\u2019t say \u201c" + qDisplay + "\u201d.";
+        }
+        if (qTokens.length <= 1) {
+          return "Only items that are actually \u201c" + qDisplay + "\u201d \u2014 the title or category needs to match that word, not a loose guess.";
+        }
+        return "Matching \u201c" + qDisplay + "\u201d by the words you typed and close meaning, not the whole catalog.";
+      }
+      function setExplain(text) {
+        var el = document.getElementById("search-explain");
+        if (!el) return;
+        var t = String(text || "").trim();
+        if (!t) {
+          el.textContent = "";
+          el.hidden = true;
+          el.setAttribute("hidden", "");
+        } else {
+          el.textContent = t;
+          el.hidden = false;
+          el.removeAttribute("hidden");
+        }
       }
 
       function updateCount(n, q) {
@@ -721,7 +791,7 @@
         return n;
       }
       // Hybrid floors live in worker.js handleSearch (1-token: lex or sem>=0.78; phrase embed-only >=0.68; include >=0.60 unless lex>=0.5). This fallback is lexical-only.
-      function applyClientLexical(q) {
+      function applyClientLexical(q, showExplain) {
         var rows = [];
         document.querySelectorAll("#grid .card").forEach(function (c) {
           var score = lexicalScore(q, c.getAttribute("data-title") || "", c.getAttribute("data-category") || "");
@@ -730,13 +800,16 @@
         rows.sort(function (a, b) { return b.score - a.score; });
         var n = applyResults(rows);
         updateCount(n, q);
+        if (showExplain) setExplain(searchExplain(q));
+        else setExplain("");
       }
 
-      function apply(query, category) {
+      function apply(query, category, opts) {
         var raw = query == null ? liveSearchValue() : String(query);
         if (!raw.trim()) raw = liveSearchValue();
         if (category !== undefined) currentCat = category || "";
         var q = raw.trim();
+        var showExplain = !!(opts && opts.explain);
         inputs.forEach(function (i) { if (i.value !== raw) i.value = raw; });
         syncChips();
         if (!inventoryReady) return;
@@ -744,9 +817,11 @@
           searchGen++;
           if (searchAbort) { try { searchAbort.abort(); } catch (e) {} searchAbort = null; }
           syncSearchUrl("");
+          setExplain("");
           showAllInCategory();
           return;
         }
+        if (!showExplain) setExplain("");
         syncSearchUrl(q);
         var gen = ++searchGen;
         var url = "/api/search?q=" + encodeURIComponent(q);
@@ -759,11 +834,13 @@
             if (gen !== searchGen) return;
             var n = applyResults(data.items || []);
             updateCount(n, q);
+            if (showExplain) setExplain((data && data.explain) || searchExplain(q));
+            else setExplain("");
           })
           .catch(function (err) {
             if (gen !== searchGen) return;
             if (err && err.name === "AbortError") return;
-            applyClientLexical(q);
+            applyClientLexical(q, showExplain);
           });
       }
 
@@ -775,7 +852,7 @@
           clearTimeout(searchTimer);
           var input = form.querySelector("input");
           var v = (input && input.value != null ? String(input.value) : "") || liveSearchValue();
-          apply(v);
+          apply(v, undefined, { explain: true });
           return false;
         });
         var inputEl = form.querySelector("input");
@@ -791,7 +868,7 @@
             e.preventDefault();
             e.stopPropagation();
             clearTimeout(searchTimer);
-            apply(e.target.value || liveSearchValue());
+            apply(e.target.value || liveSearchValue(), undefined, { explain: true });
           }
         });
       }
@@ -881,7 +958,7 @@
             var fromUrl = urlSearchQuery();
             if (fromUrl.trim()) initial = fromUrl;
           }
-          apply(initial, currentCat);
+          apply(initial, currentCat, { explain: initial.trim().length >= 2 });
         })
         .catch(function () {
           var el = document.getElementById("count-line");
