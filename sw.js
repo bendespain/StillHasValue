@@ -1,11 +1,7 @@
-const CACHE = "shv-pickup-v2";
+const CACHE = "shv-pickup-v3";
 const PRECACHE = [
-  "/pickup",
-  "/pickup.html",
   "/pickup.webmanifest",
   "/pickup-apple-touch-icon.png",
-  "/stillhasvalue_logo1024x1024_black.jpg",
-  "/stillhasvalue_black_trans.png",
   "/pickup-icon-192.png"
 ];
 
@@ -18,7 +14,11 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener("fetch", (event) => {
@@ -26,23 +26,25 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET" || url.pathname === "/api/pickup") {
     return;
   }
+  const isPickupPage = url.pathname === "/pickup" || url.pathname === "/pickup.html";
+  if (isPickupPage) {
+    event.respondWith(
+      fetch(event.request).then((res) => {
+        return res;
+      }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
   const cacheable =
-    url.pathname === "/pickup" ||
-    url.pathname === "/pickup.html" ||
     url.pathname === "/pickup.webmanifest" ||
     url.pathname === "/pickup-apple-touch-icon.png" ||
-    url.pathname === "/stillhasvalue_logo1024x1024_black.jpg" ||
-    url.pathname === "/stillhasvalue_black_trans.png" ||
     url.pathname === "/pickup-icon-192.png";
   if (!cacheable) return;
   event.respondWith(
-    caches.match(event.request).then((hit) => {
-      if (hit) return hit;
-      return fetch(event.request).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((cache) => cache.put(event.request, copy));
-        return res;
-      });
-    })
+    fetch(event.request).then((res) => {
+      const copy = res.clone();
+      caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+      return res;
+    }).catch(() => caches.match(event.request))
   );
 });
