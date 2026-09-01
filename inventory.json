@@ -17,7 +17,7 @@
     {
       "id": "78756946",
       "title": "Kids Razor Moped scooter electric 24v",
-      "price": 150,
+      "price": 120,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/e42885c3-4f84-4ca1-8d25-930b99d07158.jpg?filter=marketplace/400x300_cropped",
@@ -31,7 +31,7 @@
     {
       "id": "78757003",
       "title": "Razor electric motorcycle 24v",
-      "price": 150,
+      "price": 120,
       "category": "Powersports",
       "status": "available",
       "image": "https://image.ksldigital.com/8e529ad6-b63d-4cb6-8c4c-05115e53f771.jpg?filter=marketplace/400x300_cropped",
@@ -45,7 +45,7 @@
     {
       "id": "78757058",
       "title": "Razor Electric Moped scooter 12v",
-      "price": 125,
+      "price": 100,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/9649ff1b-de6c-4e4f-8e81-61dfc355caaa.jpg?filter=marketplace/400x300_cropped",
@@ -87,7 +87,7 @@
     {
       "id": "78763081",
       "title": "2013 John Deere D140 Riding Mower (low 142hrs)",
-      "price": 1825,
+      "price": 1472,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/8f2368ad-8ec7-45fd-8598-467fddfdb778.jpg?filter=marketplace/400x300_cropped",
@@ -115,7 +115,7 @@
     {
       "id": "78796686",
       "title": "Pacific Hydrostar 1650 PSI pressure washer",
-      "price": 80,
+      "price": 64,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/a9e70026-8d72-4c7b-9de3-def44fcf840c.jpg?filter=marketplace/400x300_cropped",
@@ -151,7 +151,8 @@
         "ksl": "https://classifieds.ksl.com/listing/79468027",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 500
     },
     {
       "id": "79484367",
@@ -170,7 +171,7 @@
     {
       "id": "79497625",
       "title": "Fairly new portable Easy Life Washer",
-      "price": 255,
+      "price": 155,
       "category": "Appliances",
       "status": "available",
       "image": "https://image.ksldigital.com/507380b1-e9fd-4148-bf47-d95d46ac297a.jpg?filter=marketplace/400x300_cropped",
@@ -184,7 +185,7 @@
     {
       "id": "79766361",
       "title": "e mobility scooter",
-      "price": 1700,
+      "price": 950,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/78b2a02d-0c4f-4b5c-af55-eba5002399be.jpg?filter=marketplace/400x300_cropped",
@@ -234,7 +235,8 @@
         "ksl": "https://classifieds.ksl.com/listing/79961838",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 125
     },
     {
       "id": "79962034",
@@ -247,12 +249,13 @@
         "ksl": "https://classifieds.ksl.com/listing/79962034",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 178
     },
     {
       "id": "79962054",
       "title": "4000 watt Dayton Honda generator",
-      "price": 400,
+      "price": 178,
       "category": "Power & tools",
       "status": "available",
       "image": "https://image.ksldigital.com/5a386695-25f5-4793-940f-51137c6edd42.jpg?filter=marketplace/400x300_cropped",
@@ -274,12 +277,13 @@
         "ksl": "https://classifieds.ksl.com/listing/79962067",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 275
     },
     {
       "id": "79962084",
       "title": "green machine electric big wheel",
-      "price": 225,
+      "price": 126,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/38993e95-4eaa-425a-8fb4-f2953f965049.jpg?filter=marketplace/400x300_cropped",
@@ -293,7 +297,7 @@
     {
       "id": "79976164",
       "title": "Danby portable AC 10400 BTU",
-      "price": 240,
+      "price": 125,
       "category": "Appliances",
       "status": "available",
       "image": "https://image.ksldigital.com/a29bc9a7-2b9e-4f22-9b55-366ece5b5a72.jpg?filter=marketplace/400x300_cropped",
@@ -307,7 +311,7 @@
     {
       "id": "80088543",
       "title": "WEN 3800W inverter generator",
-      "price": 650,
+      "price": 520,
       "category": "Power & tools",
       "status": "available",
       "image": "https://image.ksldigital.com/3b10323c-2b3b-4554-9b9b-4bcb8163a55d.jpg?filter=marketplace/400x300_cropped",
@@ -321,7 +325,7 @@
     {
       "id": "80113371",
       "title": "Stainless microwave with faceplate",
-      "price": 158,
+      "price": 120,
       "category": "Appliances",
       "status": "available",
       "image": "https://image.ksldigital.com/442b402f-fb07-4668-90a3-dc347e4b6a37.jpg?filter=marketplace/400x300_cropped",
@@ -335,7 +339,7 @@
     {
       "id": "80345040",
       "title": "X Hover Pioneer Electric Scooter",
-      "price": 255,
+      "price": 225,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/84b2b3ef-a7d7-4b38-9fbf-9c1f53a8b12c.jpg?filter=marketplace/400x300_cropped",
@@ -349,7 +353,7 @@
     {
       "id": "80345143",
       "title": "Ninebot ES1L Electric Scooter",
-      "price": 275,
+      "price": 175,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/09bff6da-6ae8-404c-8501-560417031d19.jpg?filter=marketplace/400x300_cropped",
@@ -363,7 +367,7 @@
     {
       "id": "80369066",
       "title": "80s 33ft Camp Trailer, title in hand.",
-      "price": 3500,
+      "price": 3000,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/8da99c30-81bf-42ca-867d-d49aca166d54.jpg?filter=marketplace/400x300_cropped",
@@ -385,12 +389,13 @@
         "ksl": "https://classifieds.ksl.com/listing/80419117",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 195
     },
     {
       "id": "80419141",
       "title": "HP Officejet Pro 8625",
-      "price": 355,
+      "price": 275,
       "category": "Electronics",
       "status": "available",
       "image": "https://image.ksldigital.com/99649c45-99c0-4d89-ba53-dfc493431572.jpg?filter=marketplace/400x300_cropped",
@@ -432,7 +437,7 @@
     {
       "id": "80440817",
       "title": "2020 150cc Mountopz ATV 4 Wheeler",
-      "price": 1850,
+      "price": 1650,
       "category": "Powersports",
       "status": "available",
       "image": "https://image.ksldigital.com/35986c25-018e-4409-8fb6-0cbc14b9a3aa.jpg?filter=marketplace/400x300_cropped",
@@ -524,7 +529,8 @@
         "ksl": "https://classifieds.ksl.com/listing/80550030",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 125
     },
     {
       "id": "80576748",
@@ -565,7 +571,8 @@
         "ksl": "https://classifieds.ksl.com/listing/80576784",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 170
     },
     {
       "id": "80612792",
@@ -578,7 +585,8 @@
         "ksl": "https://classifieds.ksl.com/listing/80612792",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 280
     },
     {
       "id": "80697283",
@@ -597,7 +605,7 @@
     {
       "id": "80698219",
       "title": "PC Computers, Dell, HP, Fully Setup & Ready to go",
-      "price": 350,
+      "price": 315,
       "category": "Electronics",
       "status": "available",
       "image": "https://image.ksldigital.com/e4084438-7419-4a87-92fe-e9aa12f46fdd.jpg?filter=marketplace/400x300_cropped",
@@ -633,7 +641,8 @@
         "ksl": "https://classifieds.ksl.com/listing/80698344",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 360
     },
     {
       "id": "80699030",
@@ -646,7 +655,8 @@
         "ksl": "https://classifieds.ksl.com/listing/80699030",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 150
     },
     {
       "id": "80715531",
@@ -665,7 +675,7 @@
     {
       "id": "80736437",
       "title": "LG gas dryer tan metallic",
-      "price": 195,
+      "price": 125,
       "category": "Appliances",
       "status": "available",
       "image": "https://image.ksldigital.com/342474e2-9f6f-47b6-b334-4cf60273edff.jpg?filter=marketplace/400x300_cropped",
@@ -679,7 +689,7 @@
     {
       "id": "80737460",
       "title": "Bafang Ebike electric",
-      "price": 1450,
+      "price": 1160,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/3f77383b-d9ae-4928-a531-31b93097ae01.jpg?filter=marketplace/400x300_cropped",
@@ -693,7 +703,7 @@
     {
       "id": "80737543",
       "title": "Yamaha 4hp outboard",
-      "price": 1100,
+      "price": 880,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/edc79626-d12b-43ec-b9a0-1316326eca82.jpg?filter=marketplace/400x300_cropped",
@@ -707,7 +717,7 @@
     {
       "id": "80805341",
       "title": "5th wheel Demco 21k truck attachment",
-      "price": 350,
+      "price": 280,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/3558fadb-6ade-4b63-9483-92763400ee21.jpg?filter=marketplace/400x300_cropped",
@@ -743,7 +753,8 @@
         "ksl": "https://classifieds.ksl.com/listing/81015708",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 145
     },
     {
       "id": "81120661",
@@ -776,7 +787,7 @@
     {
       "id": "81284978",
       "title": "Dell Inspiron 3280 AIO Series All In One",
-      "price": 295,
+      "price": 236,
       "category": "Electronics",
       "status": "available",
       "image": "https://image.ksldigital.com/425ff7d8-e437-4c9f-8bee-e2e61078e0c0.jpg?filter=marketplace/400x300_cropped",
@@ -790,7 +801,7 @@
     {
       "id": "81375934",
       "title": "Elkay Drinking Fountain",
-      "price": 650,
+      "price": 350,
       "category": "Appliances",
       "status": "available",
       "image": "https://image.ksldigital.com/77d2adb6-d461-45ae-89f5-7c622c9d6553.jpg?filter=marketplace/400x300_cropped",
@@ -812,7 +823,8 @@
         "ksl": "https://classifieds.ksl.com/listing/81375966",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 120
     },
     {
       "id": "81455474",
@@ -825,7 +837,8 @@
         "ksl": "https://classifieds.ksl.com/listing/81455474",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 165
     },
     {
       "id": "81815894",
@@ -844,7 +857,7 @@
     {
       "id": "81816668",
       "title": "Hangkai 3.6 HP 2-Stroke Outboard Boat Motor with Tiller Handle Extension",
-      "price": 836,
+      "price": 794,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/f4dbaf9d-c6ca-43f7-a916-1d9cc235748a.jpg?filter=marketplace/400x300_cropped",
@@ -858,7 +871,7 @@
     {
       "id": "81819100",
       "title": "Aluminum fishing Jon Boat (12ft) with Boat Trailer and Old Town Canoe, 4hp motor",
-      "price": 2800,
+      "price": 2240,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/5bd6c5ba-0f6a-4c37-88b3-be004d8081f0.jpg?filter=marketplace/400x300_cropped",
@@ -872,7 +885,7 @@
     {
       "id": "76290681",
       "title": "Honda Generator EM 5000 IS",
-      "price": 2250,
+      "price": 1282,
       "category": "Power & tools",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1722455436-36837.jpg?filter=marketplace/400x300_cropped",
@@ -900,7 +913,7 @@
     {
       "id": "76901561",
       "title": "John Deere STX46",
-      "price": 775,
+      "price": 650,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1728007054-261527.jpg?filter=marketplace/400x300_cropped",
@@ -914,7 +927,7 @@
     {
       "id": "77567434",
       "title": "50\" Seiki LED-backlit 4K HDTV",
-      "price": 175,
+      "price": 145,
       "category": "Electronics",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1734837408-405048.jpg?filter=marketplace/400x300_cropped",
@@ -928,7 +941,7 @@
     {
       "id": "77860471",
       "title": "Shop Smith Mark V (ShopSmith Mark 5)",
-      "price": 550,
+      "price": 440,
       "category": "Power & tools",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1738440820-816437.jpg?filter=marketplace/400x300_cropped",
@@ -950,12 +963,13 @@
         "ksl": "https://classifieds.ksl.com/listing/78042707",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 1292
     },
     {
       "id": "78109385",
       "title": "Pride Mobility GoGo Electric Scooter 4 wheel",
-      "price": 715,
+      "price": 520,
       "category": "Mobility",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1741721754-875688.jpg?filter=marketplace/400x300_cropped",
@@ -977,7 +991,8 @@
         "ksl": "https://classifieds.ksl.com/listing/78388306",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 492
     },
     {
       "id": "78416997",
@@ -996,7 +1011,7 @@
     {
       "id": "78575099",
       "title": "Sunl 150cc Scooter Moped with Alarm",
-      "price": 2500,
+      "price": 2000,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/372f0f99-de82-4f56-9e90-ebf5c423767d.jpg?filter=marketplace/400x300_cropped",
@@ -1010,7 +1025,7 @@
     {
       "id": "78675703",
       "title": "Small and quiet GP2200i Generac Generator",
-      "price": 465,
+      "price": 364,
       "category": "Power & tools",
       "status": "available",
       "image": "https://image.ksldigital.com/905fc557-f0a3-44c7-9b0c-db6fa35b7161.jpg?filter=marketplace/400x300_cropped",
@@ -1024,7 +1039,7 @@
     {
       "id": "78696028",
       "title": "2005 John Deere L100 Riding Mower, no hood",
-      "price": 1150,
+      "price": 925,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/7308693b-7114-4de2-9dee-105660e4f72f.jpg?filter=marketplace/400x300_cropped",
@@ -1046,7 +1061,8 @@
         "ksl": "https://classifieds.ksl.com/listing/78756962",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 257
     },
     {
       "id": "78818194",
@@ -1079,7 +1095,7 @@
     {
       "id": "79574140",
       "title": "John Deere LT155 42in Freedom Mulcher",
-      "price": 1100,
+      "price": 895,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/3b401f5d-ba05-4024-ad2a-c59f29517502.jpg?filter=marketplace/400x300_cropped",
@@ -1101,12 +1117,13 @@
         "ksl": "https://classifieds.ksl.com/listing/79961967",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 487
     },
     {
       "id": "79966822",
       "title": "Ewheels mobility scooter",
-      "price": 1550,
+      "price": 1009,
       "category": "Mobility",
       "status": "available",
       "image": "https://image.ksldigital.com/627dde0f-0907-4a4b-bab4-e52db7d9ff16.jpg?filter=marketplace/400x300_cropped",
@@ -1120,7 +1137,7 @@
     {
       "id": "80612815",
       "title": "DuroMax XP4000S Generator",
-      "price": 515,
+      "price": 412,
       "category": "Power & tools",
       "status": "available",
       "image": "https://image.ksldigital.com/be46d05b-1bc1-4836-84af-04950144b777.jpg?filter=marketplace/400x300_cropped",
@@ -1134,7 +1151,7 @@
     {
       "id": "80618930",
       "title": "1992 Club Car Golf Cart 36v Lead Acid",
-      "price": 2500,
+      "price": 2000,
       "category": "Home",
       "status": "available",
       "image": "https://image.ksldigital.com/b6bdfd28-6019-4353-b52a-0a4580cd7fe7.jpg?filter=marketplace/400x300_cropped",
@@ -1148,7 +1165,7 @@
     {
       "id": "81015399",
       "title": "Yamaha 3100 pressure washer",
-      "price": 325,
+      "price": 260,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/8f0d3262-2012-43d2-a415-99f8b6fb3f4e.jpg?filter=marketplace/400x300_cropped",
@@ -1162,7 +1179,7 @@
     {
       "id": "81105350",
       "title": "Craftsman DLT 3000 Riding Mower 42 in 18.5 hp",
-      "price": 1850,
+      "price": 1120,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/7b2991c3-963c-44d6-a715-dd0256b87187.jpg?filter=marketplace/400x300_cropped",
@@ -1176,7 +1193,7 @@
     {
       "id": "81105379",
       "title": "Toro LX 500 Riding Mower 50in 22hp, low hours",
-      "price": 1400,
+      "price": 1450,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/e921718e-b32e-4b2e-b15f-3f050100502d.jpg?filter=marketplace/400x300_cropped",
@@ -1190,7 +1207,7 @@
     {
       "id": "81455498",
       "title": "Homelite 3100 PSI 2.6 GPM Pressure Washer with Honda GCV190 Engine - High Performance",
-      "price": 275,
+      "price": 255,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/4a55b424-323f-4e08-bc3e-0270d2e2b5fd.jpg?filter=marketplace/400x300_cropped",
@@ -1204,7 +1221,7 @@
     {
       "id": "81455560",
       "title": "Polaris Predator 90 ATV Quad - Parts Only - Damaged Engine Casing & Chain",
-      "price": 2500,
+      "price": 960,
       "category": "Powersports",
       "status": "available",
       "image": "https://image.ksldigital.com/f1822d79-b4ec-4ca4-89ea-2340b3daa16d.jpg?filter=marketplace/400x300_cropped",
@@ -1218,7 +1235,7 @@
     {
       "id": "81455590",
       "title": "PullRite SuperGlide 2700 Hitch RV Trailer Fifth Wheel Hitch - Used",
-      "price": 320,
+      "price": 256,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/057da25a-6b0c-4a24-a1dc-496be99d2cd6.jpg?filter=marketplace/400x300_cropped",
@@ -1240,12 +1257,13 @@
         "ksl": "https://classifieds.ksl.com/listing/81455602",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 4800
     },
     {
       "id": "81680206",
       "title": "Used Red Go Kart Buggy - Two Seater with Safety Harnesses",
-      "price": 1950,
+      "price": 1552,
       "category": "Powersports",
       "status": "available",
       "image": "https://image.ksldigital.com/6e7481da-5758-46bb-8195-9477c87a0bbb.jpg?filter=marketplace/400x300_cropped",
@@ -1259,7 +1277,7 @@
     {
       "id": "81790396",
       "title": "2019 Samsung NE59M4320SS Electric Range Stainless Steel Glass Cooktop",
-      "price": 325,
+      "price": 260,
       "category": "Appliances",
       "status": "available",
       "image": "https://image.ksldigital.com/6b3eeaba-bec1-4083-bfd5-cd1aec79c740.jpg?filter=marketplace/400x300_cropped",
@@ -1273,7 +1291,7 @@
     {
       "id": "81921669",
       "title": "Scotts by John Deere 23HP 48\" Automatic Riding mower Lawnmower Model S2348",
-      "price": 2100,
+      "price": 1710,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/74debe85-d060-400a-a72a-90babfbaf4a8.jpg?filter=marketplace/400x300_cropped",
@@ -1309,7 +1327,8 @@
         "ksl": "https://classifieds.ksl.com/listing/74054390",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 25
     },
     {
       "id": "74105524",
@@ -1322,12 +1341,13 @@
         "ksl": "https://classifieds.ksl.com/listing/74105524",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 15
     },
     {
       "id": "74153093",
       "title": "Diamondback Response w/ BionX electric assist",
-      "price": 750,
+      "price": 364,
       "category": "Mobility",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1703009105-649728.jpg?filter=marketplace/400x300_cropped",
@@ -1349,7 +1369,8 @@
         "ksl": "https://classifieds.ksl.com/listing/74184580",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 60
     },
     {
       "id": "74419966",
@@ -1362,7 +1383,8 @@
         "ksl": "https://classifieds.ksl.com/listing/74419966",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 50
     },
     {
       "id": "74570152",
@@ -1375,7 +1397,8 @@
         "ksl": "https://classifieds.ksl.com/listing/74570152",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 75
     },
     {
       "id": "74570172",
@@ -1388,7 +1411,8 @@
         "ksl": "https://classifieds.ksl.com/listing/74570172",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 75
     },
     {
       "id": "74589436",
@@ -1415,7 +1439,8 @@
         "ksl": "https://classifieds.ksl.com/listing/74594295",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 100
     },
     {
       "id": "74675455",
@@ -1428,7 +1453,8 @@
         "ksl": "https://classifieds.ksl.com/listing/74675455",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 25
     },
     {
       "id": "74809317",
@@ -1455,7 +1481,8 @@
         "ksl": "https://classifieds.ksl.com/listing/74837677",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 50
     },
     {
       "id": "75256416",
@@ -1468,12 +1495,13 @@
         "ksl": "https://classifieds.ksl.com/listing/75256416",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 15
     },
     {
       "id": "76288172",
       "title": "Primo water cooler",
-      "price": 175,
+      "price": 140,
       "category": "Appliances",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1722441399-560153.jpg?filter=marketplace/400x300_cropped",
@@ -1487,7 +1515,7 @@
     {
       "id": "76290776",
       "title": "Honda 2600 pressure washer",
-      "price": 75,
+      "price": 60,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1722455963-187109.jpg?filter=marketplace/400x300_cropped",
@@ -1509,7 +1537,8 @@
         "ksl": "https://classifieds.ksl.com/listing/76728134",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 90
     },
     {
       "id": "77634311",
@@ -1550,7 +1579,8 @@
         "ksl": "https://classifieds.ksl.com/listing/77651209",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 157
     },
     {
       "id": "77651240",
@@ -1577,7 +1607,8 @@
         "ksl": "https://classifieds.ksl.com/listing/77651247",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 550
     },
     {
       "id": "77651254",
@@ -1590,7 +1621,8 @@
         "ksl": "https://classifieds.ksl.com/listing/77651254",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 150
     },
     {
       "id": "77838894",
@@ -1609,7 +1641,7 @@
     {
       "id": "77838943",
       "title": "iJoy-320 massage chair with dual leg functions",
-      "price": 450,
+      "price": 342,
       "category": "Home",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1738189695-693319.jpg?filter=marketplace/400x300_cropped",
@@ -1645,7 +1677,8 @@
         "ksl": "https://classifieds.ksl.com/listing/77989235",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 250
     },
     {
       "id": "77989880",
@@ -1678,7 +1711,7 @@
     {
       "id": "78144806",
       "title": "Golden Brand Electric Tricycle Traveler Scooter",
-      "price": 515,
+      "price": 412,
       "category": "Mobility",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1741722466-131928.jpg?filter=marketplace/400x300_cropped",
@@ -1700,7 +1733,8 @@
         "ksl": "https://classifieds.ksl.com/listing/78154016",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 75
     },
     {
       "id": "78388326",
@@ -1713,12 +1747,13 @@
         "ksl": "https://classifieds.ksl.com/listing/78388326",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 950
     },
     {
       "id": "78416932",
       "title": "Kobalt battery powered cordless mower, self propel",
-      "price": 300,
+      "price": 228,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1744382141-837324.jpg?filter=marketplace/400x300_cropped",
@@ -1732,7 +1767,7 @@
     {
       "id": "78416961",
       "title": "Fast motorized wheelchair",
-      "price": 549,
+      "price": 400,
       "category": "Mobility",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1744382377-258523.jpg?filter=marketplace/400x300_cropped",
@@ -1746,7 +1781,7 @@
     {
       "id": "78508661",
       "title": "MTD Yard Machines Snowblower 5/22",
-      "price": 225,
+      "price": 215,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1745292193-619550.jpg?filter=marketplace/400x300_cropped",
@@ -1760,7 +1795,7 @@
     {
       "id": "78639480",
       "title": "Osim UComfort massage chair",
-      "price": 475,
+      "price": 400,
       "category": "Home",
       "status": "available",
       "image": "https://image.ksldigital.com/8c9b5d69-e8b5-4413-b790-f0e39f9da2da.jpg?filter=marketplace/400x300_cropped",
@@ -1782,7 +1817,8 @@
         "ksl": "https://classifieds.ksl.com/listing/78639545",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 172
     },
     {
       "id": "78696007",
@@ -1829,7 +1865,7 @@
     {
       "id": "80697664",
       "title": "Thin Sony XBR-65X930D 65-inch 4K HDR Ultra HD",
-      "price": 1000,
+      "price": 480,
       "category": "Electronics",
       "status": "available",
       "image": "https://image.ksldigital.com/c9f23078-a72c-49bb-b0eb-9dbd1b74cb5a.jpg?filter=marketplace/400x300_cropped",
@@ -1843,7 +1879,7 @@
     {
       "id": "74016925",
       "title": "Ripstik electric scooter skateboard",
-      "price": 85,
+      "price": 80,
       "category": "Mobility",
       "status": "available",
       "image": "https://img.ksl.com/mx/mplace-classifieds.ksl.com/134010-1701800842-228739.jpg?filter=marketplace/400x300_cropped",
@@ -1871,7 +1907,7 @@
     {
       "id": "77488676",
       "title": "65in Samsung 4k LED TV",
-      "price": 215,
+      "price": 172,
       "category": "Electronics",
       "status": "available",
       "image": "https://image.ksldigital.com/6ef5392e-8c5b-4063-883a-179074f8746d.jpg?filter=marketplace/400x300_cropped",
@@ -1893,12 +1929,13 @@
         "ksl": "https://classifieds.ksl.com/listing/81766984",
         "facebook": null,
         "ebay": null
-      }
+      },
+      "price": 95
     },
     {
       "id": "78784764",
       "title": "SnowJoe Snow Blower 96V with batteries",
-      "price": 650,
+      "price": 364,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://image.ksldigital.com/302dd5f7-317f-4575-9aff-2c9835049201.jpg?filter=marketplace/400x300_cropped",
