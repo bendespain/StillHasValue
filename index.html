@@ -24,7 +24,7 @@
   </script>
   <style>
     :root { --hero: 0; --green: #15803d; --amber: #d97706; --bar: 64px; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: auto; }
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
@@ -64,11 +64,12 @@
     }
     #topbar form {
       display: flex; gap: 6px; min-width: 0; flex: 1;
-      opacity: var(--hero);
+      opacity: 0;
       visibility: hidden;
       pointer-events: none;
     }
-    #topbar.is-on form {
+    #topbar.is-landed form {
+      opacity: 1;
       visibility: visible;
       pointer-events: auto;
     }
@@ -139,7 +140,7 @@
       top: 0;
       margin: 0;
       max-width: none;
-      z-index: 55;
+      z-index: 80;
       pointer-events: none;
       will-change: transform;
       transform-origin: top left;
@@ -310,22 +311,32 @@
       var CAT_ORDER = ["Mobility", "Lawn & outdoor", "Appliances", "Electronics", "Power & tools", "Powersports", "Home", "Sporting", "Other"];
       var root = document.documentElement;
       var bar = document.getElementById("topbar");
+      var hero = document.getElementById("hero");
       var truck = document.getElementById("hero-truck");
       var truckWrap = document.getElementById("hero-truck-wrap");
       var barTruck = document.querySelector("#topbar .bar-truck");
       var flying = false;
       var tickScheduled = false;
       var truckAspect = 0;
-      var fromW = 0;
-      var fromH = 0;
+      var fromRect = null;
+      var TRAVEL = 220;
 
       function easeOutCubic(x) {
         return 1 - Math.pow(1 - x, 3);
+      }
+      function heroProgress() {
+        var barH = bar ? bar.getBoundingClientRect().height : 64;
+        var heroTop = hero ? hero.getBoundingClientRect().top : barH;
+        var t = (barH - heroTop) / TRAVEL;
+        if (t < 0) t = 0;
+        if (t > 1) t = 1;
+        return t;
       }
       function flyTruck(t) {
         if (!truck || !truckWrap || !barTruck) return;
         var p = easeOutCubic(t);
         if (p <= 0.002) {
+          fromRect = null;
           if (flying) {
             truck.classList.remove("is-flying");
             truck.style.transform = "";
@@ -334,39 +345,39 @@
             truck.style.borderRadius = "";
             truckWrap.style.height = "";
             flying = false;
-            fromW = 0;
-            fromH = 0;
           }
+          if (bar) bar.classList.remove("is-landed");
           return;
         }
         if (truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
-        var wrapRect = truckWrap.getBoundingClientRect();
-        if (!flying) {
-          fromW = wrapRect.width;
-          fromH = wrapRect.height || (truckAspect ? wrapRect.width * truckAspect : 1);
+        if (!fromRect) {
+          var origin = truckWrap.getBoundingClientRect();
+          var oh = origin.height || (truckAspect ? origin.width * truckAspect : 0);
+          if (!origin.width || !oh) return;
+          fromRect = { left: origin.left, top: origin.top, width: origin.width, height: oh };
           truck.classList.add("is-flying");
           flying = true;
         }
-        truckWrap.style.height = (fromH * (1 - p)) + "px";
-        wrapRect = truckWrap.getBoundingClientRect();
+        truckWrap.style.height = (fromRect.height * (1 - t)) + "px";
         var dest = barTruck.getBoundingClientRect();
-        var scale = dest.height / fromH;
-        var x = wrapRect.left + (dest.left - wrapRect.left) * p;
-        var y = wrapRect.top + (dest.top - wrapRect.top) * p;
+        var scale = dest.height / fromRect.height;
+        var x = fromRect.left + (dest.left - fromRect.left) * p;
+        var y = fromRect.top + (dest.top - fromRect.top) * p;
         var s = 1 + (scale - 1) * p;
-        truck.style.width = fromW + "px";
-        truck.style.height = fromH + "px";
+        truck.style.width = fromRect.width + "px";
+        truck.style.height = fromRect.height + "px";
         truck.style.transformOrigin = "top left";
         truck.style.transform = "translate(" + x + "px," + y + "px) scale(" + s + ")";
         truck.style.borderRadius = (12 + (6 - 12) * p) + "px";
+        if (p >= 0.995) {
+          if (bar) bar.classList.add("is-landed");
+        } else {
+          if (bar) bar.classList.remove("is-landed");
+        }
       }
       function onScroll() {
-        var t = Math.min(1, Math.max(0, window.scrollY / 280));
+        var t = heroProgress();
         root.style.setProperty("--hero", String(t));
-        if (t > 0.55) bar.classList.add("is-on");
-        else bar.classList.remove("is-on");
-        if (t > 0.85) bar.classList.add("is-landed");
-        else bar.classList.remove("is-landed");
         flyTruck(t);
       }
       function requestTick() {
@@ -380,13 +391,7 @@
       onScroll();
       window.addEventListener("scroll", requestTick, { passive: true });
       window.addEventListener("resize", function () {
-        if (flying && truckWrap) {
-          var w = truckWrap.clientWidth;
-          if (w && truckAspect) {
-            fromW = w;
-            fromH = w * truckAspect;
-          }
-        }
+        if (heroProgress() <= 0) fromRect = null;
         requestTick();
       });
       if (truck) {
@@ -555,6 +560,7 @@
           n += vis;
         });
         updateCount(n, "");
+        requestTick();
       }
       function applyResults(items) {
         var order = {};
@@ -584,6 +590,7 @@
           g.hidden = vis === 0;
           n += vis;
         });
+        requestTick();
         return n;
       }
       // Hybrid floors live in worker.js handleSearch (1-token: lex or sem>=0.78; phrase embed-only >=0.68; include >=0.60 unless lex>=0.5). This fallback is lexical-only.
