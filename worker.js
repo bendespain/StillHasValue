@@ -226,7 +226,7 @@ function pickupSchemaInfo() {
 
 // --- lexical search (client may mirror) ---
 const SYN_GROUPS = [
-  ["mower", "lawnmower", "lawn mower", "riding mower", "tractor", "deere"],
+  ["mower", "lawnmower", "lawn mower", "riding mower", "tractor", "deere", "cut grass"],
   ["scooter", "moped", "ebike", "e-bike", "electric bike", "mobility", "razor", "wheelchair", "jazzy"],
   ["washer", "dryer", "laundry", "washing machine"],
   ["ac", "air conditioner", "aircon", "cooling", "hvac", "swamp cooler", "evaporative"],
@@ -308,26 +308,27 @@ function anyTokenMatch(token, bagList) {
   return false;
 }
 
+function synGroupMatches(group, tokens, rawText) {
+  const set = Object.create(null);
+  for (let i = 0; i < tokens.length; i++) set[tokens[i]] = 1;
+  const hay = " " + String(rawText || tokens.join(" ")).toLowerCase().replace(/[^a-z0-9]+/g, " ") + " ";
+  for (let i = 0; i < group.length; i++) {
+    const phrase = group[i];
+    if (phrase.indexOf(" ") !== -1) {
+      if (hay.indexOf(" " + phrase + " ") !== -1) return true;
+    } else if (set[phrase] || (phrase.length >= 4 && set[phrase + "s"]) || (phrase.length >= 5 && phrase.charAt(phrase.length - 1) === "s" && set[phrase.slice(0, -1)])) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function expandTokens(tokens, rawText) {
   const set = Object.create(null);
   for (const t of tokens) set[t] = 1;
-  const hay = " " + String(rawText || tokens.join(" ")).toLowerCase().replace(/[^a-z0-9]+/g, " ") + " ";
   for (let g = 0; g < SYN_GROUPS.length; g++) {
     const group = SYN_GROUPS[g];
-    let hit = false;
-    for (let i = 0; i < group.length; i++) {
-      const phrase = group[i];
-      if (phrase.indexOf(" ") !== -1) {
-        if (hay.indexOf(" " + phrase + " ") !== -1) {
-          hit = true;
-          break;
-        }
-      } else if (set[phrase]) {
-        hit = true;
-        break;
-      }
-    }
-    if (hit) {
+    if (synGroupMatches(group, tokens, rawText)) {
       for (let i = 0; i < group.length; i++) {
         const parts = group[i].replace(/-/g, " ").replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/);
         const GENERIC = { electric:1, machine:1, machines:1, powered:1, start:1 };
@@ -380,12 +381,21 @@ function lexicalScore(q, title, category) {
     if (ok) matched++;
     if (isDirect) direct++;
   }
-  if (!matched) return 0;
-  let score = (direct * 1 + (matched - direct) * 0.72) / qTokens.length;
-  const catTok = tokenize(category);
-  for (let i = 0; i < qTokens.length; i++) {
-    if (anyTokenMatch(qTokens[i], catTok)) {
-      score = Math.min(1, score + 0.12);
+  let score = 0;
+  if (matched) {
+    score = (direct * 1 + (matched - direct) * 0.72) / qTokens.length;
+    const catTok = tokenize(category);
+    for (let i = 0; i < qTokens.length; i++) {
+      if (anyTokenMatch(qTokens[i], catTok)) {
+        score = Math.min(1, score + 0.12);
+        break;
+      }
+    }
+  }
+  // Phrase synonym: "cut grass" shares the mower group even if no single token matched.
+  for (let g = 0; g < SYN_GROUPS.length; g++) {
+    if (synGroupMatches(SYN_GROUPS[g], qTokens, q) && synGroupMatches(SYN_GROUPS[g], titleTokens, title)) {
+      score = Math.max(score, 0.72);
       break;
     }
   }
@@ -510,13 +520,29 @@ async function handleSearch(request, env, url) {
     }
   }
 
+  const qTokens = tokenize(q).filter((t) => t.length > 1 && !STOP[t]);
+  const nTok = qTokens.length;
   const outItems = [];
   for (let i = 0; i < lexicalRows.length; i++) {
     const row = lexicalRows[i];
-    let score = Math.max(row.sem, row.lex);
-    // Drop weak embedding-only hits with no word/synonym overlap.
-    if (row.lex <= 0 && row.sem < 0.55) score = 0;
-    if (score >= 0.35) outItems.push({ id: row.id, score: Math.round(score * 1000) / 1000 });
+    const lex = row.lex;
+    const sem = row.sem;
+    // Prefer a real word match; a weak embed cannot outrank one or sneak in alone.
+    const score = Math.max(lex, 0.4 * lex + 0.6 * sem);
+    let keep;
+    if (nTok <= 1) {
+      // Single noun like "lamp": require lexical overlap or a very high embedding.
+      keep = lex > 0 || sem >= 0.78;
+    } else {
+      // Phrase / meaning search ("something to cut grass"): embedding-only if strong.
+      keep = lex > 0 || sem >= 0.68;
+    }
+    // Include floor: drop mid scores unless the word hit is strong.
+    if (keep && lex < 0.5 && score < 0.60) {
+      const embedOnlyOk = lex <= 0 && ((nTok <= 1 && sem >= 0.78) || (nTok > 1 && sem >= 0.68));
+      if (!embedOnlyOk) keep = false;
+    }
+    if (keep && score > 0) outItems.push({ id: row.id, score: Math.round(score * 1000) / 1000 });
   }
   outItems.sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : 1));
   return json({ q: q, mode: mode, items: outItems });
