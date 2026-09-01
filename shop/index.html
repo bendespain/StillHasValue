@@ -97,7 +97,22 @@
     }
     #topbar button {
       background: var(--green); color: #fff; border: 0; border-radius: 999px;
-      padding: 8px 14px; font-weight: 700; cursor: pointer;
+      font-weight: 700; cursor: pointer; flex-shrink: 0;
+      max-width: 0;
+      opacity: 0;
+      padding: 8px 0;
+      overflow: hidden;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: translate3d(-10px, 0, 0);
+      transition: max-width .28s ease, opacity .22s ease, padding .28s ease, transform .28s ease;
+    }
+    #topbar.is-searching button {
+      max-width: 6.5rem;
+      opacity: 1;
+      padding: 8px 14px;
+      pointer-events: auto;
+      transform: none;
     }
     #topbar .bar-pickup {
       flex-shrink: 0;
@@ -330,7 +345,8 @@
     }
     @media (prefers-reduced-motion: reduce) {
       #topbar { will-change: auto; }
-      #topbar .bar-pickup { transition: none; }
+      #topbar .bar-pickup,
+      #topbar button { transition: none; }
       .hero-truck.is-flying { display: none !important; }
     }
   </style>
