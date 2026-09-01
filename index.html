@@ -221,10 +221,11 @@
       content-visibility: auto;
       contain-intrinsic-size: 190px 210px;
     }
+    .card-media { position: relative; display: block; }
     .card img { width: 100%; height: 150px; object-fit: cover; display: block; background: #e7e5e4; }
     .card .title {
       display: block;
-      padding: 8px 10px 2px;
+      padding: 8px 10px 10px;
       font-size: 0.92rem;
       color: #1c1917;
       white-space: nowrap;
@@ -232,15 +233,22 @@
       mask-image: linear-gradient(90deg, #000 72%, transparent);
       -webkit-mask-image: linear-gradient(90deg, #000 72%, transparent);
     }
-    .card .title.no-price { padding-bottom: 10px; }
     .card .price {
-      display: block;
-      padding: 0 10px 10px;
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      z-index: 1;
+      display: inline-block;
+      padding: 5px 11px;
+      background: #fff;
       color: #15803d;
-      font-weight: 700;
-      font-size: 0.95rem;
-      line-height: 1.3;
+      font-weight: 800;
+      font-size: 1.12rem;
+      line-height: 1.15;
       letter-spacing: .01em;
+      border-radius: 999px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.38);
+      pointer-events: none;
     }
     .card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.16); }
     .empty { display: none; color: #444; padding: 24px 0; }
@@ -258,7 +266,7 @@
         overflow-x: auto;
         padding-bottom: 8px;
       }
-      .card .price { font-size: 0.92rem; }
+      .card .price { font-size: 1.05rem; padding: 4px 9px; }
     }
   </style>
 </head>
@@ -822,9 +830,11 @@
               var search = (title + " " + priceLabel + " " + cat).toLowerCase().replace(/\s+/g, " ").trim();
               var dataTitle = title + (priceLabel ? " " + priceLabel : "");
               html += '<a class="card" href="' + esc(href) + '" target="_blank" rel="noopener" data-id="' + esc(String(it.id)) + '" data-ord="' + cardIndex + '" data-title="' + esc(dataTitle) + '" data-search="' + esc(search) + '" data-category="' + esc(cat) + '">'
+                + '<span class="card-media">'
                 + '<img src="' + esc(img) + '" alt="' + esc(title) + '" loading="' + lazy + '" decoding="async" width="400" height="300">'
-                + '<span class="title' + (hasPrice ? "" : " no-price") + '">' + esc(title) + "</span>"
                 + (hasPrice ? '<span class="price">' + esc(priceLabel) + "</span>" : "")
+                + "</span>"
+                + '<span class="title">' + esc(title) + "</span>"
                 + "</a>";
               cardIndex++;
             });
