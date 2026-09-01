@@ -979,10 +979,6 @@ export default {
         return json({ ok: false, status: "error", reason: "could not save pickup" }, 502);
       }
     }
-    if (url.pathname === "/shop" || url.pathname === "/shop/") {
-      const shopReq = new Request(new URL("/index.html", url.origin), request);
-      return env.ASSETS.fetch(shopReq);
-    }
     const assetRes = await env.ASSETS.fetch(request);
     if (/\.(png|svg|ico|webmanifest|json)$/i.test(url.pathname) || /icon/i.test(url.pathname)) {
       const headers = new Headers(assetRes.headers);
