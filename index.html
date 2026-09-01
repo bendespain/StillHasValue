@@ -221,6 +221,8 @@
       content-visibility: auto;
       contain-intrinsic-size: 190px 210px;
     }
+    .card[hidden], .card.is-out { display: none !important; content-visibility: hidden !important; }
+    .cat-group[hidden], .cat-group.is-out { display: none !important; }
     .card-media { position: relative; display: block; }
     .card img { width: 100%; height: 150px; object-fit: cover; display: block; background: #e7e5e4; }
     .card .title {
@@ -625,6 +627,20 @@
           b.classList.toggle("is-on", (b.getAttribute("data-category") || "") === currentCat);
         });
       }
+      function hideFiltered(el) {
+        if (!el) return;
+        el.classList.add("is-out");
+        el.hidden = true;
+        el.setAttribute("hidden", "");
+        el.style.display = "none";
+      }
+      function showFiltered(el) {
+        if (!el) return;
+        el.classList.remove("is-out");
+        el.removeAttribute("hidden");
+        el.style.display = "";
+        el.hidden = false;
+      }
       function showAllInCategory() {
         if (shopQueryActive()) return;
         var n = 0;
@@ -638,11 +654,21 @@
             return Number(a.getAttribute("data-ord") || 0) - Number(b.getAttribute("data-ord") || 0);
           });
           cards.forEach(function (c) {
-            c.hidden = !catOk;
-            if (grid) grid.appendChild(c);
-            if (catOk) vis++;
+            if (catOk) {
+              showFiltered(c);
+              if (grid) grid.appendChild(c);
+              vis++;
+            } else {
+              hideFiltered(c);
+            }
           });
-          g.hidden = !catOk || vis === 0;
+          if (!catOk || vis === 0) hideFiltered(g);
+          else showFiltered(g);
+          var heading = g.querySelector(".cat-heading");
+          if (heading) {
+            if (!catOk || vis === 0) hideFiltered(heading);
+            else showFiltered(heading);
+          }
           n += vis;
         });
         updateCount(n, "");
@@ -671,16 +697,20 @@
             var id = String(c.getAttribute("data-id") || "");
             var show = catOk && Object.prototype.hasOwnProperty.call(order, id);
             if (show) {
-              c.hidden = false;
-              c.removeAttribute("hidden");
+              showFiltered(c);
               if (grid) grid.appendChild(c);
               vis++;
             } else {
-              c.hidden = true;
-              c.setAttribute("hidden", "");
+              hideFiltered(c);
             }
           });
-          g.hidden = vis === 0;
+          if (vis === 0) hideFiltered(g);
+          else showFiltered(g);
+          var heading = g.querySelector(".cat-heading");
+          if (heading) {
+            if (vis === 0) hideFiltered(heading);
+            else showFiltered(heading);
+          }
           n += vis;
         });
         settleAfterFilter();
