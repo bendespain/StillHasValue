@@ -1,12 +1,12 @@
-const CACHE = "shv-pickup-v1";
+const CACHE = "shv-pickup-v2";
 const PRECACHE = [
   "/pickup",
   "/pickup.html",
-  "/manifest.webmanifest",
-  "/apple-touch-icon.png",
+  "/pickup.webmanifest",
+  "/pickup-apple-touch-icon.png",
   "/stillhasvalue_logo1024x1024_black.jpg",
   "/stillhasvalue_black_trans.png",
-  "/favicon.ico"
+  "/pickup-icon-192.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -29,11 +29,11 @@ self.addEventListener("fetch", (event) => {
   const cacheable =
     url.pathname === "/pickup" ||
     url.pathname === "/pickup.html" ||
-    url.pathname === "/manifest.webmanifest" ||
-    url.pathname === "/apple-touch-icon.png" ||
+    url.pathname === "/pickup.webmanifest" ||
+    url.pathname === "/pickup-apple-touch-icon.png" ||
     url.pathname === "/stillhasvalue_logo1024x1024_black.jpg" ||
     url.pathname === "/stillhasvalue_black_trans.png" ||
-    url.pathname === "/favicon.ico";
+    url.pathname === "/pickup-icon-192.png";
   if (!cacheable) return;
   event.respondWith(
     caches.match(event.request).then((hit) => {
