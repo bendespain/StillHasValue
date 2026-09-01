@@ -30,13 +30,12 @@
   </script>
   <style>
     :root { --hero: 0; --green: #15803d; --amber: #d97706; --bar: 64px; }
-    html { scroll-behavior: auto; }
+    html { scroll-behavior: auto; overflow-x: hidden; }
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
       background: #f8f8f8;
       color: #1c1917;
-      padding-top: var(--bar);
     }
     .skip-link {
       position: absolute; left: -9999px; top: 8px; z-index: 100;
@@ -46,18 +45,27 @@
     .skip-link:focus { left: 8px; }
     #topbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 60;
-      height: var(--bar);
+      box-sizing: border-box;
+      height: calc(var(--bar) + env(safe-area-inset-top, 0px));
       display: flex; align-items: center; gap: 10px;
-      padding: 0 12px;
+      padding: env(safe-area-inset-top, 0px) 12px 0;
       background: #000;
+      transform: translate3d(0, calc((var(--hero) - 1) * 110%), 0);
+      opacity: var(--hero);
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    #topbar.is-landed {
+      transform: none;
+      opacity: 1;
       pointer-events: auto;
+      will-change: auto;
+      box-shadow: 0 10px 24px rgba(0,0,0,.4);
     }
     #topbar .bar-truck {
-      visibility: hidden;
       height: 44px; width: auto; border-radius: 6px;
       flex-shrink: 0;
     }
-    #topbar.is-landed .bar-truck { visibility: visible; }
     #topbar .bar-brand {
       display: flex; align-items: center; gap: 8px;
       color: #fff; text-decoration: none;
@@ -98,11 +106,26 @@
       background: #000; color: #fff; text-align: center;
       padding: 28px 20px calc(36px * (1 - var(--hero)));
     }
-    header.hero .logo { width: 120px; margin: 0 auto 12px; display: block; }
+    .hero-brand {
+      width: 100%;
+      background: #000;
+      position: relative;
+      z-index: 2;
+    }
+    header.hero .logo {
+      width: 120px;
+      margin: 0 auto calc(12px * (1 - var(--hero)));
+      display: block;
+      opacity: calc(1 - var(--hero) * 1.35);
+      transform: scale(calc(1 - var(--hero) * 0.12));
+      transform-origin: center top;
+      pointer-events: none;
+    }
     header.hero h1 {
-      margin: 0 0 14px;
+      margin: 0 0 calc(14px * (1 - var(--hero)));
       font-weight: 600;
       font-size: 1.17rem;
+      opacity: calc(1 - var(--hero) * 1.35);
     }
     header.hero h1 .tag {
       color: var(--amber);
@@ -117,8 +140,11 @@
       box-shadow: 0 4px 16px rgba(21,128,61,.45);
       position: relative;
       z-index: 45;
+      opacity: calc(1 - var(--hero) * 1.45);
+      transform: scale(calc(1 - var(--hero) * 0.08));
     }
     .hero-pickup:hover { background: #166534; }
+    header.hero.is-exiting .hero-pickup { pointer-events: none; }
     .hero-ai-hint {
       margin: calc(10px * (1 - var(--hero))) 0 0;
       color: #a8a29e;
@@ -139,19 +165,9 @@
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
       margin: 0;
       display: block;
+      transform: scale(calc(1 - var(--hero) * 0.04));
+      transform-origin: center top;
     }
-    .hero-truck.is-flying {
-      position: fixed;
-      left: 0;
-      top: 0;
-      margin: 0;
-      max-width: none;
-      z-index: 80;
-      pointer-events: none;
-      will-change: transform;
-      transform-origin: top left;
-    }
-    #topbar.is-landed ~ .hero .hero-truck.is-flying { opacity: 0; }
     .hero-copy {
       max-width: 640px;
       margin: calc(12px * (1 - var(--hero))) auto 0;
@@ -272,9 +288,21 @@
       #topbar .bar-name { display: none; }
       #topbar form { max-width: none; }
       #topbar .bar-pickup { padding: 8px 12px; font-size: 13px; }
-      header.hero { padding: 24px 16px calc(28px * (1 - var(--hero))); }
-      header.hero .logo { width: 96px; }
+      header.hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 16px calc(24px * (1 - var(--hero)));
+      }
+      header.hero .logo { width: 96px; margin-top: 16px; }
       .hero-pickup { padding: 12px 24px; font-size: 1rem; }
+      .hero-truck-wrap {
+        order: -1;
+        max-width: none;
+        width: calc(100% + 32px);
+        margin: 0 -16px calc(12px * (1 - var(--hero)));
+      }
+      .hero-truck { border-radius: 0; box-shadow: none; }
       .chips {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -282,11 +310,15 @@
       }
       .card .price { font-size: 1.05rem; padding: 4px 9px; }
     }
+    @media (prefers-reduced-motion: reduce) {
+      #topbar { will-change: auto; }
+      .hero-truck.is-flying { display: none !important; }
+    }
   </style>
 </head>
 <body>
   <a class="skip-link" href="#shop-now">Skip to inventory</a>
-  <div id="topbar">
+  <div id="topbar" inert aria-hidden="true">
     <img class="bar-truck" src="Cybee with logo.jpg" alt="">
     <a class="bar-brand" href="/">
       <img class="bar-logo" src="stillhasvalue_black_trans.png" alt="Still Has Value">
@@ -300,10 +332,12 @@
   </div>
 
   <header class="hero" id="hero">
-    <img src="stillhasvalue_black_trans.png" alt="Still Has Value Logo" class="logo">
-    <h1>Still Has Value <span class="tag">— We Prove It</span></h1>
-    <a class="hero-pickup" href="/pickup">Request a pickup</a>
-    <p class="hero-ai-hint">Or talk it in with AI on your phone.</p>
+    <div class="hero-brand">
+      <img src="stillhasvalue_black_trans.png" alt="Still Has Value Logo" class="logo">
+      <h1>Still Has Value <span class="tag">— We Prove It</span></h1>
+      <a class="hero-pickup" href="/pickup">Request a pickup</a>
+      <p class="hero-ai-hint">Or talk it in with AI on your phone.</p>
+    </div>
     <div class="hero-truck-wrap" id="hero-truck-wrap">
       <img src="Cybee with logo.jpg" alt="Still Has Value Cybertruck" class="hero-truck" id="hero-truck">
     </div>
@@ -352,11 +386,8 @@
       var truck = document.getElementById("hero-truck");
       var truckWrap = document.getElementById("hero-truck-wrap");
       var barTruck = document.querySelector("#topbar .bar-truck");
-      var flying = false;
       var tickScheduled = false;
-      var truckAspect = 0;
-      var fromRect = null;
-      var TRAVEL = 220;
+      var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       function liveSearchValue() {
         var shopEl = document.querySelector("#shop-search input");
@@ -405,83 +436,53 @@
       }
       function pinLanded() {
         root.style.setProperty("--hero", "1");
-        if (bar) bar.classList.add("is-landed");
-        flyTruck(1);
+        syncChrome(1);
       }
       function settleAfterFilter() {
-        if (shouldKeepLanded() || (shopQueryActive() && ((bar && bar.classList.contains("is-landed")) || flying))) {
+        if (shouldKeepLanded() || (shopQueryActive() && bar && bar.classList.contains("is-landed"))) {
           pinLanded();
           return;
         }
         requestTick();
       }
 
-      function easeOutCubic(x) {
-        return 1 - Math.pow(1 - x, 3);
+      function travelPx() {
+        var h = (truckWrap && truckWrap.getBoundingClientRect().height) || 240;
+        return Math.max(160, Math.min(h * 0.75, 360));
       }
       function heroProgress() {
-        var barH = bar ? bar.getBoundingClientRect().height : 64;
-        var heroTop = hero ? hero.getBoundingClientRect().top : barH;
-        var t = (barH - heroTop) / TRAVEL;
+        if (shouldKeepLanded()) return 1;
+        var y = window.scrollY || document.documentElement.scrollTop || 0;
+        var t = y / travelPx();
         if (t < 0) t = 0;
         if (t > 1) t = 1;
-        if (shouldKeepLanded()) return 1;
         return t;
       }
-      function flyTruck(t) {
-        if (!truck || !truckWrap || !barTruck) return;
-        if (shouldKeepLanded() && t < 1) t = 1;
-        var p = easeOutCubic(t);
-        if (p <= 0.002) {
-          if (shouldKeepLanded()) {
-            t = 1;
-            p = 1;
-          } else {
-            fromRect = null;
-            if (flying) {
-              truck.classList.remove("is-flying");
-              truck.style.transform = "";
-              truck.style.width = "";
-              truck.style.height = "";
-              truck.style.borderRadius = "";
-              truckWrap.style.height = "";
-              flying = false;
-            }
-            if (bar) bar.classList.remove("is-landed");
-            return;
-          }
-        }
-        if (truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
-        if (!fromRect) {
-          var origin = truckWrap.getBoundingClientRect();
-          var oh = origin.height || (truckAspect ? origin.width * truckAspect : 0);
-          if (!origin.width || !oh) return;
-          if (oh < 16) return;
-          fromRect = { left: origin.left, top: origin.top, width: origin.width, height: oh };
-          truck.classList.add("is-flying");
-          flying = true;
-        }
-        truckWrap.style.height = (fromRect.height * (1 - t)) + "px";
-        var dest = barTruck.getBoundingClientRect();
-        var scale = dest.height / fromRect.height;
-        var x = fromRect.left + (dest.left - fromRect.left) * p;
-        var y = fromRect.top + (dest.top - fromRect.top) * p;
-        var s = 1 + (scale - 1) * p;
-        truck.style.width = fromRect.width + "px";
-        truck.style.height = fromRect.height + "px";
-        truck.style.transformOrigin = "top left";
-        truck.style.transform = "translate(" + x + "px," + y + "px) scale(" + s + ")";
-        truck.style.borderRadius = (12 + (6 - 12) * p) + "px";
-        if (p >= 0.995) {
-          if (bar) bar.classList.add("is-landed");
+      function setBarLanded(on) {
+        if (!bar) return;
+        if (on) {
+          bar.classList.add("is-landed");
+          bar.removeAttribute("inert");
+          bar.setAttribute("aria-hidden", "false");
         } else {
-          if (bar) bar.classList.remove("is-landed");
+          bar.classList.remove("is-landed");
+          bar.setAttribute("inert", "");
+          bar.setAttribute("aria-hidden", "true");
+        }
+      }
+      function syncChrome(t) {
+        if (shouldKeepLanded() && t < 1) t = 1;
+        if (t >= 0.58) setBarLanded(true);
+        else if (t <= 0.38) setBarLanded(false);
+        if (hero) {
+          if (t > 0.18) hero.classList.add("is-exiting");
+          else hero.classList.remove("is-exiting");
         }
       }
       function onScroll() {
         var t = heroProgress();
         root.style.setProperty("--hero", String(t));
-        flyTruck(t);
+        syncChrome(t);
       }
       function requestTick() {
         if (tickScheduled) return;
@@ -493,17 +494,7 @@
       }
       onScroll();
       window.addEventListener("scroll", requestTick, { passive: true });
-      window.addEventListener("resize", function () {
-        if (heroProgress() <= 0) fromRect = null;
-        requestTick();
-      });
-      if (truck) {
-        if (truck.complete && truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
-        truck.addEventListener("load", function () {
-          if (truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
-          requestTick();
-        });
-      }
+      window.addEventListener("resize", requestTick);
 
       var inputs = document.querySelectorAll("#bar-search input, #shop-search input");
       var currentCat = "";
