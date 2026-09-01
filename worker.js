@@ -979,9 +979,6 @@ export default {
         return json({ ok: false, status: "error", reason: "could not save pickup" }, 502);
       }
     }
-    if (url.pathname === "/" || url.pathname === "") {
-      return Response.redirect(new URL("/shop", url.origin), 302);
-    }
     if (url.pathname === "/shop" || url.pathname === "/shop/") {
       const shopReq = new Request(new URL("/index.html", url.origin), request);
       return env.ASSETS.fetch(shopReq);
