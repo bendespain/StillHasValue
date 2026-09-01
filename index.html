@@ -270,7 +270,7 @@
       <img class="bar-logo" src="stillhasvalue_black_trans.png" alt="Still Has Value">
       <span class="bar-name">STILL HAS VALUE</span>
     </a>
-    <form id="bar-search" role="search">
+    <form id="bar-search" role="search" action="/" method="get" onsubmit="return false;">
       <input type="search" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off">
       <button type="submit">Search</button>
     </form>
@@ -298,7 +298,7 @@
       <h2>Shop Our Current Inventory</h2>
       <div class="shop-head">
         <p id="count-line">Loading inventory…</p>
-        <form class="shop-search" id="shop-search" role="search">
+        <form class="shop-search" id="shop-search" role="search" action="/" method="get" onsubmit="return false;">
           <input type="search" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off">
           <button type="submit">Search</button>
         </form>
@@ -332,6 +332,64 @@
       var fromRect = null;
       var TRAVEL = 220;
 
+      function liveSearchValue() {
+        var shopEl = document.querySelector("#shop-search input");
+        var barEl = document.querySelector("#bar-search input");
+        var shop = shopEl && shopEl.value != null ? String(shopEl.value) : "";
+        var barV = barEl && barEl.value != null ? String(barEl.value) : "";
+        var shopT = shop.trim();
+        var barT = barV.trim();
+        if (barT.length > shopT.length) return barV;
+        if (shopT.length) return shop;
+        return barV;
+      }
+      function shopQueryActive() {
+        return liveSearchValue().trim().length >= 2;
+      }
+      function barSearchFocused() {
+        var el = document.querySelector("#bar-search input");
+        return !!(el && document.activeElement === el);
+      }
+      function urlSearchQuery() {
+        try {
+          return new URLSearchParams(window.location.search).get("q") || "";
+        } catch (e) {
+          return "";
+        }
+      }
+      function syncSearchUrl(q) {
+        try {
+          var url = new URL(window.location.href);
+          var trimmed = String(q || "").trim();
+          if (trimmed.length >= 2) {
+            if (url.searchParams.get("q") === trimmed) return;
+            url.searchParams.set("q", trimmed);
+          } else {
+            if (!url.searchParams.has("q")) return;
+            url.searchParams.delete("q");
+          }
+          history.replaceState(null, "", url.pathname + url.search + url.hash);
+        } catch (e) {}
+      }
+      function shouldKeepLanded() {
+        if (barSearchFocused()) return true;
+        if (shopQueryActive() && window.scrollY > 8) return true;
+        if (bar && bar.classList.contains("is-landed") && shopQueryActive()) return true;
+        return false;
+      }
+      function pinLanded() {
+        root.style.setProperty("--hero", "1");
+        if (bar) bar.classList.add("is-landed");
+        flyTruck(1);
+      }
+      function settleAfterFilter() {
+        if (shouldKeepLanded() || (shopQueryActive() && ((bar && bar.classList.contains("is-landed")) || flying))) {
+          pinLanded();
+          return;
+        }
+        requestTick();
+      }
+
       function easeOutCubic(x) {
         return 1 - Math.pow(1 - x, 3);
       }
@@ -341,30 +399,38 @@
         var t = (barH - heroTop) / TRAVEL;
         if (t < 0) t = 0;
         if (t > 1) t = 1;
+        if (shouldKeepLanded()) return 1;
         return t;
       }
       function flyTruck(t) {
         if (!truck || !truckWrap || !barTruck) return;
+        if (shouldKeepLanded() && t < 1) t = 1;
         var p = easeOutCubic(t);
         if (p <= 0.002) {
-          fromRect = null;
-          if (flying) {
-            truck.classList.remove("is-flying");
-            truck.style.transform = "";
-            truck.style.width = "";
-            truck.style.height = "";
-            truck.style.borderRadius = "";
-            truckWrap.style.height = "";
-            flying = false;
+          if (shouldKeepLanded()) {
+            t = 1;
+            p = 1;
+          } else {
+            fromRect = null;
+            if (flying) {
+              truck.classList.remove("is-flying");
+              truck.style.transform = "";
+              truck.style.width = "";
+              truck.style.height = "";
+              truck.style.borderRadius = "";
+              truckWrap.style.height = "";
+              flying = false;
+            }
+            if (bar) bar.classList.remove("is-landed");
+            return;
           }
-          if (bar) bar.classList.remove("is-landed");
-          return;
         }
         if (truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
         if (!fromRect) {
           var origin = truckWrap.getBoundingClientRect();
           var oh = origin.height || (truckAspect ? origin.width * truckAspect : 0);
           if (!origin.width || !oh) return;
+          if (oh < 16) return;
           fromRect = { left: origin.left, top: origin.top, width: origin.width, height: oh };
           truck.classList.add("is-flying");
           flying = true;
@@ -552,6 +618,7 @@
         });
       }
       function showAllInCategory() {
+        if (shopQueryActive()) return;
         var n = 0;
         document.querySelectorAll("#grid .cat-group").forEach(function (g) {
           var gcat = g.getAttribute("data-category") || "";
@@ -571,7 +638,7 @@
           n += vis;
         });
         updateCount(n, "");
-        requestTick();
+        settleAfterFilter();
       }
       function applyResults(items) {
         var order = {};
@@ -593,15 +660,22 @@
           });
           var vis = 0;
           cards.forEach(function (c) {
-            var show = catOk && order[c.getAttribute("data-id")] !== undefined;
-            c.hidden = !show;
-            if (show && grid) grid.appendChild(c);
-            if (show) vis++;
+            var id = String(c.getAttribute("data-id") || "");
+            var show = catOk && Object.prototype.hasOwnProperty.call(order, id);
+            if (show) {
+              c.hidden = false;
+              c.removeAttribute("hidden");
+              if (grid) grid.appendChild(c);
+              vis++;
+            } else {
+              c.hidden = true;
+              c.setAttribute("hidden", "");
+            }
           });
           g.hidden = vis === 0;
           n += vis;
         });
-        requestTick();
+        settleAfterFilter();
         return n;
       }
       // Hybrid floors live in worker.js handleSearch (1-token: lex or sem>=0.78; phrase embed-only >=0.68; include >=0.60 unless lex>=0.5). This fallback is lexical-only.
@@ -617,11 +691,8 @@
       }
 
       function apply(query, category) {
-        var raw = (query == null)
-          ? ((document.querySelector("#shop-search input") || {}).value
-            || (document.querySelector("#bar-search input") || {}).value
-            || "")
-          : String(query);
+        var raw = query == null ? liveSearchValue() : String(query);
+        if (!raw.trim()) raw = liveSearchValue();
         if (category !== undefined) currentCat = category || "";
         var q = raw.trim();
         inputs.forEach(function (i) { if (i.value !== raw) i.value = raw; });
@@ -630,9 +701,11 @@
         if (q.length < 2) {
           searchGen++;
           if (searchAbort) { try { searchAbort.abort(); } catch (e) {} searchAbort = null; }
+          syncSearchUrl("");
           showAllInCategory();
           return;
         }
+        syncSearchUrl(q);
         var gen = ++searchGen;
         var url = "/api/search?q=" + encodeURIComponent(q);
         if (currentCat) url += "&category=" + encodeURIComponent(currentCat);
@@ -653,20 +726,40 @@
       }
 
       function bind(form) {
+        if (!form) return;
         form.addEventListener("submit", function (e) {
           e.preventDefault();
+          e.stopPropagation();
           clearTimeout(searchTimer);
-          apply(form.querySelector("input").value);
+          var input = form.querySelector("input");
+          var v = (input && input.value != null ? String(input.value) : "") || liveSearchValue();
+          apply(v);
+          return false;
         });
-        form.querySelector("input").addEventListener("input", function (e) {
+        var inputEl = form.querySelector("input");
+        if (!inputEl) return;
+        inputEl.addEventListener("input", function (e) {
           var v = e.target.value;
           inputs.forEach(function (i) { if (i !== e.target && i.value !== v) i.value = v; });
           clearTimeout(searchTimer);
           searchTimer = setTimeout(function () { apply(v); }, 180);
         });
+        inputEl.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.keyCode === 13) {
+            e.preventDefault();
+            e.stopPropagation();
+            clearTimeout(searchTimer);
+            apply(e.target.value || liveSearchValue());
+          }
+        });
       }
       bind(document.getElementById("bar-search"));
       bind(document.getElementById("shop-search"));
+      var barSearchInput = document.querySelector("#bar-search input");
+      if (barSearchInput) {
+        barSearchInput.addEventListener("focus", requestTick);
+        barSearchInput.addEventListener("blur", requestTick);
+      }
 
       document.getElementById("chips").addEventListener("click", function (e) {
         var b = e.target.closest(".chip");
@@ -739,9 +832,12 @@
           });
           grid.innerHTML = html;
           inventoryReady = true;
-          apply((document.querySelector("#shop-search input") || {}).value
-            || (document.querySelector("#bar-search input") || {}).value
-            || "", currentCat);
+          var initial = liveSearchValue();
+          if (initial.trim().length < 2) {
+            var fromUrl = urlSearchQuery();
+            if (fromUrl.trim()) initial = fromUrl;
+          }
+          apply(initial, currentCat);
         })
         .catch(function () {
           var el = document.getElementById("count-line");
