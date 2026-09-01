@@ -568,6 +568,7 @@
         });
         return n;
       }
+      // Hybrid floors live in worker.js handleSearch (1-token: lex or sem>=0.78; phrase embed-only >=0.68; include >=0.60 unless lex>=0.5). This fallback is lexical-only.
       function applyClientLexical(q) {
         var rows = [];
         document.querySelectorAll("#grid .card").forEach(function (c) {
