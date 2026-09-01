@@ -66,6 +66,9 @@
     #topbar .bar-truck {
       height: 44px; width: auto; border-radius: 6px;
       flex-shrink: 0;
+      max-width: 72px;
+      opacity: 1;
+      transition: max-width .28s ease, opacity .2s ease, margin .28s ease;
     }
     #topbar .bar-brand {
       display: flex; align-items: center; gap: 8px;
@@ -82,6 +85,7 @@
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
+      transition: opacity .2s ease;
     }
     #topbar.is-landed form {
       opacity: 1;
@@ -101,8 +105,21 @@
       border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 14px; white-space: nowrap;
       position: relative;
       z-index: 61;
+      max-width: 14rem;
+      overflow: hidden;
+      transform: translate3d(0, 0, 0);
+      transition: max-width .28s ease, opacity .22s ease, padding .28s ease, margin .28s ease, transform .28s ease;
     }
     #topbar .bar-pickup:hover { background: #166534; }
+    #topbar.is-searching .bar-pickup {
+      max-width: 0;
+      opacity: 0;
+      padding-left: 0;
+      padding-right: 0;
+      margin: 0;
+      transform: translate3d(18px, 0, 0);
+      pointer-events: none;
+    }
     header.hero {
       background: #000; color: #fff; text-align: center;
       padding: 28px 20px calc(36px * (1 - var(--hero)));
@@ -288,21 +305,21 @@
       #topbar .bar-name { display: none; }
       #topbar form { max-width: none; }
       #topbar .bar-pickup { padding: 8px 12px; font-size: 13px; }
-      header.hero {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 0 16px calc(24px * (1 - var(--hero)));
+      #topbar.is-searching .bar-truck {
+        max-width: 0;
+        width: 0;
+        opacity: 0;
+        margin: 0;
+        overflow: hidden;
       }
-      header.hero .logo { width: 96px; margin-top: 16px; }
+      header.hero {
+        padding: 24px 16px calc(28px * (1 - var(--hero)));
+      }
+      header.hero .logo { width: 96px; }
       .hero-pickup { padding: 12px 24px; font-size: 1rem; }
       .hero-truck-wrap {
-        order: -1;
-        max-width: none;
-        width: calc(100% + 32px);
-        margin: 0 -16px calc(12px * (1 - var(--hero)));
+        max-width: min(100%, 520px);
       }
-      .hero-truck { border-radius: 0; box-shadow: none; }
       .cat-heading { position: static; }
       .chips {
         flex-wrap: nowrap;
@@ -313,6 +330,7 @@
     }
     @media (prefers-reduced-motion: reduce) {
       #topbar { will-change: auto; }
+      #topbar .bar-pickup { transition: none; }
       .hero-truck.is-flying { display: none !important; }
     }
   </style>
@@ -872,11 +890,30 @@
       }
       bind(document.getElementById("bar-search"));
       bind(document.getElementById("shop-search"));
+      var barSearchForm = document.getElementById("bar-search");
       var barSearchInput = document.querySelector("#bar-search input");
-      if (barSearchInput) {
-        barSearchInput.addEventListener("focus", requestTick);
-        barSearchInput.addEventListener("blur", requestTick);
+      function syncSearching() {
+        if (!bar) return;
+        var focused = !!(barSearchForm && barSearchForm.contains(document.activeElement));
+        var typed = !!(barSearchInput && String(barSearchInput.value || "").trim());
+        bar.classList.toggle("is-searching", focused || typed);
       }
+      if (barSearchForm) {
+        barSearchForm.addEventListener("focusin", function () {
+          syncSearching();
+          requestTick();
+        });
+        barSearchForm.addEventListener("focusout", function () {
+          setTimeout(function () {
+            syncSearching();
+            requestTick();
+          }, 0);
+        });
+      }
+      if (barSearchInput) {
+        barSearchInput.addEventListener("input", syncSearching);
+      }
+      syncSearching();
 
       document.getElementById("chips").addEventListener("click", function (e) {
         var b = e.target.closest(".chip");
