@@ -3,7 +3,7 @@
   "endpoint": "https://tracker.stillhasvalue.com/api/save",
   "method": "POST",
   "contentType": "text/plain;charset=utf-8",
-  "notes": "Grok/voice should set source to grok-voice. Do not invent a sale price. After a confirmed sale, set the matching item status to sold in https://stillhasvalue.com/inventory.json so it drops off the shop.",
+  "notes": "Grok/voice should set source to grok-voice. Do not invent a sale price. Optional inventoryId is the shop item id from inventory.json. After a confirmed tracker save, the tracker (not the shop page) marks that item status sold in inventory.json so it drops off the shop. If Grok/voice has no inventoryId, the tracker matches by title; if two or more match, it skips the shop update.",
   "humanForm": "https://tracker.stillhasvalue.com",
   "sheet": "Still Has Value Tracker, Sales tab",
   "fields": {
@@ -49,6 +49,11 @@
         "manual"
       ],
       "description": "Use grok-voice when an AI logs it"
+    },
+    "inventoryId": {
+      "type": "string",
+      "required": false,
+      "description": "Shop inventory.json item id. Prefer picking the card on the tracker form."
     }
   }
 }

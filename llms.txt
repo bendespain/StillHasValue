@@ -52,4 +52,4 @@ POST https://tracker.stillhasvalue.com/api/save
 Content-Type: text/plain;charset=utf-8
 JSON: description, category (Electronics|Tools|Furniture|Appliances|Outdoor / Lawn|Other), purchaseCost, repairCost, dateSold, salePrice, miles, notes, source (grok-voice|manual)
 Schema: https://stillhasvalue.com/sale.json
-Ask the human for the price; do not invent one. Then mark the item sold in inventory.json.
+Ask the human for the price; do not invent one. Optional inventoryId (shop card id). Sales go through the tracker; after /api/save the tracker writes status sold on stillhasvalue.com/inventory.json. If Grok/voice and no id, match by title — if two or more match, skip the shop update and say so.
