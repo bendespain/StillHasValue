@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="/icon.svg?v=20260902a" type="image/svg+xml">
-  <link rel="icon" href="/icon-32.png?v=20260902a" type="image/png" sizes="32x32">
-  <link rel="icon" href="/favicon.ico?v=20260902a" type="image/x-icon">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=20260902a">
-  <link rel="manifest" href="/manifest.webmanifest?v=20260902a">
+  <link rel="icon" href="/icon.svg?v=20260902b" type="image/svg+xml">
+  <link rel="icon" href="/icon-32.png?v=20260902b" type="image/png" sizes="32x32">
+  <link rel="icon" href="/favicon.ico?v=20260902b" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=20260902b">
+  <link rel="manifest" href="/manifest.webmanifest?v=20260902b">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -65,11 +65,13 @@
       display: flex; align-items: center; gap: 10px;
       padding: env(safe-area-inset-top, 0px) 12px 0;
       background: #000;
+      transform: translate3d(0, calc((var(--hero) - 1) * 110%), 0);
       opacity: var(--hero);
       pointer-events: none;
-      will-change: opacity;
+      will-change: transform, opacity;
     }
     #topbar.is-landed {
+      transform: none;
       opacity: 1;
       pointer-events: auto;
       will-change: auto;
@@ -106,8 +108,9 @@
       visibility: visible;
       pointer-events: auto;
     }
-    #topbar input[type="search"] {
-      flex: 1; min-width: 0; border: 0; border-radius: 999px; padding: 8px 14px; font-size: 14px;
+    #topbar input[name="q"] {
+      flex: 1; min-width: 0; border: 0; border-radius: 999px; padding: 8px 14px; font-size: 16px;
+      -webkit-user-select: text; user-select: text; cursor: text;
     }
     #topbar button {
       background: var(--green); color: #fff; border: 0; border-radius: 999px;
@@ -151,7 +154,7 @@
     }
     header.hero {
       background: #000; color: #fff; text-align: center;
-      padding: calc(28px + env(safe-area-inset-top, 0px)) 20px 36px;
+      padding: calc(28px + env(safe-area-inset-top, 0px)) 20px calc(36px * (1 - var(--hero)));
     }
     .hero-brand {
       width: 100%;
@@ -200,22 +203,14 @@
       max-height: calc(1.6em * (1 - var(--hero)));
       overflow: hidden;
     }
-    .hero-stage {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      max-width: 760px;
-      width: 100%;
-      margin: 20px auto 8px;
-      position: relative;
-      z-index: 1;
-    }
     .hero-truck-wrap {
       max-width: min(100%, 640px);
       width: 100%;
-      margin: 0 auto;
+      margin: calc(20px * (1 - var(--hero))) auto calc(8px * (1 - var(--hero)));
       overflow: hidden;
+      max-height: calc(var(--truck-h, 520px) * (1 - var(--hero)));
+      transform: translateY(calc(var(--hero) * -110%));
+      will-change: transform, max-height;
     }
     .hero-truck {
       width: 100%;
@@ -223,56 +218,28 @@
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
       margin: 0;
       display: block;
-      transform-origin: top left;
+      transform: translateY(calc(var(--hero) * -4%));
+      transform-origin: center top;
     }
-    .hero-truck.is-flying {
-      position: fixed;
-      left: 0;
-      top: 0;
-      margin: 0;
-      max-width: none;
-      z-index: 80;
-      pointer-events: none;
-      will-change: transform;
-      transform-origin: top left;
-    }
-    #topbar.is-landed ~ .hero .hero-truck.is-flying { opacity: 0; }
-    .hero-fleet {
+    .hero-copy {
       max-width: 760px;
-      width: 100%;
+      margin: 12px auto 0;
       text-align: left;
+      position: relative;
+      z-index: 3;
     }
-    .hero-fleet h2,
     .hero-copy h2 {
       color: var(--amber);
       font-size: 0.95rem;
       font-weight: 700;
-      margin: 0 0 4px;
+      margin: 14px 0 4px;
     }
-    .hero-fleet p,
+    .hero-copy h2:first-child { margin-top: 0; }
     .hero-copy p {
       margin: 0;
       line-height: 1.65;
       color: #e7e5e4;
       font-size: 0.95rem;
-    }
-    .hero-copy {
-      max-width: 760px;
-      margin: 16px auto 0;
-      text-align: left;
-      position: relative;
-      z-index: 3;
-    }
-    .hero-copy h2 { margin: 0 0 4px; }
-    @media (min-width: 860px) {
-      .hero-stage {
-        flex-direction: row;
-        align-items: center;
-        text-align: left;
-        gap: 22px;
-      }
-      .hero-truck-wrap { flex: 1 1 52%; margin: 0; }
-      .hero-fleet { flex: 1 1 48%; }
     }
     main { padding: 28px 16px 56px; max-width: 1280px; margin: 0 auto; }
     #shop-now h2 { color: var(--amber); margin: 0 0 8px; }
@@ -283,7 +250,8 @@
     .search-explain[hidden] { display: none !important; }
     .shop-search { display: flex; gap: 8px; flex: 1 1 240px; max-width: 480px; }
     .shop-search input {
-      flex: 1; border: 1px solid #d6d3d1; border-radius: 999px; padding: 10px 14px; font-size: 15px;
+      flex: 1; border: 1px solid #d6d3d1; border-radius: 999px; padding: 10px 14px; font-size: 16px;
+      -webkit-user-select: text; user-select: text; cursor: text;
     }
     .shop-search button, .ksl-cta {
       background: var(--green); color: #fff; border: 0; border-radius: 999px; padding: 10px 18px;
@@ -391,11 +359,10 @@
         overflow: hidden;
       }
       header.hero {
-        padding: calc(24px + env(safe-area-inset-top, 0px)) 16px 28px;
+        padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(28px * (1 - var(--hero)));
       }
       header.hero .logo { width: 96px; }
       .hero-pickup { padding: 12px 24px; font-size: 1rem; }
-      .hero-stage { margin: 16px auto 8px; }
       .hero-truck-wrap {
         max-width: min(100%, 520px);
       }
@@ -411,17 +378,16 @@
       #topbar { will-change: auto; }
       #topbar .bar-pickup,
       #topbar button { transition: none; }
-      .hero-truck.is-flying { display: none !important; }
+      .hero-truck-wrap { will-change: auto; transform: none; }
     }
 
-    input, textarea, select, [contenteditable] {
-      -webkit-user-select: text !important;
-      user-select: text !important;
+    input, textarea, select {
+      font-size: 16px;
+      -webkit-user-select: text;
+      user-select: text;
+      cursor: text;
       -webkit-touch-callout: default;
       touch-action: manipulation;
-    }
-    @media (pointer: coarse), (max-width: 480px) {
-      input, textarea, select { font-size: 16px !important; }
     }
   </style>
 </head>
@@ -434,7 +400,7 @@
       <span class="bar-name">STILL HAS VALUE</span>
     </a>
     <form id="bar-search" role="search" action="/" method="get" onsubmit="return false;">
-      <input type="search" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off">
+      <input type="text" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off" inputmode="search" enterkeyhint="search">
       <button type="submit">Search</button>
     </form>
     <a class="bar-pickup" href="/pickup">Request a pickup</a>
@@ -447,18 +413,14 @@
       <a class="hero-pickup" href="/pickup">Request a pickup</a>
       <p class="hero-ai-hint">Or talk it in with AI on your phone.</p>
     </div>
-    <div class="hero-stage" id="hero-stage">
-      <div class="hero-truck-wrap" id="hero-truck-wrap">
-        <img src="/Cybee with logo.jpg" alt="Still Has Value Cybertruck" class="hero-truck" id="hero-truck">
-      </div>
-      <div class="hero-fleet">
-        <h2>Our fleet</h2>
-        <p>In 2026–2027, you'll see us rolling up in this: soon with autonomous pickups (eh Elon?), free removal of prescreened items you want gone.</p>
-      </div>
+    <div class="hero-truck-wrap" id="hero-truck-wrap">
+      <img src="/Cybee with logo.jpg" alt="Still Has Value Cybertruck" class="hero-truck" id="hero-truck">
     </div>
     <div class="hero-copy">
+      <h2>Our fleet</h2>
+      <p>In 2026–2027, you'll see us rolling up in this: soon with autonomous pickups (eh Elon?), free removal of prescreened items you want gone.</p>
       <h2>What we do</h2>
-      <p>Still Has Value turns your no-longer-needed items into someone else's perfect find—without the hassle, guilt, or waste. For you (the seller): Schedule a free, quick pickup at your convenience. We get it out of your way fast and you can feel great knowing your unwanted item isn't heading to a landfill. Instead, we revive it and help put it into the hands of someone in different circumstances. No more worrying about it sitting unappreciated or ending up as trash. For buyers: Discover real deals on quality, estranged items that have plenty of value to the right person. We only list pieces worth keeping—cleaned, repaired if needed, and honestly described—so you shop with confidence. No junk, no surprises—just great value that saves you money and keeps good things in circulation. It's simple sustainability: one happy goodbye, one excited hello, zero waste. Please help us declutter too by only offering to have us pickup items that merit the effort.</p>
+      <p>Still Has Value turns your no-longer-needed items into someone else's perfect find—without the hassle, guilt, or waste. Sellers: free pickup, we revive it, and it doesn't go to the landfill. Buyers: real deals on cleaned, honestly listed pieces—no junk. One happy goodbye, one excited hello. Please only offer items that merit the trip.</p>
     </div>
   </header>
 
@@ -471,7 +433,7 @@
           <p id="search-explain" class="search-explain" hidden></p>
         </div>
         <form class="shop-search" id="shop-search" role="search" action="/" method="get" onsubmit="return false;">
-          <input type="search" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off">
+          <input type="text" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off" inputmode="search" enterkeyhint="search">
           <button type="submit">Search</button>
         </form>
         <a class="ksl-cta" href="https://classifieds.ksl.com/v2/search/member/134010" target="_blank" rel="noopener">View on KSL</a>
@@ -572,20 +534,11 @@
       var hero = document.getElementById("hero");
       var truck = document.getElementById("hero-truck");
       var truckWrap = document.getElementById("hero-truck-wrap");
-      var barTruck = document.querySelector("#topbar .bar-truck");
       var tickScheduled = false;
-      var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      var truckAspect = 0;
-      var fromRest = null;
-      var cachedTravel = 0;
-      var flying = false;
+      var restTruckH = 0;
       if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
         root.classList.add("standalone");
       }
-      function easeOutCubic(x) {
-        return 1 - Math.pow(1 - x, 3);
-      }
-
       function liveSearchValue() {
         var shopEl = document.querySelector("#shop-search input");
         var barEl = document.querySelector("#bar-search input");
@@ -634,7 +587,6 @@
       function pinLanded() {
         root.style.setProperty("--hero", "1");
         syncChrome(1);
-        flyTruck(1);
       }
       function settleAfterFilter() {
         if (shouldKeepLanded() || (shopQueryActive() && bar && bar.classList.contains("is-landed"))) {
@@ -644,34 +596,27 @@
         requestTick();
       }
 
-      function measureTravel() {
-        var barH = bar ? bar.getBoundingClientRect().height : 64;
-        var h = hero ? hero.offsetHeight : 0;
-        cachedTravel = Math.max(1, h - barH);
-        return cachedTravel;
+      function captureRestTruck() {
+        if (!truckWrap) return;
+        if ((window.scrollY || 0) < 2 && !shouldKeepLanded()) {
+          var h = truckWrap.scrollHeight || truckWrap.offsetHeight;
+          if (h) {
+            restTruckH = h;
+            root.style.setProperty("--truck-h", h + "px");
+          }
+        }
       }
       function travelPx() {
-        if (!cachedTravel) measureTravel();
-        return cachedTravel;
+        var h = restTruckH || 240;
+        return Math.max(160, Math.min(h * 0.75, 360));
       }
       function heroProgress() {
         if (shouldKeepLanded()) return 1;
         var y = window.scrollY || document.documentElement.scrollTop || 0;
-        var barH = bar ? bar.getBoundingClientRect().height : 64;
-        var travel = travelPx();
-        if (hero) {
-          var rect = hero.getBoundingClientRect();
-          // How far the hero has been scrolled through vs the rest-state hero height.
-          // Use the top edge so collapsing the truck wrap does not shorten travel.
-          var t = (barH - rect.top) / travel;
-          if (t < 0) t = 0;
-          if (t > 1) t = 1;
-          return t;
-        }
-        var t2 = y / travel;
-        if (t2 < 0) t2 = 0;
-        if (t2 > 1) t2 = 1;
-        return t2;
+        var t = y / travelPx();
+        if (t < 0) t = 0;
+        if (t > 1) t = 1;
+        return t;
       }
       function setBarLanded(on) {
         if (!bar) return;
@@ -687,81 +632,17 @@
       }
       function syncChrome(t) {
         if (shouldKeepLanded() && t < 1) t = 1;
-        if (t >= 0.92) setBarLanded(true);
-        else if (t <= 0.2) setBarLanded(false);
+        if (t >= 0.58) setBarLanded(true);
+        else if (t <= 0.38) setBarLanded(false);
         if (hero) {
-          if (t > 0.55) hero.classList.add("is-exiting");
+          if (t > 0.18) hero.classList.add("is-exiting");
           else hero.classList.remove("is-exiting");
         }
-      }
-      function resetTruck() {
-        if (!truck) return;
-        truck.classList.remove("is-flying");
-        truck.style.transform = "";
-        truck.style.width = "";
-        truck.style.height = "";
-        truck.style.borderRadius = "";
-        truck.style.visibility = "";
-        truck.style.opacity = "";
-        if (truckWrap) truckWrap.style.height = "";
-        fromRest = null;
-        flying = false;
-      }
-      function landTruckInstant() {
-        if (truck) {
-          truck.classList.remove("is-flying");
-          truck.style.visibility = "hidden";
-          truck.style.opacity = "0";
-        }
-        if (truckWrap) truckWrap.style.height = "0px";
-        flying = false;
-      }
-      function captureRest() {
-        if (!truckWrap) return null;
-        if (truck && truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
-        var origin = truckWrap.getBoundingClientRect();
-        var oh = origin.height || (truckAspect ? origin.width * truckAspect : 0);
-        if (!origin.width || !oh) return null;
-        return { width: origin.width, height: oh };
-      }
-      function flyTruck(t) {
-        if (!truck || !truckWrap || !barTruck) return;
-        if (shouldKeepLanded()) t = 1;
-        if (t <= 0.001 && !shouldKeepLanded()) {
-          resetTruck();
-          return;
-        }
-        if (reduceMotion || t >= 0.995) {
-          landTruckInstant();
-          return;
-        }
-        if (!fromRest) {
-          fromRest = captureRest();
-          if (!fromRest) return;
-        }
-        truck.classList.add("is-flying");
-        flying = true;
-        truckWrap.style.height = (fromRest.height * (1 - t)) + "px";
-        var dest = barTruck.getBoundingClientRect();
-        var wrapRect = truckWrap.getBoundingClientRect();
-        var p = easeOutCubic(t);
-        var scale = dest.height / fromRest.height;
-        var x = wrapRect.left + (dest.left - wrapRect.left) * p;
-        var y = wrapRect.top + (dest.top - wrapRect.top) * p;
-        var s = 1 + (scale - 1) * p;
-        truck.style.width = fromRest.width + "px";
-        truck.style.height = fromRest.height + "px";
-        truck.style.visibility = "visible";
-        truck.style.opacity = "1";
-        truck.style.transformOrigin = "top left";
-        truck.style.transform = "translate(" + x + "px," + y + "px) scale(" + s + ")";
-        truck.style.borderRadius = (12 + (6 - 12) * p) + "px";
       }
       function onScroll() {
         var t = heroProgress();
         root.style.setProperty("--hero", String(t));
         syncChrome(t);
-        flyTruck(t);
       }
       function requestTick() {
         if (tickScheduled) return;
@@ -771,27 +652,16 @@
           onScroll();
         });
       }
-      measureTravel();
+      captureRestTruck();
       onScroll();
       window.addEventListener("scroll", requestTick, { passive: true });
       window.addEventListener("resize", function () {
-        var y = window.scrollY || 0;
-        if (y < 2 && !shouldKeepLanded()) {
-          resetTruck();
-          measureTravel();
-        } else if (!flying) {
-          fromRest = null;
-        }
+        captureRestTruck();
         requestTick();
       });
       if (truck) {
-        if (truck.complete && truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
         truck.addEventListener("load", function () {
-          if (truck.naturalWidth) truckAspect = truck.naturalHeight / truck.naturalWidth;
-          if ((window.scrollY || 0) < 2 && !shouldKeepLanded()) {
-            resetTruck();
-            measureTravel();
-          }
+          captureRestTruck();
           requestTick();
         });
       }
@@ -1460,50 +1330,5 @@
     }
   </script>
 
-  <script>
-    (function () {
-      function fieldFrom(e) {
-        var t = e.target;
-        if (!t) return null;
-        return (t.nodeType === 1 && t.closest) ? t.closest("input, textarea, select") : null;
-      }
-      function focusField(e) {
-        var el = fieldFrom(e);
-        if (!el) return;
-        if (document.activeElement !== el) el.focus();
-      }
-      document.addEventListener("touchstart", focusField, true);
-      document.addEventListener("mousedown", focusField, true);
-      function placeField(el) {
-        if (!el || document.activeElement !== el) return;
-        var vv = window.visualViewport;
-        var r = el.getBoundingClientRect();
-        var topGuard = 8;
-        var barEl = document.getElementById("topbar");
-        if (barEl && barEl.classList.contains("is-landed")) {
-          topGuard = barEl.getBoundingClientRect().bottom + 8;
-        }
-        if (r.top < topGuard) {
-          window.scrollBy(0, r.top - topGuard);
-          r = el.getBoundingClientRect();
-        }
-        var bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
-        if (r.bottom > bottom - 12) window.scrollBy(0, r.bottom - bottom + 12);
-      }
-      function onFocusIn(e) {
-        var el = fieldFrom(e);
-        if (!el) return;
-        setTimeout(function () { placeField(el); }, 50);
-        setTimeout(function () { placeField(el); }, 350);
-      }
-      document.addEventListener("focusin", onFocusIn);
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", function () {
-          var el = document.activeElement;
-          if (el && el.matches && el.matches("input, textarea, select")) placeField(el);
-        });
-      }
-    })();
-  </script>
 </body>
 </html>
