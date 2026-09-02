@@ -1,7 +1,7 @@
 {
   "name": "Still Has Value",
   "url": "https://stillhasvalue.com",
-  "updated": "2026-08-31",
+  "updated": "2026-09-02",
   "channels": [
     "site",
     "ksl"
@@ -12,8 +12,32 @@
     "offerup",
     "nextdoor"
   ],
-  "count_available": 139,
+  "count_available": 140,
   "items": [
+    {
+      "id": "shv-hechinger-1642",
+      "title": "Hechinger 16-42 Hi Cut riding mower, 42\"",
+      "price": 550,
+      "category": "Lawn & outdoor",
+      "status": "available",
+      "image": "https://stillhasvalue.com/images/shv-hechinger-1642/0.jpg",
+      "url": "https://stillhasvalue.com/#item-shv-hechinger-1642",
+      "channels": {
+        "ksl": null,
+        "facebook": null,
+        "ebay": null
+      },
+      "description": "Starts easy, runs, drives, and cuts. New battery going in before pickup. Used: torn seat vinyl, faded hood with rust, deck's been working. Rear hitch on it. Grass catcher can be added for an additional fee. Local pickup Murray / Salt Lake valley.",
+      "condition": "Used: torn seat vinyl, faded hood with rust, deck's been working.",
+      "images": [
+        "https://stillhasvalue.com/images/shv-hechinger-1642/0.jpg",
+        "https://stillhasvalue.com/images/shv-hechinger-1642/1.jpg",
+        "https://stillhasvalue.com/images/shv-hechinger-1642/2.jpg",
+        "https://stillhasvalue.com/images/shv-hechinger-1642/3.jpg",
+        "https://stillhasvalue.com/images/shv-hechinger-1642/4.jpg",
+        "https://stillhasvalue.com/images/shv-hechinger-1642/5.jpg"
+      ]
+    },
     {
       "id": "78756946",
       "title": "Kids Razor Moped scooter electric 24v",
