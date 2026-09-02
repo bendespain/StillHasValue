@@ -145,6 +145,16 @@
       .row { grid-template-columns: 1fr; }
       header.top .brand span { display:none; }
     }
+
+    input, textarea, select, [contenteditable] {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      -webkit-touch-callout: default;
+      touch-action: manipulation;
+    }
+    @media (display-mode: standalone), (display-mode: fullscreen) {
+      input, textarea, select { font-size: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -621,6 +631,20 @@
       });
       var addPhone = document.getElementById("add-phone-btn");
       if (addPhone) addPhone.addEventListener("click", addToPhone);
+    })();
+  </script>
+
+  <script>
+    (function () {
+      function focusField(e) {
+        var t = e.target;
+        if (!t) return;
+        var el = (t.nodeType === 1 && t.closest) ? t.closest("input, textarea, select") : null;
+        if (!el) return;
+        if (document.activeElement !== el) el.focus();
+      }
+      document.addEventListener("touchend", focusField, true);
+      document.addEventListener("mouseup", focusField, true);
     })();
   </script>
 </body>
