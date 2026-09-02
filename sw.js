@@ -1,4 +1,4 @@
-const CACHE = "shv-pickup-v3";
+const CACHE = "shv-pickup-v4";
 const PRECACHE = [
   "/pickup.webmanifest",
   "/pickup-apple-touch-icon.png",
