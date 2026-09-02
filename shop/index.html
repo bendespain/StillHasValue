@@ -238,7 +238,7 @@
     }
     .chips {
       display: flex; flex-wrap: wrap; gap: 8px;
-      margin: 0 0 18px;
+      margin: 0 0 10px;
       -webkit-overflow-scrolling: touch;
     }
     .chip {
@@ -252,6 +252,16 @@
     }
     .chip.is-on { background: var(--green); color: #fff; }
     .chip:hover { box-shadow: 0 0 0 2px rgba(21,128,61,.25); }
+
+    .sort-bar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      margin: 0 0 18px;
+    }
+    .sort-bar .sort-label {
+      font-size: 13px; font-weight: 700; color: #57534e;
+    }
+    .sort-bar .chip { border-color: #57534e; color: #44403c; }
+    .sort-bar .chip.is-on { background: #44403c; border-color: #44403c; color: #fff; }
     #grid { display: block; }
     .cat-group { margin: 0 0 28px; }
     .cat-heading {
@@ -398,7 +408,14 @@
         </form>
         <a class="ksl-cta" href="https://classifieds.ksl.com/v2/search/member/134010" target="_blank" rel="noopener">View on KSL</a>
       </div>
-      <div class="chips" id="chips" role="toolbar" aria-label="Filter by category"></div>
+      <div class="chips" id="chips" role="toolbar" aria-label="Filter by group"></div>
+      <div class="sort-bar" id="sort-bar" role="toolbar" aria-label="Sort listings">
+        <span class="sort-label">Sort</span>
+        <button type="button" class="chip is-on" data-sort="smart">Smart</button>
+        <button type="button" class="chip" data-sort="latest">Latest</button>
+        <button type="button" class="chip" data-sort="price-high">Price high</button>
+        <button type="button" class="chip" data-sort="price-low">Price low</button>
+      </div>
       <div id="grid"></div>
       <p class="empty" id="empty">No items match that search.</p>
     </section>
@@ -414,7 +431,74 @@
 
   <script>
     (function () {
-      var CAT_ORDER = ["Mobility", "Lawn & outdoor", "Appliances", "Electronics", "Power & tools", "Powersports", "Home", "Sporting", "Other"];
+      var FAM_ORDER = ["Rideables", "Lawn & outdoor", "Appliances", "Electronics", "Tools", "Home", "Sporting", "Other"];
+      var CLUSTER_RULES = {
+        Rideables: [
+          ["golf", ["golf cart", "club car"]],
+          ["snowmobile", ["snowmobile", "ski doo", "skidoo"]],
+          ["atv", ["atv", "4 wheeler", "four wheeler", "quad"]],
+          ["dirtbike", ["dirt bike", "enduro"]],
+          ["razor", ["razor"]],
+          ["gokart", ["go kart", "go cart", "gokart", "buggy"]],
+          ["gas2wheel", ["motorcycle", "mototec", "150cc", "4 stroke"]],
+          ["ebike", ["ebike", "e bike", "electric bike", "bafang", "bionx", "jetson", "diamondback"]],
+          ["wheelchair", ["wheelchair", "jazzy", "quantum"]],
+          ["mobility", ["mobility scooter", "pride", "gogo", "rascal", "ewheels", "e mobility", "traveler scooter"]],
+          ["escooter", ["electric scooter", "electric moped", "turboant", "ninebot", "hover", "tri wheel", "ripstik", "scooter", "moped"]]
+        ],
+        "Lawn & outdoor": [
+          ["outboard", ["outboard"]],
+          ["boat", ["boat", "canoe", "jon"]],
+          ["hitch", ["hitch", "5th wheel", "fifth wheel", "demco", "pullrite"]],
+          ["camp", ["camp trailer", "camping trailer", "pop up", "popup", "viking saga"]],
+          ["riding", ["riding mower", "lawnmower", "stx46", "lt155", "freedom mulcher", "john deere", "mulcher"]],
+          ["mower", ["mower", "mowers"]],
+          ["pressure", ["pressure washer"]],
+          ["snow", ["snow blower", "snowblower", "sno tek", "snotek", "snowjoe"]],
+          ["blower", ["blower"]]
+        ],
+        Appliances: [
+          ["hvac", ["furnace", "portable ac", "air conditioner", "evaporative", "hisense", "danby"]],
+          ["laundry", ["washer", "dryer", "speed queen"]],
+          ["range", ["range", "cooktop", "stove"]],
+          ["microwave", ["microwave"]],
+          ["floor", ["vacuum", "mop", "floor", "crosswave", "tineco", "shark", "bissel"]],
+          ["water", ["water cooler", "drinking fountain", "elkay", "primo"]],
+          ["fryer", ["air fryer"]]
+        ],
+        Electronics: [
+          ["music", ["peavey", "guitar", "drum", "line 6", "boss dr", "amp"]],
+          ["tv", ["tv", "hdtv", "xbr", "ultra hd"]],
+          ["computer", ["monitor", "display", "imac", "computer", "pc", "dell", "aio", "inspiron"]],
+          ["printer", ["printer", "officejet", "copier", "mfc"]],
+          ["watch", ["watch"]],
+          ["robot", ["robot"]],
+          ["net", ["router", "modem"]],
+          ["stereo", ["stereo"]]
+        ],
+        Tools: [
+          ["gen", ["generator"]],
+          ["shopsmith", ["shop smith", "shopsmith"]],
+          ["sew", ["sewing"]],
+          ["dust", ["dust collector"]],
+          ["tools", ["tools"]]
+        ],
+        Home: [
+          ["massage", ["massage chair"]],
+          ["recliner", ["recliner"]],
+          ["bean", ["bean bag", "bean bags"]],
+          ["light", ["light", "lamp", "strobe", "led"]],
+          ["fit", ["pull up"]],
+          ["holiday", ["christmas"]],
+          ["auto", ["tesla", "seat"]]
+        ],
+        Sporting: [
+          ["ski", ["ski", "rossignol", "dynastar", "helmet", "goggles", "boots", "poles", "solamon", "salomon"]],
+          ["scuba", ["scuba", "bcd", "seaquest"]]
+        ],
+        Other: []
+      };
+      var RIDE_WORDS = ["golf cart", "club car", "scooter", "moped", "motorcycle", "moto", "atv", "4 wheeler", "four wheeler", "quad", "dirt bike", "enduro", "go kart", "go cart", "gokart", "buggy", "snowmobile", "ski doo", "skidoo", "wheelchair", "ebike", "e bike", "electric bike", "jazzy", "razor"];
       var root = document.documentElement;
       var bar = document.getElementById("topbar");
       var hero = document.getElementById("hero");
@@ -538,6 +622,79 @@
       var searchGen = 0;
       var searchTimer = 0;
       var searchAbort = null;
+      var currentSort = "smart";
+
+      function normHay(s) {
+        return " " + String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim() + " ";
+      }
+      function hayHas(h, parts) {
+        for (var i = 0; i < parts.length; i++) {
+          if (h.indexOf(" " + parts[i] + " ") !== -1) return true;
+        }
+        return false;
+      }
+      function firstCluster(h, rules) {
+        for (var i = 0; i < rules.length; i++) {
+          if (hayHas(h, rules[i][1])) return rules[i][0];
+        }
+        return "other";
+      }
+      function familyOf(it) {
+        var cat = it.category || "Other";
+        var h = normHay(it.title);
+        if (cat === "Mobility" || cat === "Powersports" || hayHas(h, RIDE_WORDS)) return "Rideables";
+        if (cat === "Power & tools") return "Tools";
+        if (FAM_ORDER.indexOf(cat) !== -1) return cat;
+        return "Other";
+      }
+      function clusterOf(family, title) {
+        return firstCluster(normHay(title), CLUSTER_RULES[family] || []);
+      }
+      function itemPrice(it) {
+        var n = Number(it.price);
+        if (it.price == null || it.price === "" || !isFinite(n) || n <= 0) return null;
+        return n;
+      }
+      function itemRecency(it, jsonIndex) {
+        var n = Number(it.id);
+        if (it.id != null && it.id !== "" && isFinite(n)) return n;
+        return jsonIndex;
+      }
+      function clusterTopPrice(list) {
+        var max = -1, any = false;
+        for (var i = 0; i < list.length; i++) {
+          var p = itemPrice(list[i]);
+          if (p != null) { any = true; if (p > max) max = p; }
+        }
+        return any ? max : -1;
+      }
+      function sortItemsSmart(list) {
+        var groups = {};
+        var keys = [];
+        list.forEach(function (it) {
+          var k = clusterOf(it._family, it.title);
+          if (!groups[k]) { groups[k] = []; keys.push(k); }
+          groups[k].push(it);
+        });
+        keys.forEach(function (k) {
+          groups[k].sort(function (a, b) {
+            var pa = itemPrice(a), pb = itemPrice(b);
+            var ha = pa != null, hb = pb != null;
+            if (ha && hb && pb !== pa) return pb - pa;
+            if (ha && !hb) return -1;
+            if (!ha && hb) return 1;
+            return (a._jsonOrd || 0) - (b._jsonOrd || 0);
+          });
+        });
+        keys.sort(function (a, b) {
+          var ta = clusterTopPrice(groups[a]), tb = clusterTopPrice(groups[b]);
+          if (tb !== ta) return tb - ta;
+          return 0;
+        });
+        var out = [];
+        keys.forEach(function (k) { groups[k].forEach(function (it) { out.push(it); }); });
+        return out;
+      }
 
       var SYN_GROUPS = [
         ["mower", "lawnmower", "lawn mower", "riding mower", "tractor", "deere", "grass", "yard", "cut grass"],
@@ -724,6 +881,7 @@
         if (!el || !inventoryReady) return;
         if (q) el.textContent = n + " of " + totalAvailable + " matching \u201c" + q + "\u201d";
         else if (currentCat) el.textContent = n + " in " + currentCat;
+        else if (currentSort === "latest") el.textContent = totalAvailable + " items for sale, newest first.";
         else el.textContent = totalAvailable + " items for sale. This site is the catalog.";
         var empty = document.getElementById("empty");
         if (empty) empty.style.display = (inventoryReady && n === 0) ? "block" : "none";
@@ -731,6 +889,9 @@
       function syncChips() {
         document.querySelectorAll("#chips .chip").forEach(function (b) {
           b.classList.toggle("is-on", (b.getAttribute("data-category") || "") === currentCat);
+        });
+        document.querySelectorAll("#sort-bar [data-sort]").forEach(function (b) {
+          b.classList.toggle("is-on", (b.getAttribute("data-sort") || "") === currentSort);
         });
       }
       function hideFiltered(el) {
@@ -747,80 +908,148 @@
         el.style.display = "";
         el.hidden = false;
       }
-      function showAllInCategory() {
-        if (shopQueryActive()) return;
-        var n = 0;
-        document.querySelectorAll("#grid .cat-group").forEach(function (g) {
-          var gcat = g.getAttribute("data-category") || "";
-          var catOk = !currentCat || gcat === currentCat;
-          var vis = 0;
-          var grid = g.querySelector(".grid");
-          var cards = Array.prototype.slice.call(g.querySelectorAll(".card"));
-          cards.sort(function (a, b) {
+      function groupByAttr(fam) {
+        var nodes = document.querySelectorAll("#grid .cat-group");
+        for (var i = 0; i < nodes.length; i++) {
+          if ((nodes[i].getAttribute("data-category") || "") === fam) return nodes[i];
+        }
+        return null;
+      }
+      function cardRecency(el) {
+        var n = Number(el.getAttribute("data-recency") || 0);
+        if (isFinite(n) && n > 0) return n;
+        return Number(el.getAttribute("data-json-ord") || 0);
+      }
+      function cardPrice(el) {
+        var raw = el.getAttribute("data-price");
+        if (raw == null || raw === "") return null;
+        var n = Number(raw);
+        if (!isFinite(n) || n <= 0) return null;
+        return n;
+      }
+      function familyOk(el) {
+        if (!currentCat) return true;
+        return (el.getAttribute("data-family") || "") === currentCat;
+      }
+      function cmpSecondary(a, b) {
+        if (currentSort === "latest") {
+          var rb = cardRecency(b) - cardRecency(a);
+          if (rb) return rb;
+        } else if (currentSort === "price-high" || currentSort === "price-low") {
+          var pa = cardPrice(a), pb = cardPrice(b);
+          var ha = pa != null, hb = pb != null;
+          if (ha && hb && pb !== pa) return currentSort === "price-high" ? (pb - pa) : (pa - pb);
+          if (ha && !hb) return -1;
+          if (!ha && hb) return 1;
+        }
+        return Number(a.getAttribute("data-ord") || 0) - Number(b.getAttribute("data-ord") || 0);
+      }
+      function layoutCards(searchOrder) {
+        var searching = !!searchOrder;
+        var flatten = currentSort !== "smart";
+        var cards = Array.prototype.slice.call(document.querySelectorAll("#grid .card"));
+        var visible = [];
+        cards.forEach(function (c) {
+          var id = String(c.getAttribute("data-id") || "");
+          var ok = familyOk(c);
+          if (searching) ok = ok && Object.prototype.hasOwnProperty.call(searchOrder, id);
+          if (ok) {
+            showFiltered(c);
+            visible.push(c);
+          } else {
+            hideFiltered(c);
+          }
+        });
+        if (searching) {
+          visible.sort(function (a, b) {
+            var ia = searchOrder[a.getAttribute("data-id")];
+            var ib = searchOrder[b.getAttribute("data-id")];
+            var ha = ia !== undefined, hb = ib !== undefined;
+            if (ha && hb && ia !== ib) return ia - ib;
+            if (ha && !hb) return -1;
+            if (!ha && hb) return 1;
+            return cmpSecondary(a, b);
+          });
+        } else if (currentSort === "latest") {
+          visible.sort(function (a, b) {
+            var d = cardRecency(b) - cardRecency(a);
+            if (d) return d;
+            return Number(b.getAttribute("data-json-ord") || 0) - Number(a.getAttribute("data-json-ord") || 0);
+          });
+        } else if (currentSort === "price-high" || currentSort === "price-low") {
+          var dir = currentSort === "price-high" ? 1 : -1;
+          visible.sort(function (a, b) {
+            var pa = cardPrice(a), pb = cardPrice(b);
+            var ha = pa != null, hb = pb != null;
+            if (ha && hb && pb !== pa) return dir * (pb - pa);
+            if (ha && !hb) return -1;
+            if (!ha && hb) return 1;
             return Number(a.getAttribute("data-ord") || 0) - Number(b.getAttribute("data-ord") || 0);
           });
-          cards.forEach(function (c) {
-            if (catOk) {
-              showFiltered(c);
-              if (grid) grid.appendChild(c);
-              vis++;
-            } else {
-              hideFiltered(c);
-            }
+        } else {
+          visible.sort(function (a, b) {
+            return Number(a.getAttribute("data-ord") || 0) - Number(b.getAttribute("data-ord") || 0);
           });
-          if (!catOk || vis === 0) hideFiltered(g);
-          else showFiltered(g);
-          var heading = g.querySelector(".cat-heading");
-          if (heading) {
-            if (!catOk || vis === 0) hideFiltered(heading);
-            else showFiltered(heading);
-          }
-          n += vis;
+        }
+
+        var flat = groupByAttr("__flat__");
+        var famGroups = Array.prototype.slice.call(document.querySelectorAll("#grid .cat-group")).filter(function (g) {
+          return (g.getAttribute("data-category") || "") !== "__flat__";
         });
-        updateCount(n, "");
+
+        if (flatten) {
+          var heading = flat ? flat.querySelector(".cat-heading") : null;
+          var grid = flat ? flat.querySelector(".grid") : null;
+          var label = "Newest first";
+          if (currentSort === "price-high") label = "Price, high to low";
+          if (currentSort === "price-low") label = "Price, low to high";
+          if (currentCat) label = currentCat + " \u00b7 " + label;
+          if (heading) heading.textContent = label;
+          famGroups.forEach(function (g) { hideFiltered(g); });
+          if (flat) {
+            if (visible.length) showFiltered(flat);
+            else hideFiltered(flat);
+            if (heading) {
+              if (visible.length) showFiltered(heading);
+              else hideFiltered(heading);
+            }
+            visible.forEach(function (c) { if (grid) grid.appendChild(c); });
+          }
+        } else {
+          if (flat) hideFiltered(flat);
+          var visByFam = {};
+          visible.forEach(function (c) {
+            var fam = c.getAttribute("data-family") || "Other";
+            visByFam[fam] = visByFam[fam] || [];
+            visByFam[fam].push(c);
+          });
+          famGroups.forEach(function (g) {
+            var fam = g.getAttribute("data-category") || "";
+            var list = visByFam[fam] || [];
+            var grid = g.querySelector(".grid");
+            var heading = g.querySelector(".cat-heading");
+            if (!list.length) {
+              hideFiltered(g);
+              if (heading) hideFiltered(heading);
+              return;
+            }
+            showFiltered(g);
+            if (heading) showFiltered(heading);
+            list.forEach(function (c) { if (grid) grid.appendChild(c); });
+          });
+        }
         settleAfterFilter();
+        return visible.length;
+      }
+      function showAllInCategory() {
+        if (shopQueryActive()) return;
+        var n = layoutCards(null);
+        updateCount(n, "");
       }
       function applyResults(items) {
         var order = {};
         (items || []).forEach(function (it, i) { order[String(it.id)] = i; });
-        var n = 0;
-        document.querySelectorAll("#grid .cat-group").forEach(function (g) {
-          var gcat = g.getAttribute("data-category") || "";
-          var catOk = !currentCat || gcat === currentCat;
-          var grid = g.querySelector(".grid");
-          var cards = Array.prototype.slice.call(g.querySelectorAll(".card"));
-          cards.sort(function (a, b) {
-            var ia = order[a.getAttribute("data-id")];
-            var ib = order[b.getAttribute("data-id")];
-            var ha = ia !== undefined, hb = ib !== undefined;
-            if (ha && hb) return ia - ib;
-            if (ha) return -1;
-            if (hb) return 1;
-            return Number(a.getAttribute("data-ord") || 0) - Number(b.getAttribute("data-ord") || 0);
-          });
-          var vis = 0;
-          cards.forEach(function (c) {
-            var id = String(c.getAttribute("data-id") || "");
-            var show = catOk && Object.prototype.hasOwnProperty.call(order, id);
-            if (show) {
-              showFiltered(c);
-              if (grid) grid.appendChild(c);
-              vis++;
-            } else {
-              hideFiltered(c);
-            }
-          });
-          if (vis === 0) hideFiltered(g);
-          else showFiltered(g);
-          var heading = g.querySelector(".cat-heading");
-          if (heading) {
-            if (vis === 0) hideFiltered(heading);
-            else showFiltered(heading);
-          }
-          n += vis;
-        });
-        settleAfterFilter();
-        return n;
+        return layoutCards(order);
       }
       // Hybrid floors live in worker.js handleSearch (1-token: lex or sem>=0.78; phrase embed-only >=0.68; include >=0.60 unless lex>=0.5). This fallback is lexical-only.
       function applyClientLexical(q, showExplain) {
@@ -857,7 +1086,6 @@
         syncSearchUrl(q);
         var gen = ++searchGen;
         var url = "/api/search?q=" + encodeURIComponent(q);
-        if (currentCat) url += "&category=" + encodeURIComponent(currentCat);
         if (searchAbort) { try { searchAbort.abort(); } catch (e) {} }
         searchAbort = (window.AbortController ? new AbortController() : null);
         fetch(url, searchAbort ? { signal: searchAbort.signal } : undefined)
@@ -936,6 +1164,12 @@
         if (!b) return;
         apply(null, b.getAttribute("data-category") || "");
       });
+      document.getElementById("sort-bar").addEventListener("click", function (e) {
+        var b = e.target.closest("[data-sort]");
+        if (!b) return;
+        currentSort = b.getAttribute("data-sort") || "smart";
+        apply(null, undefined);
+      });
 
       function esc(s) {
         return String(s || "").replace(/[&<>"']/g, function (c) {
@@ -946,42 +1180,51 @@
         .then(function (r) { return r.json(); })
         .then(function (data) {
           var items = (data.items || []).filter(function (it) { return it.status !== "sold"; });
+          items.forEach(function (it, i) {
+            it._jsonOrd = i;
+            it._family = familyOf(it);
+          });
           totalAvailable = items.length;
-          var byCat = {};
-          var catCounts = {};
+          var byFam = {};
+          var famCounts = {};
           items.forEach(function (it) {
-            var c = it.category || "Other";
-            if (CAT_ORDER.indexOf(c) === -1) c = "Other";
-            it._cat = c;
-            byCat[c] = byCat[c] || [];
-            byCat[c].push(it);
-            catCounts[c] = (catCounts[c] || 0) + 1;
+            var f = it._family || "Other";
+            if (FAM_ORDER.indexOf(f) === -1) f = "Other";
+            it._family = f;
+            byFam[f] = byFam[f] || [];
+            byFam[f].push(it);
+            famCounts[f] = (famCounts[f] || 0) + 1;
           });
           var chips = document.getElementById("chips");
           var chipsHtml = '<button type="button" class="chip is-on" data-category="">All (' + items.length + ")</button>";
-          CAT_ORDER.forEach(function (c) {
-            if (!catCounts[c]) return;
-            chipsHtml += '<button type="button" class="chip" data-category="' + esc(c) + '">' + esc(c) + " (" + catCounts[c] + ")</button>";
+          FAM_ORDER.forEach(function (c) {
+            if (!famCounts[c]) return;
+            chipsHtml += '<button type="button" class="chip" data-category="' + esc(c) + '">' + esc(c) + " (" + famCounts[c] + ")</button>";
           });
           chips.innerHTML = chipsHtml;
 
           var grid = document.getElementById("grid");
           var html = "";
+          html += '<section class="cat-group" data-category="__flat__" hidden style="display:none">';
+          html += '<h3 class="cat-heading">Newest first</h3>';
+          html += '<div class="grid"></div></section>';
           var cardIndex = 0;
-          CAT_ORDER.forEach(function (c) {
-            var list = byCat[c];
+          FAM_ORDER.forEach(function (c) {
+            var list = byFam[c];
             if (!list || !list.length) return;
+            list = sortItemsSmart(list);
             html += '<section class="cat-group" data-category="' + esc(c) + '">';
             html += '<h3 class="cat-heading">' + esc(c) + "</h3>";
             html += '<div class="grid">';
             list.forEach(function (it) {
               var title = it.title || "Item";
-              var cat = it._cat || "Other";
+              var cat = it.category || "Other";
+              var fam = it._family || "Other";
               var href = (it.channels && it.channels.ksl) || it.url || "#";
               var img = it.image || "";
               var eager = cardIndex < 24;
-              var nPrice = Number(it.price);
-              var hasPrice = it.price != null && it.price !== "" && isFinite(nPrice) && nPrice > 0;
+              var nPrice = itemPrice(it);
+              var hasPrice = nPrice != null;
               var priceLabel = "";
               if (hasPrice) {
                 var whole = Math.round(nPrice) === nPrice;
@@ -989,9 +1232,10 @@
                   ? nPrice.toLocaleString("en-US")
                   : nPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
               }
-              var search = (title + " " + priceLabel + " " + cat).toLowerCase().replace(/\s+/g, " ").trim();
+              var search = (title + " " + priceLabel + " " + cat + " " + fam).toLowerCase().replace(/\s+/g, " ").trim();
               var dataTitle = title + (priceLabel ? " " + priceLabel : "");
-              html += '<a class="card" href="' + esc(href) + '" target="_blank" rel="noopener" data-id="' + esc(String(it.id)) + '" data-ord="' + cardIndex + '" data-title="' + esc(dataTitle) + '" data-search="' + esc(search) + '" data-category="' + esc(cat) + '">'
+              var recency = itemRecency(it, it._jsonOrd || 0);
+              html += '<a class="card" href="' + esc(href) + '" target="_blank" rel="noopener" data-id="' + esc(String(it.id)) + '" data-ord="' + cardIndex + '" data-json-ord="' + esc(String(it._jsonOrd || 0)) + '" data-recency="' + esc(String(recency)) + '" data-price="' + (hasPrice ? esc(String(nPrice)) : "") + '" data-title="' + esc(dataTitle) + '" data-search="' + esc(search) + '" data-category="' + esc(cat) + '" data-family="' + esc(fam) + '">'
                 + '<span class="card-media">'
                 + '<img src="' + esc(img) + '" alt="' + esc(title) + '" loading="eager"' + (eager ? ' fetchpriority="high"' : "") + ' decoding="async" referrerpolicy="no-referrer" width="400" height="300">'
                 + (hasPrice ? '<span class="price">' + esc(priceLabel) + "</span>" : "")
