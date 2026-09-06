@@ -374,6 +374,8 @@
     .empty { display: none; color: #444; padding: 24px 0; }
     footer { background: #000; color: #a8a29e; text-align: center; padding: 32px 16px calc(32px + env(safe-area-inset-bottom, 0px)); font-size: .9em; }
     footer a { color: #e7e5e4; }
+    footer .footer-employee { display: none; }
+    html.is-employee footer .footer-employee { display: inline; }
     footer .fe-line { margin: 12px 0 0; font-size: .85em; color: #78716c; }
     footer .fe-line a { color: var(--green); text-decoration: none; }
     footer .fe-line a:hover { color: var(--amber); }
@@ -487,7 +489,7 @@
   <footer>
     &copy; 2026 Still Has Value | Murray / West Jordan, UT | @StillHasValue |
     <a href="/">Shop</a> |
-    <a href="/pickup">Request a pickup</a>
+    <a href="/pickup">Request a pickup</a><span class="footer-employee" hidden> | <a href="https://tracker.stillhasvalue.com">Tracker</a></span>
     <p class="fe-line">Still Has Value is a <a href="https://www.flightenabled.com/">Flight Enabled</a> company</p>
   </footer>
 
@@ -1363,7 +1365,7 @@
     (function () {
       function revealEmployee() {
         document.documentElement.classList.add("is-employee");
-        document.querySelectorAll(".bar-employee").forEach(function (el) {
+        document.querySelectorAll(".bar-employee, .footer-employee").forEach(function (el) {
           el.hidden = false;
         });
       }
