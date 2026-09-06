@@ -894,9 +894,34 @@ async function handleVoice(request, env) {
   return new Response(JSON.stringify(out), { status: 200, headers });
 }
 
+
+function hasAccessSession(request) {
+  if (request.headers.get("Cf-Access-Jwt-Assertion")) return true;
+  const cookie = request.headers.get("Cookie") || "";
+  // CF_Authorization is set when Access session cookie domain includes this host
+  // (configure Access app cookie domain to .stillhasvalue.com for tracker).
+  if (/(?:^|;\s*)CF_Authorization=/.test(cookie)) return true;
+  if (/(?:^|;\s*)CF_AppSession=/.test(cookie)) return true;
+  return false;
+}
+
+function employeeStatus(request) {
+  const employee = hasAccessSession(request);
+  return new Response(JSON.stringify({ employee }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "private, no-store",
+    },
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/employee") {
+      return employeeStatus(request);
+    }
     if (url.pathname === "/api/voice") {
       return handleVoice(request, env);
     }

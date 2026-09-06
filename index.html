@@ -131,6 +131,36 @@
       pointer-events: auto;
       transform: none;
     }
+    #topbar .bar-employee {
+      display: none;
+      flex-shrink: 0;
+      background: #292524; color: #fafaf9; text-decoration: none;
+      border: 1px solid #57534e;
+      border-radius: 999px; padding: 8px 12px; font-weight: 700; font-size: 13px; white-space: nowrap;
+      position: relative;
+      z-index: 61;
+    }
+    html.is-employee #topbar .bar-employee { display: inline-flex; align-items: center; }
+    #topbar .bar-employee:hover { background: #44403c; color: #fff; }
+    #topbar.is-searching .bar-employee {
+      max-width: 0;
+      opacity: 0;
+      padding-left: 0;
+      padding-right: 0;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .hero-employee {
+      display: none;
+      margin: 10px 0 0;
+    }
+    html.is-employee .hero-employee { display: block; }
+    .hero-employee a {
+      color: #a8a29e; font-size: .9rem; font-weight: 600; text-decoration: none;
+      border-bottom: 1px dotted #78716c;
+    }
+    .hero-employee a:hover { color: var(--amber); border-bottom-color: var(--amber); }
     #topbar .bar-pickup {
       flex-shrink: 0;
       background: var(--green); color: #fff; text-decoration: none;
@@ -351,6 +381,7 @@
       #topbar .bar-name { display: none; }
       #topbar form { max-width: none; }
       #topbar .bar-pickup { padding: 8px 12px; font-size: 13px; }
+      #topbar .bar-employee { padding: 8px 10px; font-size: 12px; }
       #topbar.is-searching .bar-truck {
         max-width: 0;
         width: 0;
@@ -403,6 +434,7 @@
       <input type="text" name="q" placeholder="Search inventory" aria-label="Search inventory" autocomplete="off" inputmode="search" enterkeyhint="search">
       <button type="submit">Search</button>
     </form>
+    <a class="bar-employee" href="https://tracker.stillhasvalue.com" hidden>Tracker</a>
     <a class="bar-pickup" href="/pickup">Request a pickup</a>
   </div>
 
@@ -411,6 +443,7 @@
       <img src="/stillhasvalue_black_trans.png" alt="Still Has Value Logo" class="logo">
       <h1>Still Has Value <span class="tag">— We Prove It</span></h1>
       <a class="hero-pickup" href="/pickup">Request a pickup</a>
+      <p class="hero-employee"><a href="https://tracker.stillhasvalue.com">Tracker / Posting</a></p>
       <p class="hero-ai-hint">Or talk it in with AI on your phone.</p>
     </div>
     <div class="hero-truck-wrap" id="hero-truck-wrap">
@@ -454,8 +487,7 @@
   <footer>
     &copy; 2026 Still Has Value | Murray / West Jordan, UT | @StillHasValue |
     <a href="/">Shop</a> |
-    <a href="/pickup">Request a pickup</a> |
-    <a href="https://tracker.stillhasvalue.com">tracker</a>
+    <a href="/pickup">Request a pickup</a>
     <p class="fe-line">Still Has Value is a <a href="https://www.flightenabled.com/">Flight Enabled</a> company</p>
   </footer>
 
@@ -1328,6 +1360,20 @@
         });
       }).catch(function () {});
     }
+    (function () {
+      function revealEmployee() {
+        document.documentElement.classList.add("is-employee");
+        document.querySelectorAll(".bar-employee").forEach(function (el) {
+          el.hidden = false;
+        });
+      }
+      fetch("/api/employee", { credentials: "same-origin", headers: { "Accept": "application/json" } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (data && data.employee) revealEmployee();
+        })
+        .catch(function () {});
+    })();
   </script>
 
 </body>
