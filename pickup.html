@@ -82,16 +82,47 @@
       display:none; border-radius:12px; padding:18px 18px; margin-bottom:18px; line-height:1.5;
       font-size: 1.05rem;
     }
-    #banner.show { display:block; }
+    /* Fixed top status — visible after submit without scrolling (form submit is below the fold) */
+    #banner.show {
+      display:block !important;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 3000;
+      margin: 0;
+      border-radius: 0;
+      padding: calc(14px + env(safe-area-inset-top, 0px)) 18px 16px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.22);
+      max-height: 45vh;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
     #banner .banner-title { display:block; font-size:1.25rem; font-weight:800; margin:0 0 6px; }
     #banner .banner-ref { display:block; margin-top:8px; font-weight:700; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     #banner.no {
-      background:#fef3c7; border:2px solid #f59e0b; color:#78350f;
+      background:#fef3c7; border:2px solid #f59e0b; border-left:0; border-right:0; color:#78350f;
     }
     #banner.ok {
-      background:#ecfdf5; border:2px solid #15803d; color:#14532d;
+      background:#ecfdf5; border:2px solid #15803d; border-left:0; border-right:0; color:#14532d;
     }
     #banner a { color: var(--green); font-weight:700; }
+    #form-status {
+      display:none; margin: 14px 0 0; padding: 14px 14px; border-radius: 12px;
+      font-size: 1.05rem; line-height: 1.45; font-weight: 600;
+    }
+    #form-status.show { display:block; }
+    #form-status .banner-title { display:block; font-size:1.2rem; font-weight:800; margin:0 0 6px; }
+    #form-status .banner-ref { display:block; margin-top:8px; font-weight:700; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    #form-status.no {
+      background:#fef3c7; border:2px solid #f59e0b; color:#78350f;
+    }
+    #form-status.ok {
+      background:#ecfdf5; border:2px solid #15803d; color:#14532d;
+    }
+    #form-status a { color: var(--green); font-weight:700; }
+    body.banner-visible { padding-top: 0; }
+    body.banner-visible main { padding-top: 12px; }
     /* HIDDEN FOR NOW (Ben): AI-send marketing — restore by removing .ai-hint-hidden below */
     #ai-hint.ai-hint-hidden { display: none !important; }
     #ai-hint {
@@ -321,6 +352,7 @@
 
       <div id="cf-widget" class="cf-turnstile"></div>
       <p class="hint">Stops junk bots. Takes a second.</p>
+      <div id="form-status" role="status" aria-live="polite"></div>
       <div id="submit-wrap">
         <button type="submit" id="submit-btn" disabled>Request pickup</button>
       </div>
@@ -357,8 +389,10 @@
       var photoUrls = [];
       var form = document.getElementById("pickup-form");
       var banner = document.getElementById("banner");
+      var formStatus = document.getElementById("form-status");
       var btn = document.getElementById("submit-btn");
       var previews = document.getElementById("previews");
+      var statusTerminal = false; // once success/final reject shown, ignore Turnstile clobber
 
       function zipOf(raw) {
         return String(raw || "").replace(/\D/g, "").slice(0, 5);
@@ -377,17 +411,45 @@
         }
         return null;
       }
-      function showBanner(kind, html) {
-        banner.className = "show " + kind;
-        banner.innerHTML = html;
-        banner.scrollIntoView({ behavior: "smooth", block: "start" });
+      function clearStatusUI() {
+        statusTerminal = false;
+        document.body.classList.remove("banner-visible");
+        if (banner) {
+          banner.className = "";
+          banner.innerHTML = "";
+          banner.removeAttribute("style");
+        }
+        if (formStatus) {
+          formStatus.className = "";
+          formStatus.innerHTML = "";
+        }
       }
-      function declineMsg(reason) {
+      function showBanner(kind, html, terminal) {
+        if (statusTerminal && !terminal) return; // do not let Turnstile errors wipe submit result
+        if (terminal) statusTerminal = true;
+        document.body.classList.add("banner-visible");
+        if (banner) {
+          banner.className = "show " + kind;
+          banner.innerHTML = html;
+          banner.style.display = "block";
+        }
+        if (formStatus) {
+          formStatus.className = "show " + kind;
+          formStatus.innerHTML = html;
+        }
+        try {
+          if (banner) banner.focus && banner.setAttribute("tabindex", "-1");
+          if (banner && banner.scrollIntoView) banner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch (e) {}
+      }
+      function declineMsg(reason, terminal) {
         var detail = reason ? String(reason).trim() : "";
         var title = '<span class="banner-title">Request not accepted</span>';
+        var term = terminal !== false;
         if (!detail || /not a fit|junk|mattress|hazard/i.test(detail)) {
           showBanner("no", title +
-            "This doesn’t look like a fit for a free value pickup. We aren’t a junk-haul service — we only pick up items that still have resale value in the Salt Lake valley. You’re welcome to <a href=\"/\">shop the site</a> instead.");
+            "This doesn’t look like a fit for a free value pickup. We aren’t a junk-haul service — we only pick up items that still have resale value in the Salt Lake valley. You’re welcome to <a href=\"/\">shop the site</a> instead.", term);
           return;
         }
         var map = {
@@ -402,7 +464,7 @@
           "bot check failed": "The bot check failed. Refresh and try again."
         };
         var plain = map[detail.toLowerCase()] || detail;
-        showBanner("no", title + plain);
+        showBanner("no", title + plain, term);
       }
       function resizeOne(file) {
         return new Promise(function (resolve, reject) {
@@ -544,13 +606,19 @@
               if (hint) hint.style.display = "none";
               var vp = document.getElementById("voice-panel");
               if (vp) vp.style.display = "none";
+              var aiA = document.getElementById("ai-assistants");
+              if (aiA) aiA.style.display = "none";
               document.querySelector("h1").textContent = "Request submitted";
               document.querySelector(".lead").style.display = "none";
+              // Keep fixed banner + in-form status (form hidden — promote formStatus into main)
+              if (formStatus && formStatus.parentNode === form) {
+                form.parentNode.insertBefore(formStatus, form);
+              }
               var ref = data.reference || data.id || data.requestId || "";
               var okHtml = '<span class="banner-title">Request submitted</span>' +
                 "It passed the first screen. Ben will review and contact you if we’re coming.";
               if (ref) okHtml += '<span class="banner-ref">Reference: ' + String(ref).replace(/[<>&]/g, "") + "</span>";
-              showBanner("ok", okHtml);
+              showBanner("ok", okHtml, true);
               if (opts.onSuccess) opts.onSuccess(data);
               return data;
             }
@@ -560,7 +628,7 @@
             return data || { ok: false, reason: reason };
           })
           .catch(function () {
-            showBanner("no", '<span class="banner-title">Couldn’t send</span>Check your connection and try again.');
+            showBanner("no", '<span class="banner-title">Couldn’t send</span>Check your connection and try again.', true);
             if (opts.onError) opts.onError();
             return { ok: false, reason: "network error" };
           })
@@ -640,8 +708,7 @@
 
       function submitPickupRequest(source, opts) {
         opts = opts || {};
-        banner.className = "";
-        banner.innerHTML = "";
+        clearStatusUI();
         if (!getTurnstileToken()) {
           showCheckBanner();
           if (opts.onNeedTurnstile) opts.onNeedTurnstile();
