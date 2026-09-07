@@ -242,6 +242,29 @@
       background: #fff; color: #444; border: 1px solid #d6d3d1 !important;
     }
     #voice-gate-cancel:hover { background: #f5f5f4; }
+    #voice-gate-modal .vg-step { display: none; }
+    #voice-gate-modal .vg-step.show { display: block; }
+    #voice-gate-modal .vg-fields label {
+      display: block; font-weight: 700; margin: 10px 0 6px; font-size: .9rem; color: #292524;
+    }
+    #voice-gate-modal .vg-fields input,
+    #voice-gate-modal .vg-fields textarea {
+      width: 100%; box-sizing: border-box; border: 1px solid #d6d3d1;
+      border-radius: 10px; padding: 10px 12px; font-size: .95rem;
+      font-family: inherit;
+    }
+    #voice-gate-modal .vg-fields textarea { min-height: 64px; resize: vertical; }
+    #voice-gate-status {
+      margin: 10px 0 0; font-size: .9rem; line-height: 1.4; color: #57534e; min-height: 1.2em;
+    }
+    #voice-gate-status.err { color: #b91c1c; }
+    #voice-gate-check { background: #15803d; color: #fff; }
+    #voice-gate-check:hover { background: #166534; }
+    #voice-gate-check:disabled { opacity: .6; cursor: wait; }
+    #voice-gate-back {
+      background: #fff; color: #444; border: 1px solid #d6d3d1 !important;
+    }
+    #voice-gate-back:hover { background: #f5f5f4; }
 
     #voice-panel {
       display: none;
@@ -329,11 +352,28 @@
     <div id="voice-gate-modal" role="dialog" aria-modal="true" aria-labelledby="voice-gate-title" hidden>
       <div class="vg-card">
         <h2 id="voice-gate-title">Talk to fill this out</h2>
-        <p>Is your item known to be worth <strong>$100+</strong> used? If yes, talking is free — SHV pays for the session. If you’re not sure, pay <strong>$0.25</strong> for AI help figuring out whether it clears that bar. The typed form below stays free either way.</p>
-        <div class="vg-actions">
-          <button type="button" id="voice-gate-free">Yes — worth $100+ (free talk)</button>
-          <button type="button" id="voice-gate-pay">Not sure — $0.25 AI help</button>
-          <button type="button" id="voice-gate-cancel">Cancel</button>
+        <div id="vg-step-choice" class="vg-step show">
+          <p>Free talk is available <strong>after we confirm</strong> your item is plausibly worth <strong>$100+</strong> used (not just a Yes tap). If you’re not sure, pay <strong>$0.25</strong> for AI help figuring that out. The typed form below stays free either way.</p>
+          <div class="vg-actions">
+            <button type="button" id="voice-gate-free">Yes — worth $100+ (check &amp; free talk)</button>
+            <button type="button" id="voice-gate-pay">Not sure — $0.25 AI help</button>
+            <button type="button" id="voice-gate-cancel">Cancel</button>
+          </div>
+        </div>
+        <div id="vg-step-describe" class="vg-step">
+          <p>Tell us what it is so we can confirm it’s plausibly worth $100+ used. Complete the bot check near the form first if you haven’t.</p>
+          <div class="vg-fields">
+            <label for="vg-item-title">What is it? <span class="req">*</span></label>
+            <input id="vg-item-title" type="text" maxlength="120" placeholder="e.g. Mid-century dresser, working KitchenAid mixer" autocomplete="off">
+            <label for="vg-item-desc">Brand / condition / details <span class="opt">(optional)</span></label>
+            <textarea id="vg-item-desc" maxlength="500" placeholder="Brand, size, working condition, what’s included…"></textarea>
+          </div>
+          <p id="voice-gate-status" role="status" aria-live="polite"></p>
+          <div class="vg-actions" style="margin-top:12px">
+            <button type="button" id="voice-gate-check">Check &amp; start free talk</button>
+            <button type="button" id="voice-gate-pay2">Not sure — $0.25 AI help</button>
+            <button type="button" id="voice-gate-back">Back</button>
+          </div>
         </div>
       </div>
     </div>
@@ -341,7 +381,7 @@
     <section id="voice-panel" aria-label="Talk to request pickup" hidden>
       <h2>Talk to fill this out</h2>
       <p class="voice-lead">Say your zip, what it is, phone (spoken is fine), access notes, and add photos here. When it’s complete, say <strong>send it</strong> to submit — or use the free typed form below.</p>
-      <p class="voice-cost" id="voice-cost">If your item is known worth $100+ used, talking is free (SHV pays). Otherwise AI help to figure that out is $0.25. The typed form below stays free.</p>
+      <p class="voice-cost" id="voice-cost">Free talk after we confirm the item is plausibly worth $100+ used (SHV pays). Otherwise AI help is $0.25. The typed form below stays free.</p>
       <div class="voice-actions">
         <button type="button" class="voice-btn" id="voice-start" disabled>Start talking</button>
         <button type="button" class="voice-photos" id="voice-photos">Add photos</button>
@@ -920,6 +960,8 @@
           enabled: false,
           employee: false,
           worthConfirmed: false,
+          itemTitle: "",
+          itemDescription: "",
           _syncTimer: null,
           ws: null,
           audioCtx: null,
@@ -1157,8 +1199,12 @@
             return Promise.reject(new Error("turnstile"));
           }
           var body = { turnstileToken: token, product: "shv-pickup", voiceTest: !!voiceTestQ };
-          // Public free path: user confirmed $100+ used. Never send mint key from the browser.
-          if (state.worthConfirmed) body.worthConfirmed = true;
+          // Public free path: Worker re-checks AI worth. Never send mint key from the browser.
+          if (state.worthConfirmed) {
+            body.worthConfirmed = true;
+            if (state.itemTitle) body.itemTitle = state.itemTitle;
+            if (state.itemDescription) body.itemDescription = state.itemDescription;
+          }
           return fetch("/api/voice/ephemeral", {
             method: "POST",
             credentials: "same-origin",
@@ -1195,6 +1241,16 @@
               startBtn.disabled = false;
               return;
             }
+            if (data.error === "not_worth_enough" || data.error === "worth_check_failed" || data.error === "item_too_short") {
+              state.worthConfirmed = false;
+              setVoiceStatus(
+                (data.message || data.reason || "Free talk not available for this item.") +
+                  " Use $0.25 talk or the typed form.",
+                true
+              );
+              startBtn.disabled = !getTurnstileToken();
+              return;
+            }
             if (!data.ok || !data.value) {
               setVoiceStatus(
                 (data && data.message) || "Voice isn’t available. Typed form stays free.",
@@ -1209,7 +1265,7 @@
                   "Test session (Ben allowlist). Mint key stays on the Worker — not in this page.";
               } else if (data.mode === "sponsored") {
                 costEl.textContent =
-                  "Free talk — SHV is sponsoring this session because you confirmed the item is worth $100+ used. Typed form stays free.";
+                  "Free talk — SHV is sponsoring this session after confirming the item is plausibly worth $100+ used. Typed form stays free.";
               } else if (data.disclose) {
                 costEl.textContent = data.disclose;
               } else {
@@ -1309,7 +1365,7 @@
           if (!costEl) return;
           if (state.worthConfirmed) {
             costEl.textContent =
-              "Free talk — you confirmed the item is worth $100+ used (SHV pays). Typed form stays free.";
+              "Free talk — we confirmed the item is plausibly worth $100+ used (SHV pays). Typed form stays free.";
           } else if (state.employee && (voiceTestQ || state.employee)) {
             costEl.textContent =
               "Employee / Access session. Start talking for a free test mint. Typed form stays free for everyone.";
@@ -1323,8 +1379,27 @@
           opts = opts || {};
           state.employee = !!employee;
           state.enabled = true;
-          if (opts.worthConfirmed) state.worthConfirmed = true;
-          if (opts.paidPath) state.worthConfirmed = false;
+          if (opts.worthConfirmed) {
+            state.worthConfirmed = true;
+            if (opts.itemTitle) state.itemTitle = String(opts.itemTitle);
+            if (opts.itemDescription) state.itemDescription = String(opts.itemDescription);
+            // Prefill typed form if empty
+            try {
+              var titleEl = document.getElementById("title");
+              var descEl = document.getElementById("description");
+              if (titleEl && !String(titleEl.value || "").trim() && state.itemTitle) {
+                titleEl.value = state.itemTitle;
+              }
+              if (descEl && !String(descEl.value || "").trim() && state.itemDescription) {
+                descEl.value = state.itemDescription;
+              }
+            } catch (ePrefill) {}
+          }
+          if (opts.paidPath) {
+            state.worthConfirmed = false;
+            state.itemTitle = "";
+            state.itemDescription = "";
+          }
           panel.hidden = false;
           panel.classList.add("show");
           var hint = document.getElementById("ai-hint");
@@ -1373,8 +1448,34 @@
         var gateModal = document.getElementById("voice-gate-modal");
         var micBtn = document.getElementById("mic-open");
 
+        var vgStepChoice = document.getElementById("vg-step-choice");
+        var vgStepDescribe = document.getElementById("vg-step-describe");
+        var vgStatus = document.getElementById("voice-gate-status");
+        var vgTitleInput = document.getElementById("vg-item-title");
+        var vgDescInput = document.getElementById("vg-item-desc");
+
+        function setGateStatus(msg, isErr) {
+          if (!vgStatus) return;
+          vgStatus.textContent = msg || "";
+          if (isErr) vgStatus.classList.add("err");
+          else vgStatus.classList.remove("err");
+        }
+
+        function showGateStep(step) {
+          if (vgStepChoice) {
+            if (step === "choice") vgStepChoice.classList.add("show");
+            else vgStepChoice.classList.remove("show");
+          }
+          if (vgStepDescribe) {
+            if (step === "describe") vgStepDescribe.classList.add("show");
+            else vgStepDescribe.classList.remove("show");
+          }
+        }
+
         function openGateModal() {
           if (!gateModal) return;
+          showGateStep("choice");
+          setGateStatus("");
           gateModal.hidden = false;
           gateModal.classList.add("show");
         }
@@ -1382,6 +1483,17 @@
           if (!gateModal) return;
           gateModal.classList.remove("show");
           gateModal.hidden = true;
+          showGateStep("choice");
+          setGateStatus("");
+        }
+
+        function takePaidPath() {
+          closeGateModal();
+          enablePanel(false, { paidPath: true });
+          setVoiceStatus(
+            "Complete the bot check if needed, then Start talking ($0.25 when payment is required). Typed form stays free.",
+            false
+          );
         }
 
         if (micBtn) {
@@ -1391,27 +1503,123 @@
         }
         var freeBtn = document.getElementById("voice-gate-free");
         var payBtn = document.getElementById("voice-gate-pay");
+        var payBtn2 = document.getElementById("voice-gate-pay2");
         var cancelBtn = document.getElementById("voice-gate-cancel");
+        var checkBtn = document.getElementById("voice-gate-check");
+        var backBtn = document.getElementById("voice-gate-back");
         if (freeBtn) {
           freeBtn.addEventListener("click", function () {
-            closeGateModal();
-            enablePanel(false, { worthConfirmed: true });
-            setVoiceStatus("Complete the bot check if needed, then Start talking (free — $100+ confirmed).");
+            showGateStep("describe");
+            setGateStatus("");
+            try {
+              var tEl = document.getElementById("title");
+              var dEl = document.getElementById("description");
+              if (vgTitleInput && tEl && !String(vgTitleInput.value || "").trim() && tEl.value) {
+                vgTitleInput.value = tEl.value;
+              }
+              if (vgDescInput && dEl && !String(vgDescInput.value || "").trim() && dEl.value) {
+                vgDescInput.value = dEl.value;
+              }
+              if (vgTitleInput) vgTitleInput.focus();
+            } catch (eFocus) {}
           });
         }
         if (payBtn) {
           payBtn.addEventListener("click", function () {
-            closeGateModal();
-            enablePanel(false, { paidPath: true });
-            setVoiceStatus(
-              "Complete the bot check if needed, then Start talking ($0.25 when payment is required). Typed form stays free.",
-              false
-            );
+            takePaidPath();
+          });
+        }
+        if (payBtn2) {
+          payBtn2.addEventListener("click", function () {
+            takePaidPath();
+          });
+        }
+        if (backBtn) {
+          backBtn.addEventListener("click", function () {
+            showGateStep("choice");
+            setGateStatus("");
           });
         }
         if (cancelBtn) {
           cancelBtn.addEventListener("click", function () {
             closeGateModal();
+          });
+        }
+        if (checkBtn) {
+          checkBtn.addEventListener("click", function () {
+            var title = vgTitleInput ? String(vgTitleInput.value || "").trim() : "";
+            var desc = vgDescInput ? String(vgDescInput.value || "").trim() : "";
+            var combined = (title + " " + desc).trim();
+            if (combined.length < 12) {
+              setGateStatus("Please describe the item more specifically (at least ~12 characters).", true);
+              return;
+            }
+            var token = getTurnstileToken();
+            if (!token) {
+              setGateStatus("Complete the bot check near the form first, then try again.", true);
+              showCheckBanner();
+              return;
+            }
+            checkBtn.disabled = true;
+            setGateStatus("Checking whether it’s plausibly worth $100+ used…");
+            fetch("/api/voice/worth-check", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json"
+              },
+              body: JSON.stringify({
+                turnstileToken: token,
+                itemTitle: title,
+                itemDescription: desc
+              })
+            })
+              .then(function (r) {
+                return r.json().catch(function () { return {}; }).then(function (data) {
+                  return { status: r.status, data: data || {} };
+                });
+              })
+              .then(function (res) {
+                checkBtn.disabled = false;
+                var data = res.data;
+                if (data.error === "turnstile_failed" || (res.status === 401 && !data.ok)) {
+                  setGateStatus((data.message || data.reason || "Bot check failed.") + " Refresh and complete the check near the form.", true);
+                  try { resetTurnstile(); } catch (eR) {}
+                  return;
+                }
+                if (data.error === "worth_check_failed" || res.status === 503) {
+                  setGateStatus(
+                    (data.message || data.reason || "Worth check unavailable.") +
+                      " Try $0.25 AI help or the typed form.",
+                    true
+                  );
+                  return;
+                }
+                if (!data.ok) {
+                  setGateStatus(data.message || data.reason || "Couldn’t check that item.", true);
+                  return;
+                }
+                if (data.plausible === true) {
+                  closeGateModal();
+                  enablePanel(false, {
+                    worthConfirmed: true,
+                    itemTitle: title,
+                    itemDescription: desc
+                  });
+                  setVoiceStatus("Item looks plausibly $100+ — Start talking (free). Complete bot check if needed.");
+                  return;
+                }
+                setGateStatus(
+                  (data.reason || "Doesn’t look like it’s plausibly worth $100+ used.") +
+                    " You can still use $0.25 AI help below.",
+                  true
+                );
+              })
+              .catch(function () {
+                checkBtn.disabled = false;
+                setGateStatus("Network error checking worth. Try again or use $0.25 / typed form.", true);
+              });
           });
         }
         if (gateModal) {
