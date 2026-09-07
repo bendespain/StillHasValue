@@ -1,0 +1,5 @@
+# Copy to .dev.vars for local wrangler — never commit real values.
+# Production: wrangler secret put VOICE_TEST_MINT_KEY
+# Value must match fe-voice-mint Worker secret TEST_MINT_KEY.
+TURNSTILE_SECRET_KEY=
+VOICE_TEST_MINT_KEY=

@@ -1,5 +1,7 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjeUVzMIbR1Mg3orxMoQ8AiVWQbiP91ABsRrZmfisUYvUMXJvsR-3MukhjSJk8ZGGy4g/exec";
 
+const FE_VOICE_MINT_URL = "https://fe-voice-mint.ben-e22.workers.dev";
+
 const SERVICE_ZIPS = new Set([
   // Salt Lake City and 84101–84129
   "84101","84102","84103","84104","84105","84106","84107","84108","84109",
@@ -119,7 +121,7 @@ function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Accept, X-SHV-Pickup",
+    "Access-Control-Allow-Headers": "Content-Type, Accept, X-SHV-Pickup, X-SHV-Voice-Test",
     "Access-Control-Max-Age": "86400",
   };
 }
@@ -895,6 +897,130 @@ async function handleVoice(request, env) {
 }
 
 
+
+async function handleVoiceEphemeral(request, env) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders() });
+  }
+  if (request.method === "GET") {
+    let pricing = { session_price_cents: 25 };
+    try {
+      const r = await fetch(FE_VOICE_MINT_URL + "/v1/pricing");
+      if (r.ok) pricing = await r.json();
+    } catch (e) {}
+    return json({
+      ok: true,
+      product: "shv-pickup",
+      mint: FE_VOICE_MINT_URL,
+      session_price_cents: Number(pricing.session_price_cents) || 25,
+      typed_form_free: true,
+      test_mint: "Worker secret VOICE_TEST_MINT_KEY + CF Access session; browser never sees the key",
+      note: "Public talk is paywalled ($0.25). Typed /api/pickup stays free.",
+    });
+  }
+  if (request.method !== "POST") {
+    return json({ ok: false, error: "method not allowed" }, 405);
+  }
+
+  let data;
+  try {
+    data = await request.json();
+  } catch (e) {
+    return json({ ok: false, error: "invalid_json" }, 400);
+  }
+  data = data || {};
+
+  // Bot gate on SHV before any mint call
+  const bot = await verifyTurnstile(request, env, data);
+  if (bot) return bot;
+
+  const mintBody = {
+    product: "shv-pickup",
+    turnstileToken: String(data.turnstileToken || data["cf-turnstile-response"] || "").trim(),
+  };
+  if (data.sessionCredit) mintBody.sessionCredit = String(data.sessionCredit);
+
+  let mode = "public";
+  // Free Ben test: only when CF Access session is present AND Worker secret is set.
+  // Never put TEST_MINT_KEY / VOICE_TEST_MINT_KEY in frontend JS.
+  if (hasAccessSession(request) && env.VOICE_TEST_MINT_KEY) {
+    mintBody.testKey = env.VOICE_TEST_MINT_KEY;
+    mode = "test";
+  }
+
+  try {
+    const r = await fetch(FE_VOICE_MINT_URL + "/v1/ephemeral", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(mintBody),
+    });
+    const text = await r.text();
+    let parsed = {};
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {}
+
+    if (r.status === 402 || (parsed && parsed.error === "payment_required")) {
+      return json(
+        {
+          ok: false,
+          error: "payment_required",
+          session_price_cents: Number(parsed.session_price_cents) || 25,
+          message:
+            (parsed && parsed.message) ||
+            "Talk requires prepaid session credit ($0.25). The typed form stays free.",
+        },
+        402
+      );
+    }
+    if (parsed && parsed.error === "turnstile_failed") {
+      return json(
+        {
+          ok: false,
+          error: "turnstile_failed",
+          message: "Voice bot check failed. Refresh, complete the check, or use the typed form (free).",
+        },
+        403
+      );
+    }
+    if (!r.ok || !parsed || !parsed.value) {
+      return json(
+        {
+          ok: false,
+          error: (parsed && parsed.error) || "mint_failed",
+          message: "Voice isn’t available right now. The typed form stays free.",
+        },
+        r.status >= 400 && r.status < 600 ? r.status : 502
+      );
+    }
+
+    return json({
+      ok: true,
+      value: parsed.value,
+      expires_at: parsed.expires_at,
+      model: parsed.model || "grok-voice-latest",
+      product: "shv-pickup",
+      ws_url: parsed.ws_url || "wss://api.x.ai/v1/realtime?model=grok-voice-latest",
+      mode,
+      session_price_cents: mode === "test" ? 0 : 25,
+      disclose:
+        mode === "test"
+          ? "Test session (Ben allowlist)."
+          : "Talk session costs $0.25. Typed form stays free.",
+    });
+  } catch (e) {
+    return json(
+      {
+        ok: false,
+        error: "mint_unreachable",
+        message: "Voice mint unreachable. The typed form stays free.",
+      },
+      502
+    );
+  }
+}
+
+
 function hasAccessSession(request) {
   if (request.headers.get("Cf-Access-Jwt-Assertion")) return true;
   const cookie = request.headers.get("Cookie") || "";
@@ -924,6 +1050,9 @@ export default {
     }
     if (url.pathname === "/api/voice") {
       return handleVoice(request, env);
+    }
+    if (url.pathname === "/api/voice-ephemeral") {
+      return handleVoiceEphemeral(request, env);
     }
     if (url.pathname === "/api/search") {
       return handleSearch(request, env, url);

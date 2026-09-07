@@ -1,4 +1,6 @@
 {
+  // Secrets (wrangler secret put): TURNSTILE_SECRET_KEY, VOICE_TEST_MINT_KEY
+  // VOICE_TEST_MINT_KEY must match fe-voice-mint TEST_MINT_KEY — never commit it.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "stillhasvalue",
   "main": "worker.js",
