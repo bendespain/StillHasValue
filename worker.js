@@ -898,24 +898,56 @@ async function handleVoice(request, env) {
 
 
 
+function mintBaseUrl(env) {
+  const raw = String((env && env.VOICE_MINT_URL) || FE_VOICE_MINT_URL || "").trim().replace(/\/$/, "");
+  return raw || FE_VOICE_MINT_URL;
+}
+
+function truthySecret(v) {
+  const s = String(v == null ? "" : v).trim().toLowerCase();
+  return s === "1" || s === "true" || s === "yes" || s === "on";
+}
+
+/** Ben staging: VOICE_BEN_TEST unlocks free test mint without CF Access (phone-friendly). Default off. */
+function benTestOpen(env) {
+  return truthySecret(env && env.VOICE_BEN_TEST);
+}
+
+function canAttachTestMintKey(request, env) {
+  if (!(env && env.VOICE_TEST_MINT_KEY)) return false;
+  if (benTestOpen(env)) return true;
+  if (hasAccessSession(request)) return true;
+  return false;
+}
+
 async function handleVoiceEphemeral(request, env) {
+  const mintUrl = mintBaseUrl(env);
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
   if (request.method === "GET") {
     let pricing = { session_price_cents: 25 };
     try {
-      const r = await fetch(FE_VOICE_MINT_URL + "/v1/pricing");
+      const r = await fetch(mintUrl + "/v1/pricing");
       if (r.ok) pricing = await r.json();
     } catch (e) {}
+    const ben = benTestOpen(env);
+    const hasKey = !!(env && env.VOICE_TEST_MINT_KEY);
+    const access = hasAccessSession(request);
+    const free_test_available = hasKey && (ben || access);
     return json({
       ok: true,
       product: "shv-pickup",
-      mint: FE_VOICE_MINT_URL,
+      mint: mintUrl,
       session_price_cents: Number(pricing.session_price_cents) || 25,
       typed_form_free: true,
-      test_mint: "Worker secret VOICE_TEST_MINT_KEY + CF Access session; browser never sees the key",
-      note: "Public talk is paywalled ($0.25). Typed /api/pickup stays free.",
+      ben_test_open: ben,
+      free_test_available,
+      talk_ui_ok: free_test_available,
+      test_mint:
+        "Worker secrets VOICE_TEST_MINT_KEY (+ VOICE_BEN_TEST or CF Access). Browser never sees the key.",
+      note: "Public talk is paywalled ($0.25). Typed /api/pickup stays free. Free mint is Ben-only.",
+      paths: ["/api/voice/ephemeral", "/api/voice-ephemeral"],
     });
   }
   if (request.method !== "POST") {
@@ -941,15 +973,15 @@ async function handleVoiceEphemeral(request, env) {
   if (data.sessionCredit) mintBody.sessionCredit = String(data.sessionCredit);
 
   let mode = "public";
-  // Free Ben test: only when CF Access session is present AND Worker secret is set.
+  // Free Ben test: VOICE_BEN_TEST (phone / no Access) OR CF Access session.
   // Never put TEST_MINT_KEY / VOICE_TEST_MINT_KEY in frontend JS.
-  if (hasAccessSession(request) && env.VOICE_TEST_MINT_KEY) {
+  if (canAttachTestMintKey(request, env)) {
     mintBody.testKey = env.VOICE_TEST_MINT_KEY;
     mode = "test";
   }
 
   try {
-    const r = await fetch(FE_VOICE_MINT_URL + "/v1/ephemeral", {
+    const r = await fetch(mintUrl + "/v1/ephemeral", {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(mintBody),
@@ -1005,7 +1037,7 @@ async function handleVoiceEphemeral(request, env) {
       session_price_cents: mode === "test" ? 0 : 25,
       disclose:
         mode === "test"
-          ? "Test session (Ben allowlist)."
+          ? "Test session (Ben allowlist). Talking normally costs money — this run is free for testing."
           : "Talk session costs $0.25. Typed form stays free.",
     });
   } catch (e) {
@@ -1019,6 +1051,7 @@ async function handleVoiceEphemeral(request, env) {
     );
   }
 }
+
 
 
 function hasAccessSession(request) {
@@ -1051,7 +1084,7 @@ export default {
     if (url.pathname === "/api/voice") {
       return handleVoice(request, env);
     }
-    if (url.pathname === "/api/voice-ephemeral") {
+    if (url.pathname === "/api/voice/ephemeral" || url.pathname === "/api/voice-ephemeral") {
       return handleVoiceEphemeral(request, env);
     }
     if (url.pathname === "/api/search") {

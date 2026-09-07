@@ -1,6 +1,11 @@
 {
-  // Secrets (wrangler secret put): TURNSTILE_SECRET_KEY, VOICE_TEST_MINT_KEY
-  // VOICE_TEST_MINT_KEY must match fe-voice-mint TEST_MINT_KEY — never commit it.
+  // Secrets (wrangler secret put) — never commit real values:
+  //   TURNSTILE_SECRET_KEY
+  //   VOICE_MINT_URL          optional; default https://fe-voice-mint.ben-e22.workers.dev
+  //   VOICE_TEST_MINT_KEY     same value as fe-voice-mint TEST_MINT_KEY (server-only)
+  //   VOICE_BEN_TEST          optional; "true"/"1" allows free test mint without CF Access
+  //                           (phone-friendly Ben testing). Default OFF. Do not leave on for public.
+  // Browser never sees TEST_MINT_KEY / XAI keys. Public mint stays paywalled ($0.25).
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "stillhasvalue",
   "main": "worker.js",
