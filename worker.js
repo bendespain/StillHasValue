@@ -898,6 +898,120 @@ async function runVoiceModels(env, messages) {
   return "";
 }
 
+/** Fail-closed AI pressure-test: used item plausibly worth $100+ (US/SLC thrift). */
+async function assessItemWorth100Plus(env, itemText) {
+  const text = String(itemText || "").trim();
+  if (text.length < 12) {
+    return { plausible: false, reason: "Item description too short or vague.", failed: false };
+  }
+  const junk = hasJunk(text, "");
+  if (junk) {
+    return { plausible: false, reason: "Not a fit for free value pickup (" + junk + ").", failed: false };
+  }
+  const system =
+    "You decide if a used consumer item described is *plausibly* worth at least $100 on the used market " +
+    "(US / Salt Lake City thrift and resale style). Be skeptical of vague claims like \"stuff\", \"furniture\", " +
+    "or \"electronics\" alone. Mattresses, junk, hazardous materials = no. " +
+    'Reply ONLY JSON: {"plausible":true|false,"reason":"short"}';
+  const messages = [
+    { role: "system", content: system },
+    { role: "user", content: text.slice(0, 800) },
+  ];
+  let raw = "";
+  try {
+    raw = await runVoiceModels(env, messages);
+  } catch (e) {
+    raw = "";
+  }
+  if (!raw) {
+    return {
+      plausible: false,
+      reason: "Worth check unavailable — try $0.25 talk or the typed form.",
+      failed: true,
+    };
+  }
+  let parsed = extractJson(raw);
+  if (!parsed) {
+    try {
+      parsed = JSON.parse(String(raw).trim());
+    } catch (e) {
+      parsed = null;
+    }
+  }
+  if (!parsed || typeof parsed !== "object" || typeof parsed.plausible !== "boolean") {
+    return {
+      plausible: false,
+      reason: "Worth check failed to parse — try $0.25 talk or the typed form.",
+      failed: true,
+    };
+  }
+  return {
+    plausible: parsed.plausible === true,
+    reason: String(
+      parsed.reason ||
+        (parsed.plausible ? "Plausibly worth $100+ used." : "Not clearly worth $100+ used.")
+    ).slice(0, 200),
+    failed: false,
+  };
+}
+
+function combineItemText(data) {
+  const title = String((data && (data.itemTitle || data.title)) || "").trim();
+  const desc = String(
+    (data && (data.itemDescription || data.description || data.item)) || ""
+  ).trim();
+  return [title, desc].filter(Boolean).join(" ").trim();
+}
+
+async function handleVoiceWorthCheck(request, env) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders() });
+  }
+  if (request.method !== "POST") {
+    return json({ ok: false, error: "method not allowed" }, 405);
+  }
+  let data;
+  try {
+    data = await request.json();
+  } catch (e) {
+    return json({ ok: false, error: "invalid_json" }, 400);
+  }
+  data = data || {};
+  const bot = await verifyTurnstile(request, env, data);
+  if (bot) return bot;
+
+  const combined = combineItemText(data);
+  if (combined.length < 12) {
+    return json(
+      {
+        ok: false,
+        error: "item_too_short",
+        message: "Describe the item more specifically (at least ~12 characters).",
+      },
+      400
+    );
+  }
+
+  const assess = await assessItemWorth100Plus(env, combined);
+  if (assess.failed) {
+    return json(
+      {
+        ok: false,
+        error: "worth_check_failed",
+        plausible: false,
+        reason: assess.reason,
+        message: assess.reason,
+      },
+      503
+    );
+  }
+  return json({
+    ok: true,
+    plausible: assess.plausible === true,
+    reason: assess.reason,
+  });
+}
+
 async function handleVoice(request, env) {
   const headers = Object.assign({ "Content-Type": "application/json; charset=utf-8" }, corsHeaders());
   if (request.method === "OPTIONS") {
@@ -1045,8 +1159,8 @@ async function handleVoiceEphemeral(request, env) {
       talk_ui_ok: free_test_available,
       test_mint:
         "Worker secrets VOICE_TEST_MINT_KEY (+ VOICE_BEN_TEST or CF Access). Browser never sees the key.",
-      note: "Public talk is paywalled ($0.25). Typed /api/pickup stays free. Free mint is Ben-only.",
-      paths: ["/api/voice/ephemeral", "/api/voice-ephemeral"],
+      note: "Public talk: $0.25 unpaid, or SHV-sponsored free after Turnstile + Worker AI confirms item is plausibly worth $100+ used (VOICE_TEST_MINT_KEY). Typed /api/pickup stays free. Ben test mint via VOICE_BEN_TEST or Access.",
+      paths: ["/api/voice/ephemeral", "/api/voice-ephemeral", "/api/voice/worth-check", "/api/voice-worth-check"],
     });
   }
   if (request.method !== "POST") {
@@ -1074,9 +1188,66 @@ async function handleVoiceEphemeral(request, env) {
   let mode = "public";
   // Free Ben test: VOICE_BEN_TEST (phone / no Access) OR CF Access session.
   // Never put TEST_MINT_KEY / VOICE_TEST_MINT_KEY in frontend JS.
+  // SHV-sponsored public free: Turnstile (above) + item text + server-side AI worth check.
+  // Fail closed — do not honor worthConfirmed alone; never fall through to free mint on AI outage.
+  const sponsoredAsk =
+    data.worthConfirmed === true ||
+    data.shvSponsored === true ||
+    String(data.worthConfirmed || "").toLowerCase() === "true" ||
+    String(data.shvSponsored || "").toLowerCase() === "true";
   if (canAttachTestMintKey(request, env)) {
     mintBody.testKey = env.VOICE_TEST_MINT_KEY;
     mode = "test";
+  } else if (sponsoredAsk) {
+    const combined = combineItemText(data);
+    if (combined.length < 12) {
+      return json(
+        {
+          ok: false,
+          error: "item_too_short",
+          message:
+            "Free talk needs a specific item description first. Or use $0.25 talk / the typed form.",
+        },
+        400
+      );
+    }
+    const assess = await assessItemWorth100Plus(env, combined);
+    if (assess.failed) {
+      return json(
+        {
+          ok: false,
+          error: "worth_check_failed",
+          reason: assess.reason,
+          message:
+            "Couldn’t verify item worth right now. Use $0.25 talk or the typed form (free).",
+        },
+        503
+      );
+    }
+    if (assess.plausible !== true) {
+      return json(
+        {
+          ok: false,
+          error: "not_worth_enough",
+          reason: assess.reason,
+          message:
+            "This doesn’t look like it’s plausibly worth $100+ used. Try $0.25 AI help or the free typed form.",
+        },
+        403
+      );
+    }
+    if (!(env && env.VOICE_TEST_MINT_KEY)) {
+      return json(
+        {
+          ok: false,
+          error: "sponsor_unavailable",
+          message: "Free sponsored talk isn’t available right now. Try $0.25 or the typed form.",
+        },
+        503
+      );
+    }
+    mintBody.testKey = env.VOICE_TEST_MINT_KEY;
+    mode = "sponsored";
   }
 
   try {
@@ -1125,6 +1296,7 @@ async function handleVoiceEphemeral(request, env) {
       );
     }
 
+    const freeMode = mode === "test" || mode === "sponsored";
     return json({
       ok: true,
       value: parsed.value,
@@ -1133,11 +1305,13 @@ async function handleVoiceEphemeral(request, env) {
       product: "shv-pickup",
       ws_url: parsed.ws_url || "wss://api.x.ai/v1/realtime?model=grok-voice-latest",
       mode,
-      session_price_cents: mode === "test" ? 0 : 25,
+      session_price_cents: freeMode ? 0 : 25,
       disclose:
         mode === "test"
           ? "Test session (Ben allowlist). Talking normally costs money — this run is free for testing."
-          : "Talk session costs $0.25. Typed form stays free.",
+          : mode === "sponsored"
+            ? "Free talk — SHV is sponsoring this session (item confirmed worth $100+ used). Typed form stays free."
+            : "Talk session costs $0.25. Typed form stays free.",
     });
   } catch (e) {
     return json(
@@ -1182,6 +1356,9 @@ export default {
     }
     if (url.pathname === "/api/voice") {
       return handleVoice(request, env);
+    }
+    if (url.pathname === "/api/voice/worth-check" || url.pathname === "/api/voice-worth-check") {
+      return handleVoiceWorthCheck(request, env);
     }
     if (url.pathname === "/api/voice/ephemeral" || url.pathname === "/api/voice-ephemeral") {
       return handleVoiceEphemeral(request, env);
