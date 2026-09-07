@@ -12,8 +12,34 @@
     "offerup",
     "nextdoor"
   ],
-  "count_available": 140,
+  "count_available": 141,
   "items": [
+    {
+      "id": "shv-1a07e05c855-5fc7",
+      "title": "Craftsman LT2000 Riding Mower 42 in 18.5 hp with Twin Bagger",
+      "price": 695,
+      "category": "Lawn & outdoor",
+      "status": "available",
+      "image": "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/0.jpg",
+      "url": "https://stillhasvalue.com/#item-shv-1a07e05c855-5fc7",
+      "channels": {
+        "ksl": null,
+        "facebook": null,
+        "ebay": null
+      },
+      "condition": "Used \u2014 seat torn (foam showing), deck worn/rusty, twin bagger included",
+      "description": "Craftsman LT2000 riding mower, 18.5 OHV, ~42\" Heavy Duty deck, with black twin bagger / dual catcher installed.\n\nGray hood with red Craftsman stripe, white rims, headlights. Includes the rear twin bagger \u2014 not a bare side-discharge-only unit.\n\nHonest wear: black seat has large tears with foam showing; mower deck shows heavy surface wear/rust/paint loss; bagger bins are dusty/used. Good candidate if you want bagging without paying premium red-unit money.\n\nLocal pickup Murray / West Jordan / Salt Lake valley. Cash or Venmo. Still Has Value \u2014 we prove it has value.",
+      "images": [
+        "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/0.jpg",
+        "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/1.jpg",
+        "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/2.jpg",
+        "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/3.jpg",
+        "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/4.jpg",
+        "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/5.jpg",
+        "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/6.jpg",
+        "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/7.jpg"
+      ]
+    },
     {
       "id": "shv-hechinger-1642",
       "title": "Hechinger 16-42 Hi Cut riding mower, 42\"",
