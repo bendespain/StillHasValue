@@ -1045,7 +1045,7 @@ async function handleVoiceEphemeral(request, env) {
       talk_ui_ok: free_test_available,
       test_mint:
         "Worker secrets VOICE_TEST_MINT_KEY (+ VOICE_BEN_TEST or CF Access). Browser never sees the key.",
-      note: "Public talk is paywalled ($0.25). Typed /api/pickup stays free. Free mint is Ben-only.",
+      note: "Public talk: $0.25 unpaid, or SHV-sponsored free when worthConfirmed/shvSponsored + VOICE_TEST_MINT_KEY. Typed /api/pickup stays free. Ben test mint via VOICE_BEN_TEST or Access.",
       paths: ["/api/voice/ephemeral", "/api/voice-ephemeral"],
     });
   }
@@ -1074,9 +1074,19 @@ async function handleVoiceEphemeral(request, env) {
   let mode = "public";
   // Free Ben test: VOICE_BEN_TEST (phone / no Access) OR CF Access session.
   // Never put TEST_MINT_KEY / VOICE_TEST_MINT_KEY in frontend JS.
+  // SHV-sponsored public free: client asserts worthConfirmed / shvSponsored after gate
+  // (honor-system — spoofable; Turnstile still required). Key stays on Worker.
+  const sponsoredAsk =
+    data.worthConfirmed === true ||
+    data.shvSponsored === true ||
+    String(data.worthConfirmed || "").toLowerCase() === "true" ||
+    String(data.shvSponsored || "").toLowerCase() === "true";
   if (canAttachTestMintKey(request, env)) {
     mintBody.testKey = env.VOICE_TEST_MINT_KEY;
     mode = "test";
+  } else if (sponsoredAsk && env && env.VOICE_TEST_MINT_KEY) {
+    mintBody.testKey = env.VOICE_TEST_MINT_KEY;
+    mode = "sponsored";
   }
 
   try {
@@ -1125,6 +1135,7 @@ async function handleVoiceEphemeral(request, env) {
       );
     }
 
+    const freeMode = mode === "test" || mode === "sponsored";
     return json({
       ok: true,
       value: parsed.value,
@@ -1133,11 +1144,13 @@ async function handleVoiceEphemeral(request, env) {
       product: "shv-pickup",
       ws_url: parsed.ws_url || "wss://api.x.ai/v1/realtime?model=grok-voice-latest",
       mode,
-      session_price_cents: mode === "test" ? 0 : 25,
+      session_price_cents: freeMode ? 0 : 25,
       disclose:
         mode === "test"
           ? "Test session (Ben allowlist). Talking normally costs money — this run is free for testing."
-          : "Talk session costs $0.25. Typed form stays free.",
+          : mode === "sponsored"
+            ? "Free talk — SHV is sponsoring this session (item confirmed worth $100+ used). Typed form stays free."
+            : "Talk session costs $0.25. Typed form stays free.",
     });
   } catch (e) {
     return json(
