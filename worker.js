@@ -685,16 +685,83 @@ function voiceReady(fields) {
   return !!(title && desc.length >= 15 && z.length === 5 && name && phone);
 }
 
+
+const SPOKEN_DIGIT = {
+  zero: "0", oh: "0", o: "0",
+  one: "1", two: "2", three: "3", four: "4", five: "5",
+  six: "6", seven: "7", eight: "8", nine: "9",
+  niner: "9",
+};
+
+/** Turn spoken number words / digits in text into a digit string (for phone/zip checks). */
+function spokenDigits(text) {
+  const raw = String(text || "").toLowerCase();
+  const out = [];
+  const tokens = raw
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  let i = 0;
+  while (i < tokens.length) {
+    const t = tokens[i];
+    if (/^\d+$/.test(t)) {
+      out.push(...t.split(""));
+      i++;
+      continue;
+    }
+    // "double five" / "triple two"
+    if ((t === "double" || t === "triple") && i + 1 < tokens.length) {
+      const next = tokens[i + 1];
+      const d = SPOKEN_DIGIT[next] || (/^\d$/.test(next) ? next : null);
+      if (d) {
+        const n = t === "triple" ? 3 : 2;
+        for (let k = 0; k < n; k++) out.push(d);
+        i += 2;
+        continue;
+      }
+    }
+    if (SPOKEN_DIGIT[t]) {
+      out.push(SPOKEN_DIGIT[t]);
+      i++;
+      continue;
+    }
+    i++;
+  }
+  return out.join("");
+}
+
+function transcriptDigitStream(transcript) {
+  const raw = String(transcript || "");
+  const fromDigits = raw.replace(/\D/g, "");
+  const fromSpoken = spokenDigits(raw);
+  // Prefer union: spoken may fill gaps when ASR wrote words; digits when ASR wrote numerals.
+  if (!fromSpoken) return fromDigits;
+  if (!fromDigits) return fromSpoken;
+  if (fromDigits.includes(fromSpoken) || fromSpoken.includes(fromDigits)) {
+    return fromSpoken.length >= fromDigits.length ? fromSpoken : fromDigits;
+  }
+  return fromDigits + fromSpoken;
+}
+
 function dropInventedContact(extracted, incoming, transcript) {
-  const tDigits = String(transcript || "").replace(/\D/g, "");
+  const tDigits = transcriptDigitStream(transcript);
   const out = Object.assign({}, extracted);
   if (out.zip && !zipOf(incoming.zip)) {
     const z = zipOf(out.zip);
-    if (!tDigits.includes(z)) delete out.zip;
+    if (z && !tDigits.includes(z)) delete out.zip;
   }
   if (out.phone && !String(incoming.phone || "").trim()) {
-    const p = String(out.phone).replace(/\D/g, "");
-    if (p.length < 7 || !tDigits.includes(p)) delete out.phone;
+    let p = String(out.phone).replace(/\D/g, "");
+    if (p.length === 11 && p.charAt(0) === "1") p = p.slice(1);
+    // Keep if transcript has the digits (typed or spoken-as-words), or last 7 match.
+    const ok =
+      p.length >= 7 &&
+      (tDigits.includes(p) ||
+        tDigits.includes(p.slice(-10)) ||
+        tDigits.includes(p.slice(-7)) ||
+        (tDigits.length >= 7 && p.endsWith(tDigits.slice(-7))));
+    if (!ok) delete out.phone;
   }
   return out;
 }
@@ -717,8 +784,8 @@ function nextMissingSpeak(merged) {
   if (desc.length < 15) return "Tell me a bit more about the condition or details.";
   if (z.length !== 5) return "What is your five-digit zip code?";
   if (!name) return "What is your name?";
-  if (!phone) return "What phone number should we use?";
-  return "I have what I need. Add photos if you haven't, then say send it.";
+  if (!phone) return "What phone number should we use? You can say the digits out loud.";
+  return "I have what I need. Add a photo with Add photos if you haven't, then say send it.";
 }
 
 function lexicalPickupExtract(transcript, fields) {
@@ -738,6 +805,16 @@ function lexicalPickupExtract(transcript, fields) {
     let nd = phoneMatch[0].replace(/\D/g, "");
     if (nd.length === 11 && nd.charAt(0) === "1") nd = nd.slice(1);
     if (nd.length >= 7) out.phone = nd;
+  } else {
+    const spoken = spokenDigits(t);
+    let nd = spoken;
+    if (nd.length === 11 && nd.charAt(0) === "1") nd = nd.slice(1);
+    // Prefer 10-digit US phone when a longer spoken stream is present
+    if (nd.length > 10) {
+      const m10 = nd.match(/(\d{10})/);
+      if (m10) nd = m10[1];
+    }
+    if (nd.length >= 7 && nd.length <= 10) out.phone = nd;
   }
 
   const nameMatch = t.match(/\b(?:my name is|name is|i am|i'm)\s+([A-Za-z][A-Za-z .'-]{1,60}?)(?=[,.]|\s+(?:and|phone|zip|at|in|my|the|it)\b|$)/i);
@@ -786,13 +863,18 @@ function lexicalPickupExtract(transcript, fields) {
     };
   }
   const ready = voiceReady(merged);
-  return {
+  const confirm = /\b(yes|yeah|yep|send it|submit|request pickup|go ahead|please send)\b/i.test(lower);
+  const outLex = {
     fields: extracted,
     speak: ready
-      ? ("Got it: " + merged.title + ". Add photos if needed, then say send it.")
+      ? (confirm
+          ? "Sending your pickup request."
+          : ("Got it: " + merged.title + ". Add a photo with Add photos if needed, then say send it."))
       : nextMissingSpeak(merged),
     ready,
   };
+  if (ready && confirm) outLex.submit = true;
+  return outLex;
 }
 
 async function runVoiceModels(env, messages) {
@@ -838,9 +920,9 @@ async function handleVoice(request, env) {
   const history = Array.isArray(body && body.history) ? body.history.slice(-6) : [];
 
   const system =
-    "You help people request a FREE pickup from Still Has Value in the Salt Lake valley. We pick up items that still have resale value. Not junk hauling. Extract what they said into JSON. Never invent a phone number or zip. Only set phone or zip if they clearly said the digits. condition must be one of: working, needs minor repair, for parts, not sure. category must be one of: furniture, appliance, electronics, tools, sporting/outdoor, auto, other.\nKnown fields so far: " +
+    "You help people request a FREE pickup from Still Has Value in the Salt Lake valley. We pick up items that still have resale value. Not junk hauling. Extract what they said into JSON. Never invent a phone number or zip. Accept spoken phones as digit words (five five five…) or numerals — set phone when they clearly said it; never tell them to type the phone. Remind them to use Add photos in the Talk UI for pictures — do not say filling the form is the only path. condition must be one of: working, needs minor repair, for parts, not sure. category must be one of: furniture, appliance, electronics, tools, sporting/outdoor, auto, other.\nKnown fields so far: " +
     JSON.stringify(pickVoiceFields(fields)) +
-    '\nReply ONLY JSON: {"fields":{...only keys you are confident about...},"speak":"one short spoken question or recap","ready":false}\nSet ready true only when title, description (at least 15 characters), zip, name, and phone are present (in incoming fields or newly extracted). When ready, speak a one-sentence recap and ask them to confirm they want to send it.\nIf they said yes/submit/send it and ready, {"fields":{},"speak":"Sending your pickup request.","ready":true,"submit":true}\nIf the item is junk, a mattress, box spring, hazardous, chemicals, trash, or similar, speak that it is not a fit for free value pickup, set ready false, and do not set submit.';
+    '\nReply ONLY JSON: {"fields":{...only keys you are confident about...},"speak":"one short spoken question or recap","ready":false}\nSet ready true only when title, description (at least 15 characters), zip, name, and phone are present (in incoming fields or newly extracted). When ready, speak a one-sentence recap and ask them to confirm they want to send it (and add a photo with Add photos if missing).\nIf they said yes/submit/send it and ready, {"fields":{},"speak":"Sending your pickup request.","ready":true,"submit":true}\nIf the item is junk, a mattress, box spring, hazardous, chemicals, trash, or similar, speak that it is not a fit for free value pickup, set ready false, and do not set submit.';
 
   const messages = [{ role: "system", content: system }];
   for (const h of history) {
@@ -875,7 +957,13 @@ async function handleVoice(request, env) {
     extracted = lex.fields || {};
     speak = lex.speak || speak;
     mode = "lexical";
-    submit = false;
+    submit = lex.submit === true;
+  } else {
+    // Still merge lexical confirm / spoken phone if AI omitted them
+    const lex = lexicalPickupExtract(transcript, Object.assign({}, fields, extracted));
+    if (lex.submit === true) submit = true;
+    if (!extracted.phone && lex.fields && lex.fields.phone) extracted.phone = lex.fields.phone;
+    if (!extracted.zip && lex.fields && lex.fields.zip) extracted.zip = lex.fields.zip;
   }
 
   const merged = Object.assign({}, pickVoiceFields(fields), extracted);
@@ -891,8 +979,19 @@ async function handleVoice(request, env) {
 
   const ready = voiceReady(merged);
   if (!speak) speak = nextMissingSpeak(merged);
+  // Confirm phrases can submit from AI or lexical once fields are ready
+  if (!submit && ready) {
+    const lower = transcript.toLowerCase();
+    if (/\b(yes|yeah|yep|send it|submit|request pickup|go ahead|please send)\b/i.test(lower)) {
+      submit = true;
+      if (!speak) speak = "Sending your pickup request.";
+    }
+  }
   const out = { fields: extracted, speak, ready, mode };
-  if (submit && ready && mode === "ai") out.submit = true;
+  if (submit && ready) {
+    out.submit = true;
+    if (!out.speak) out.speak = "Sending your pickup request.";
+  }
   return new Response(JSON.stringify(out), { status: 200, headers });
 }
 
@@ -1159,7 +1258,16 @@ export default {
         let parsed = {};
         try { parsed = JSON.parse(text); } catch (e) {}
         if (r.ok && parsed && parsed.ok) {
-          return json({ ok: true, status: "queued", notify: parsed.notify || "email" });
+          const reference =
+            String(parsed.reference || parsed.id || parsed.requestId || "").trim() ||
+            ("SHV-" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase());
+          return json({
+            ok: true,
+            status: "queued",
+            notify: parsed.notify || "email",
+            reference,
+            id: reference,
+          });
         }
         return json({ ok: false, status: "error", reason: "could not save pickup" }, 502);
       } catch (e) {
