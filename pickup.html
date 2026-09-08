@@ -273,9 +273,9 @@
       color: #92400e;
     }
     .human-verify .cf-turnstile { margin-top: 0; }
-    #voice-panel .human-verify { margin: 0 0 12px; }
+    #talk .human-verify { margin: 0 0 12px; }
 
-    #voice-panel {
+    #talk {
       display: none;
       background: #fff;
       border: 2px solid #d97706;
@@ -284,22 +284,22 @@
       margin: 0 0 20px;
       box-shadow: 0 2px 12px rgba(0,0,0,.06);
     }
-    #voice-panel.show { display: block; }
-    #voice-panel h2 { margin: 0 0 8px; font-size: 1.15rem; color: #15803d; }
-    #voice-panel .voice-lead { margin: 0 0 10px; line-height: 1.45; font-size: .95rem; color: #444; }
-    #voice-panel .voice-cost {
+    #talk.show { display: block; }
+    #talk h2 { margin: 0 0 8px; font-size: 1.15rem; color: #15803d; }
+    #talk .voice-lead { margin: 0 0 10px; line-height: 1.45; font-size: .95rem; color: #444; }
+    #talk .voice-cost {
       margin: 0 0 12px; font-size: .88rem; line-height: 1.4; color: #78350f;
       background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 8px 10px;
     }
-    #voice-panel .voice-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    #voice-panel button.voice-btn {
+    #talk .voice-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    #talk button.voice-btn {
       border: 0; border-radius: 999px; padding: 11px 18px; font-weight: 700;
       cursor: pointer; font-size: .95rem; background: #d97706; color: #fff;
     }
-    #voice-panel button.voice-btn:hover { background: #b45309; }
-    #voice-panel button.voice-btn.live { background: #15803d; }
-    #voice-panel button.voice-btn:disabled { opacity: .55; cursor: not-allowed; }
-    #voice-panel button.voice-stop {
+    #talk button.voice-btn:hover { background: #b45309; }
+    #talk button.voice-btn.live { background: #15803d; }
+    #talk button.voice-btn:disabled { opacity: .55; cursor: not-allowed; }
+    #talk button.voice-stop {
       border: 1px solid #d6d3d1; border-radius: 999px; padding: 10px 14px;
       background: #fff; font-weight: 700; cursor: pointer; font-size: .9rem;
     }
@@ -309,11 +309,11 @@
       margin-top: 8px; font-size: .85rem; color: #57534e; line-height: 1.4;
       max-height: 4.5em; overflow: auto; white-space: pre-wrap;
     }
-    #voice-panel button.voice-photos {
+    #talk button.voice-photos {
       background: #15803d; color: #fff; border: 0; border-radius: 999px; padding: 10px 14px;
       font-weight: 700; cursor: pointer; font-size: .95rem;
     }
-    #voice-panel button.voice-photos:hover { background: #166534; }
+    #talk button.voice-photos:hover { background: #166534; }
 
 
     input, textarea, select {
@@ -377,7 +377,7 @@
       </div>
     </div>
 
-    <section id="voice-panel" aria-label="Talk to request pickup" hidden>
+    <section id="talk" aria-label="Talk to request pickup" hidden>
       <h2>Talk</h2>
       <div class="human-verify" id="voice-human-verify">
         <h3>Verify you’re human</h3>
@@ -739,7 +739,7 @@
               form.style.display = "none";
               var hint = document.getElementById("ai-hint");
               if (hint) hint.style.display = "none";
-              var vp = document.getElementById("voice-panel");
+              var vp = document.getElementById("talk");
               if (vp) vp.style.display = "none";
               var aiA = document.getElementById("ai-assistants");
               if (aiA) aiA.style.display = "none";
@@ -976,7 +976,7 @@
       // --- FE voice mint (talk-first) — Ben test / paywalled public ---
       (function () {
         var WS_FALLBACK = "wss://api.x.ai/v1/realtime?model=grok-voice-latest";
-        var panel = document.getElementById("voice-panel");
+        var panel = document.getElementById("talk");
         var startBtn = document.getElementById("voice-start");
         var stopBtn = document.getElementById("voice-stop");
         var photosBtn = document.getElementById("voice-photos");
