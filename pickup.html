@@ -232,9 +232,6 @@
     #voice-gate-modal p {
       margin: 0 0 12px; line-height: 1.45; font-size: .95rem; color: #444;
     }
-    #voice-gate-modal .vg-purpose {
-      font-size: 1.02rem; color: #1c1917; font-weight: 600;
-    }
     #voice-gate-modal .vg-choice {
       margin: 0 0 8px; font-size: .92rem;
     }
@@ -540,19 +537,18 @@
 
     <div id="voice-gate-modal" role="dialog" aria-modal="true" aria-labelledby="voice-gate-title" hidden>
       <div class="vg-card">
-        <h2 id="voice-gate-title" class="sr-only">Talk with an AI to fill this form</h2>
+        <h2 id="voice-gate-title">Grok Voice costs money</h2>
         <div class="human-verify" id="vg-human-verify">
           <h3>Verify you’re human</h3>
           <div id="vg-turnstile" class="cf-turnstile" aria-label="Human verification"></div>
           <p class="hv-done">Verified</p>
         </div>
         <div id="vg-step-choice" class="vg-step show">
-          <p class="vg-purpose">Next you’ll <strong>talk with an AI</strong>. It listens and fills this pickup form for you.</p>
-          <p class="vg-choice">Check the box if you vouch it still has <strong>significant value</strong> to someone else (think ~$100+). We’ll trust you and cover Talk. Leave it unchecked if you’re not sure — then Talk is <strong>$0.25</strong> and we’ll figure that out with you while you talk.</p>
+          <p class="vg-choice">It fills this form while you talk. Vouch significant value to someone else (think ~$100+) and we cover it — otherwise Talk is <strong>$0.25</strong>.</p>
           <p id="voice-gate-status" role="status" aria-live="polite">Finish the human check above.</p>
           <div class="vg-vouch" id="vg-vouch-wrap">
             <input type="checkbox" id="voice-gate-vouch" disabled>
-            <label for="voice-gate-vouch">I vouch it still has significant value to someone else (think ~$100+)</label>
+            <label for="voice-gate-vouch">I vouch — significant value (think ~$100+)</label>
           </div>
           <div class="vg-actions">
             <button type="button" id="voice-gate-go" class="pay" disabled>Start talking — $0.25</button>
@@ -1770,7 +1766,7 @@
               try {
                 ws.send(JSON.stringify({
                   type: "session.update",
-                  session: { instructions: VOICE_INSTRUCTIONS }
+                  session: { instructions: VOICE_INSTRUCTIONS, voice: "rex" }
                 }));
                 // Prompt opening speak so the agent starts with “Tell me about the item…”
                 ws.send(JSON.stringify({ type: "response.create" }));
