@@ -265,6 +265,26 @@
       background: #fff; color: #444; border: 1px solid #d6d3d1 !important;
     }
     #voice-gate-back:hover { background: #f5f5f4; }
+    .human-verify {
+      margin: 0 0 14px;
+      padding: 12px 12px 10px;
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      background: #fffbeb;
+    }
+    .human-verify h3 {
+      margin: 0 0 4px;
+      font-size: 1rem;
+      color: #78350f;
+    }
+    .human-verify p {
+      margin: 0 0 10px;
+      font-size: .9rem;
+      line-height: 1.4;
+      color: #92400e;
+    }
+    .human-verify .cf-turnstile { margin-top: 0; }
+    #voice-panel .human-verify { margin: 0 0 12px; }
 
     #voice-panel {
       display: none;
@@ -352,6 +372,11 @@
     <div id="voice-gate-modal" role="dialog" aria-modal="true" aria-labelledby="voice-gate-title" hidden>
       <div class="vg-card">
         <h2 id="voice-gate-title">Talk to fill this out</h2>
+        <div class="human-verify" id="vg-human-verify">
+          <h3>Verify you’re human</h3>
+          <p>Complete this check before Talk. It proves you’re a person, not a bot.</p>
+          <div id="vg-turnstile" class="cf-turnstile" aria-label="Human verification"></div>
+        </div>
         <div id="vg-step-choice" class="vg-step show">
           <p>Free talk is available <strong>after we confirm</strong> your item is plausibly worth <strong>$100+</strong> used (not just a Yes tap). If you’re not sure, pay <strong>$0.25</strong> for AI help figuring that out. The typed form below stays free either way.</p>
           <div class="vg-actions">
@@ -361,7 +386,7 @@
           </div>
         </div>
         <div id="vg-step-describe" class="vg-step">
-          <p>Tell us what it is so we can confirm it’s plausibly worth $100+ used. Complete the bot check near the form first if you haven’t.</p>
+          <p>Tell us what it is so we can confirm it’s plausibly worth $100+ used. Make sure the <strong>Verify you’re human</strong> check above is done first.</p>
           <div class="vg-fields">
             <label for="vg-item-title">What is it? <span class="req">*</span></label>
             <input id="vg-item-title" type="text" maxlength="120" placeholder="e.g. Mid-century dresser, working KitchenAid mixer" autocomplete="off">
@@ -380,6 +405,11 @@
 
     <section id="voice-panel" aria-label="Talk to request pickup" hidden>
       <h2>Talk to fill this out</h2>
+      <div class="human-verify" id="voice-human-verify">
+        <h3>Verify you’re human</h3>
+        <p>Complete this check before you start talking.</p>
+        <div id="voice-panel-turnstile" class="cf-turnstile" aria-label="Human verification"></div>
+      </div>
       <p class="voice-lead">Say your zip, what it is, phone (spoken is fine), access notes, and add photos here. When it’s complete, say <strong>send it</strong> to submit — or use the free typed form below.</p>
       <p class="voice-cost" id="voice-cost">Free talk after we confirm the item is plausibly worth $100+ used (SHV pays). Otherwise AI help is $0.25. The typed form below stays free.</p>
       <div class="voice-actions">
@@ -631,12 +661,22 @@
       }
       function showCheckBanner() {
         if (!window.turnstile || window.__tsWidgetId == null) {
-          showBanner("no", "The bot check is still loading. Wait a moment and try again.");
+          showBanner("no", "The human check is still loading. Wait a moment and try again.");
         } else {
-          showBanner("no", "Please complete the check (the widget is right above the button).");
+          showBanner("no", "Please verify you’re human (the check is right above the button).");
         }
         var w = document.getElementById("cf-widget");
         if (w) w.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      function onTurnstileToken(token) {
+        window.__tsToken = token || "";
+        setSubmitEnabled(!!window.__tsToken);
+        try {
+          var startBtn = document.getElementById("voice-start");
+          if (startBtn && !startBtn.classList.contains("live")) {
+            startBtn.disabled = !window.__tsToken;
+          }
+        } catch (eSync) {}
       }
       function resetTurnstile() {
         window.__tsToken = "";
@@ -645,28 +685,29 @@
         try {
           if (window.turnstile) {
             if (window.__tsWidgetId != null) window.turnstile.reset(window.__tsWidgetId);
-            else window.turnstile.reset();
+            if (window.__tsGateWidgetId != null) window.turnstile.reset(window.__tsGateWidgetId);
+            if (window.__tsVoiceWidgetId != null) window.turnstile.reset(window.__tsVoiceWidgetId);
+            if (window.__tsWidgetId == null && window.__tsGateWidgetId == null && window.__tsVoiceWidgetId == null) {
+              window.turnstile.reset();
+            }
           }
         } catch (err) {}
       }
-      function renderTurnstile() {
+      function renderOneTurnstile(elId, idKey, onErrorMsg) {
         if (!window.turnstile || !window.turnstile.render) return;
-        if (window.__tsWidgetId != null) return;
-        var el = document.getElementById("cf-widget");
+        if (window[idKey] != null) return;
+        var el = document.getElementById(elId);
         if (!el) return;
         try {
-          window.__tsWidgetId = window.turnstile.render(el, {
+          window[idKey] = window.turnstile.render(el, {
             sitekey: "0x4AAAAAAEjTojQDWUWsg5en",
             appearance: "always",
             size: "normal",
-            callback: function (token) {
-              window.__tsToken = token || "";
-              setSubmitEnabled(!!window.__tsToken);
-            },
+            callback: function (token) { onTurnstileToken(token); },
             "error-callback": function () {
               window.__tsToken = "";
               setSubmitEnabled(false);
-              showBanner("no", "The check didn’t load. Please complete the widget above the button, or refresh and try again.");
+              if (onErrorMsg) showBanner("no", onErrorMsg);
             },
             "expired-callback": function () {
               window.__tsToken = "";
@@ -674,8 +715,13 @@
             }
           });
         } catch (err) {
-          showBanner("no", "The check didn’t load. Please refresh and try again.");
+          if (onErrorMsg) showBanner("no", onErrorMsg);
         }
+      }
+      function renderTurnstile() {
+        renderOneTurnstile("cf-widget", "__tsWidgetId", "The human check didn’t load. Please refresh and try again.");
+        renderOneTurnstile("vg-turnstile", "__tsGateWidgetId", null);
+        renderOneTurnstile("voice-panel-turnstile", "__tsVoiceWidgetId", null);
       }
       window.__renderTurnstile = renderTurnstile;
       if (window.__tsApiReady || (window.turnstile && window.turnstile.render)) {
@@ -1402,6 +1448,7 @@
           }
           panel.hidden = false;
           panel.classList.add("show");
+          try { renderTurnstile(); } catch (ePV) {}
           var hint = document.getElementById("ai-hint");
           if (hint) hint.classList.add("ai-hint-hidden");
           if (employee && costEl && (voiceTestQ || employee)) {
@@ -1478,6 +1525,18 @@
           setGateStatus("");
           gateModal.hidden = false;
           gateModal.classList.add("show");
+          try { renderTurnstile(); } catch (eR) {}
+        }
+        function requireHumanInGate() {
+          var token = getTurnstileToken();
+          if (token) return true;
+          setGateStatus("Verify you’re human with the check above, then continue.", true);
+          try {
+            var hv = document.getElementById("vg-human-verify");
+            if (hv) hv.scrollIntoView({ behavior: "smooth", block: "center" });
+          } catch (eH) {}
+          try { renderTurnstile(); } catch (eR2) {}
+          return false;
         }
         function closeGateModal() {
           if (!gateModal) return;
@@ -1488,10 +1547,11 @@
         }
 
         function takePaidPath() {
+          if (!requireHumanInGate()) return;
           closeGateModal();
           enablePanel(false, { paidPath: true });
           setVoiceStatus(
-            "Complete the bot check if needed, then Start talking ($0.25 when payment is required). Typed form stays free.",
+            "Verify you’re human in the Talk panel if needed, then Start talking ($0.25 when payment is required). Typed form stays free.",
             false
           );
         }
@@ -1556,8 +1616,11 @@
             }
             var token = getTurnstileToken();
             if (!token) {
-              setGateStatus("Complete the bot check near the form first, then try again.", true);
-              showCheckBanner();
+              setGateStatus("Verify you’re human with the check above, then try again.", true);
+              try {
+                var hv2 = document.getElementById("vg-human-verify");
+                if (hv2) hv2.scrollIntoView({ behavior: "smooth", block: "center" });
+              } catch (eH2) {}
               return;
             }
             checkBtn.disabled = true;
@@ -1584,7 +1647,7 @@
                 checkBtn.disabled = false;
                 var data = res.data;
                 if (data.error === "turnstile_failed" || (res.status === 401 && !data.ok)) {
-                  setGateStatus((data.message || data.reason || "Bot check failed.") + " Refresh and complete the check near the form.", true);
+                  setGateStatus((data.message || data.reason || "Human check failed.") + " Complete Verify you’re human above, then try again.", true);
                   try { resetTurnstile(); } catch (eR) {}
                   return;
                 }
