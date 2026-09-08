@@ -260,14 +260,6 @@
       margin: 0; font-weight: 600; font-size: .92rem; line-height: 1.4; color: #292524;
       cursor: pointer;
     }
-    .vg-pay-hint {
-      display: none;
-      margin: 0 0 10px;
-      font-size: .9rem;
-      color: #57534e;
-      line-height: 1.4;
-    }
-    .vg-pay-hint.show { display: block; }
     #voice-gate-go {
       border: 0; border-radius: 999px; padding: 10px 16px;
       font-weight: 700; cursor: pointer; font-size: .95rem;
@@ -562,7 +554,6 @@
             <input type="checkbox" id="voice-gate-vouch" disabled>
             <label for="voice-gate-vouch">I vouch it still has significant value to someone else (think ~$100+)</label>
           </div>
-          <p class="vg-pay-hint show" id="vg-pay-hint">Box unchecked → Talk is <strong>$0.25</strong>.</p>
           <div class="vg-actions">
             <button type="button" id="voice-gate-go" class="pay" disabled>Start talking — $0.25</button>
             <button type="button" id="voice-gate-cancel">Cancel</button>
@@ -871,7 +862,6 @@
         var vouch = document.getElementById("voice-gate-vouch");
         var wrap = document.getElementById("vg-vouch-wrap");
         var goB = document.getElementById("voice-gate-go");
-        var payHint = document.getElementById("vg-pay-hint");
         if (vouch) vouch.disabled = !ok;
         if (wrap) {
           if (ok) wrap.classList.add("ready");
@@ -882,21 +872,17 @@
           goB.disabled = !ok;
           if (vouched) {
             goB.classList.remove("pay");
-            goB.textContent = "Start talking — free";
+            goB.textContent = "Start talking — we cover it";
           } else {
             goB.classList.add("pay");
             goB.textContent = "Start talking — $0.25";
           }
         }
-        if (payHint) {
-          if (vouched) payHint.classList.remove("show");
-          else payHint.classList.add("show");
-        }
         var st = document.getElementById("voice-gate-status");
         if (st && !st.classList.contains("err")) {
           if (!ok) st.textContent = "Finish the human check above.";
-          else if (vouched) st.textContent = "Vouch checked — Talk is free. Start when ready.";
-          else st.textContent = "No vouch — Talk is $0.25, or check the box if you can vouch.";
+          else if (vouched) st.textContent = "Vouch checked — we cover Talk. Start when ready.";
+          else st.textContent = "Ready when you are.";
         }
       }
       function onTurnstileToken(token) {
