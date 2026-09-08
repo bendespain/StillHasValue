@@ -238,6 +238,9 @@
     #voice-gate-modal .vg-choice {
       margin: 0 0 8px; font-size: .92rem;
     }
+    #voice-gate-modal .vg-why {
+      margin: 0 0 10px; font-size: .88rem; line-height: 1.45; color: #57534e;
+    }
     #voice-gate-modal .vg-actions {
       display: flex; flex-direction: column; gap: 10px; margin-top: 8px;
     }
@@ -556,7 +559,8 @@
         </div>
         <div id="vg-step-choice" class="vg-step show">
           <p class="vg-purpose">Next you’ll <strong>talk with an AI</strong>. It listens and fills this pickup form for you.</p>
-          <p class="vg-choice">Talk isn’t free for us to run. Check the box if you’re vouching that the item still has a <strong>significant amount</strong> of value to someone else — enough that it’s worth our time to pick up (about <strong>$100+</strong>). We’ll trust you and cover Talk. Leave it unchecked if you’re not sure — then Talk is <strong>$0.25</strong> and we’ll figure that out with you while you talk.</p>
+          <p class="vg-why">Why about <strong>$100+</strong>? After pickup we still study and learn the item, clean and present it, store it, repair what needs it, transport it, market it, sell it, and pay for the site and AI. Below that, we lose money.</p>
+          <p class="vg-choice">Check the box if you vouch it still has a <strong>significant amount</strong> of value to someone else (~$100+). We’ll trust you and cover Talk. Leave it unchecked if you’re not sure — then Talk is <strong>$0.25</strong> and we’ll figure that out with you while you talk.</p>
           <p id="voice-gate-status" role="status" aria-live="polite">Finish the human check above.</p>
           <div class="vg-vouch" id="vg-vouch-wrap">
             <input type="checkbox" id="voice-gate-vouch" disabled>
