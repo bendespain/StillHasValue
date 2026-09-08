@@ -196,6 +196,10 @@
     }
 
 
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
     .form-or-ai {
       margin: 0 0 18px;
       line-height: 1.5;
@@ -227,6 +231,12 @@
     }
     #voice-gate-modal p {
       margin: 0 0 12px; line-height: 1.45; font-size: .95rem; color: #444;
+    }
+    #voice-gate-modal .vg-purpose {
+      font-size: 1.02rem; color: #1c1917; font-weight: 600;
+    }
+    #voice-gate-modal .vg-choice {
+      margin: 0 0 8px; font-size: .92rem;
     }
     #voice-gate-modal .vg-actions {
       display: flex; flex-direction: column; gap: 10px; margin-top: 8px;
@@ -453,21 +463,22 @@
 
     <div id="voice-gate-modal" role="dialog" aria-modal="true" aria-labelledby="voice-gate-title" hidden>
       <div class="vg-card">
-        <h2 id="voice-gate-title">Talk it through</h2>
+        <h2 id="voice-gate-title" class="sr-only">Talk with an AI to fill this form</h2>
         <div class="human-verify" id="vg-human-verify">
           <h3>Verify you’re human</h3>
           <div id="vg-turnstile" class="cf-turnstile" aria-label="Human verification"></div>
           <p class="hv-done">Verified</p>
         </div>
         <div id="vg-step-choice" class="vg-step show">
-          <p>Still worth real money to someone else, and you’d rather they have it? We sponsor Talk. Not sure? <strong>$0.25</strong>.</p>
+          <p class="vg-purpose">You’ll <strong>talk with an AI</strong> and it’ll fill the form as you go.</p>
+          <p class="vg-choice">If you <strong>vouch</strong> the item is worth a lot, we trust you and cover Talk. Not sure? Pay <strong>$0.25</strong> and we’ll figure that out together while you talk.</p>
           <p id="voice-gate-status" role="status" aria-live="polite">Finish the check above.</p>
-          <div class="vg-toggle" id="vg-path-toggle" role="group" aria-label="Talk path">
-            <button type="button" id="voice-gate-free" class="on" aria-pressed="true" disabled>Free Talk</button>
-            <button type="button" id="voice-gate-pay" aria-pressed="false" disabled>$0.25</button>
+          <div class="vg-toggle" id="vg-path-toggle" role="group" aria-label="Who pays for Talk">
+            <button type="button" id="voice-gate-free" class="on" aria-pressed="true" disabled>I vouch — free</button>
+            <button type="button" id="voice-gate-pay" aria-pressed="false" disabled>Not sure — $0.25</button>
           </div>
           <div class="vg-actions">
-            <button type="button" id="voice-gate-go" disabled>Continue</button>
+            <button type="button" id="voice-gate-go" disabled>Start talking</button>
             <button type="button" id="voice-gate-cancel">Cancel</button>
           </div>
         </div>
@@ -481,7 +492,7 @@
         <div id="voice-panel-turnstile" class="cf-turnstile" aria-label="Human verification"></div>
         <p class="hv-done">Verified</p>
       </div>
-      <p class="voice-lead">As you talk, it fills the form — item, zip, name, phone. Add photos here. Say <strong>send it</strong> when ready.</p>
+      <p class="voice-lead">Talk with the AI — it fills the form as you go (item, zip, name, phone). Add photos here. Say <strong>send it</strong> when ready.</p>
       <p class="voice-cost" id="voice-cost"></p>
       <div class="voice-actions">
         <button type="button" class="voice-btn" id="voice-start" disabled>Start talking</button>
@@ -504,7 +515,7 @@
     <h1>Request a free pickup</h1>
     <p class="lead">Salt Lake valley pickups for things that still matter to someone else — not junk. Quick screen first; we follow up if it’s a fit.</p>
 
-    <p class="form-or-ai">Please fill out the form below, or <a href="#talk" id="mic-open">have an AI do it for you</a>.</p>
+    <p class="form-or-ai">Please fill out the form below, or <a href="#talk" id="mic-open">talk with an AI to fill it out</a>.</p>
 
     <form id="pickup-form" novalidate>
       <label for="photos">Photos <span class="req">*</span></label>
@@ -771,7 +782,7 @@
         }
         var st = document.getElementById("voice-gate-status");
         if (st && !st.classList.contains("err")) {
-          st.textContent = ok ? "Choose Free Talk or $0.25, then Continue." : "Finish the check above.";
+          st.textContent = ok ? "Choose free (you vouch) or $0.25, then start talking." : "Finish the check above.";
         }
       }
       function onTurnstileToken(token) {
