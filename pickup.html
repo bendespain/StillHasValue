@@ -513,9 +513,9 @@
     </div>
 
     <h1>Request a free pickup</h1>
-    <p class="lead">Things that still have value to someone else. Salt Lake valley — not junk. Quick screen first; we follow up if it’s a fit.</p>
+    <p class="lead">We pick up things that still have value to someone else.</p>
 
-    <p class="form-or-ai">Please fill out the form below, or <a href="#talk" id="mic-open">talk with an AI to fill it out</a>.</p>
+    <p class="form-or-ai"><a href="#talk" id="mic-open">Talk with an AI to fill this out</a></p>
 
     <form id="pickup-form" novalidate>
       <label for="photos">Photos <span class="req">*</span></label>
@@ -889,7 +889,7 @@
               }
               var ref = data.reference || data.id || data.requestId || "";
               var okHtml = '<span class="banner-title">Request submitted</span>' +
-                "It passed the first screen. We’ll review and contact you if we’re coming.";
+                "We’ll follow up if it’s a fit.";
               if (ref) okHtml += '<span class="banner-ref">Reference: ' + String(ref).replace(/[<>&]/g, "") + "</span>";
               showBanner("ok", okHtml, true);
               if (opts.onSuccess) opts.onSuccess(data);
@@ -1248,7 +1248,7 @@
           submitPickupRequest("pwa-voice", {
             onSuccess: function (data) {
               var ref = (data && (data.reference || data.id || data.requestId)) || "";
-              setVoiceStatus(ref ? ("Request submitted. Reference " + ref) : "Request submitted.");
+              setVoiceStatus(ref ? ("Request submitted — we’ll follow up if it’s a fit. Reference " + ref) : "Request submitted — we’ll follow up if it’s a fit.");
               disconnectVoice();
             },
             onReject: function (data) {
