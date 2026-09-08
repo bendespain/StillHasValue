@@ -314,6 +314,19 @@
     }
     .human-verify .cf-turnstile { margin-top: 0; }
     #talk .human-verify { margin: 0 0 12px; }
+    /* Talk chrome stays in DOM for widgets/buttons; UI is the floating buddy */
+    #talk.talk-chrome-hidden {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0,0,0,0) !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
 
     #talk {
       display: none;
@@ -356,7 +369,6 @@
       align-items: flex-start;
       gap: 8px;
       transition: top .25s ease, left .25s ease, opacity .2s ease;
-      pointer-events: none;
     }
     #voice-buddy.show { display: flex; }
     #voice-buddy .vb-avatar {
@@ -405,6 +417,33 @@
       font-style: italic;
       max-height: 2.6em;
       overflow: hidden;
+    }
+    #voice-buddy {
+      pointer-events: none;
+    }
+    #voice-buddy .vb-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      pointer-events: auto;
+    }
+    #voice-buddy .vb-actions button {
+      border: 0;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: .78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    #voice-buddy .vb-photos {
+      background: #15803d;
+      color: #fff;
+    }
+    #voice-buddy .vb-stop {
+      background: #f5f5f4;
+      color: #444;
+      border: 1px solid #d6d3d1 !important;
     }
     #voice-status { margin-top: 10px; min-height: 1.3em; font-size: .9rem; color: #444; }
     #voice-status.warn { color: #9a3412; }
@@ -504,11 +543,15 @@
     </section>
 
     <div id="voice-buddy" aria-live="polite" hidden>
-      <div class="vb-avatar" aria-hidden="true">🎙</div>
+      <div class="vb-avatar" aria-hidden="true">💬</div>
       <div class="vb-body">
-        <p class="vb-label">AI listening</p>
+        <p class="vb-label">Talking with AI</p>
         <p class="vb-text" id="voice-buddy-text">Listening…</p>
         <p class="vb-heard" id="voice-buddy-heard" hidden></p>
+        <div class="vb-actions">
+          <button type="button" class="vb-photos" id="voice-buddy-photos">Add photos</button>
+          <button type="button" class="vb-stop" id="voice-buddy-stop">Stop</button>
+        </div>
       </div>
     </div>
 
@@ -1376,6 +1419,10 @@
         function disconnectVoice() {
           state.listening = false;
           hideVoiceBuddy();
+          try {
+            var aiLink = document.getElementById("mic-open");
+            if (aiLink && aiLink.parentNode) aiLink.parentNode.style.display = "";
+          } catch (eShow) {}
           if (state.processor) {
             try { state.processor.disconnect(); } catch (e) {}
             state.processor = null;
@@ -1550,6 +1597,10 @@
               stopBtn.hidden = false;
               showVoiceBuddy("Listening — say what you’d like picked up.");
               followVoiceField(document.getElementById("title") || document.getElementById("pickup-form"));
+              try {
+                var aiLink = document.getElementById("mic-open");
+                if (aiLink && aiLink.parentNode) aiLink.parentNode.style.display = "none";
+              } catch (eHide) {}
               setVoiceStatus(
                 data.mode === "test"
                   ? "Test session — listening."
@@ -1676,8 +1727,10 @@
           } else {
             state.paidPath = false;
           }
+          // Keep #talk in DOM for buttons/turnstile, but don’t show the big chrome.
           panel.hidden = false;
           panel.classList.add("show");
+          panel.classList.add("talk-chrome-hidden");
           try { renderTurnstile(); } catch (ePV) {}
           var hint = document.getElementById("ai-hint");
           if (hint) hint.classList.add("ai-hint-hidden");
@@ -1687,17 +1740,22 @@
           } else {
             setPublicCostCopy();
           }
+          // Stay on the normal page header + form — don’t jump to Talk chrome.
           try {
-            panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            var h1 = document.querySelector("h1");
+            if (h1) h1.scrollIntoView({ behavior: "smooth", block: "start" });
           } catch (e) {}
-          // Enable start when Turnstile is ready
           var sync = function () {
             startBtn.disabled = !getTurnstileToken() || state.listening;
           };
           sync();
-          // also hook token callback via polling light
           if (!state._syncTimer) {
             state._syncTimer = setInterval(sync, 800);
+          }
+          if (opts.autoStart) {
+            setTimeout(function () {
+              try { startVoice(); } catch (eStart) {}
+            }, 50);
           }
         }
 
@@ -1708,14 +1766,32 @@
           disconnectVoice();
           setVoiceStatus("Stopped.");
         });
+        function openVoicePhotos() {
+          var input = document.getElementById("photos");
+          if (!input) return;
+          try { input.setAttribute("capture", "environment"); } catch (e) {}
+          input.click();
+          setVoiceStatus("Pick or take a photo — then say send it when ready.");
+          followVoiceField(input);
+          showVoiceBuddy("Add a photo, then keep talking.");
+        }
         if (photosBtn) {
           photosBtn.addEventListener("click", function () {
-            var input = document.getElementById("photos");
-            if (!input) return;
-            try { input.setAttribute("capture", "environment"); } catch (e) {}
-            input.click();
-            setVoiceStatus("Pick or take a photo — then say send it when ready.");
-            try { input.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e2) {}
+            openVoicePhotos();
+          });
+        }
+        var buddyPhotos = document.getElementById("voice-buddy-photos");
+        var buddyStop = document.getElementById("voice-buddy-stop");
+        if (buddyPhotos) {
+          buddyPhotos.addEventListener("click", function () {
+            openVoicePhotos();
+          });
+        }
+        if (buddyStop) {
+          buddyStop.addEventListener("click", function () {
+            disconnectVoice();
+            setVoiceStatus("Stopped.");
+            hideVoiceBuddy();
           });
         }
 
@@ -1766,15 +1842,13 @@
         function takePaidPath() {
           if (!requireHumanInGate()) return;
           closeGateModal();
-          enablePanel(false, { paidPath: true });
-          setVoiceStatus("Start talking ($0.25). Form stays free.", false);
+          enablePanel(false, { paidPath: true, autoStart: true });
         }
 
         function takeFreePath() {
           if (!requireHumanInGate()) return;
           closeGateModal();
-          enablePanel(false, { worthConfirmed: true });
-          setVoiceStatus("Start talking — we’ll fill the form as you go.", false);
+          enablePanel(false, { worthConfirmed: true, autoStart: true });
         }
 
         if (micBtn) {
