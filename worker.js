@@ -898,7 +898,7 @@ async function runVoiceModels(env, messages) {
   return "";
 }
 
-/** Fail-closed AI pressure-test: used item plausibly worth $100+ (US/SLC thrift). */
+/** Fail-closed AI pressure-test: item still has meaningful resale value as-is for free pickup. */
 async function assessItemWorth100Plus(env, itemText) {
   const text = String(itemText || "").trim();
   if (text.length < 12) {
@@ -909,7 +909,7 @@ async function assessItemWorth100Plus(env, itemText) {
     return { plausible: false, reason: "Not a fit for free value pickup (" + junk + ").", failed: false };
   }
   const system =
-    "You decide if a used consumer item described is *plausibly* worth at least $100 on the used market " +
+    "You decide if a used consumer item described still has meaningful resale value as-is (no repair needed) for a free Still Has Value pickup in the Salt Lake valley " +
     "(US / Salt Lake City thrift and resale style). Be skeptical of vague claims like \"stuff\", \"furniture\", " +
     "or \"electronics\" alone. Mattresses, junk, hazardous materials = no. " +
     'Reply ONLY JSON: {"plausible":true|false,"reason":"short"}';
@@ -949,7 +949,7 @@ async function assessItemWorth100Plus(env, itemText) {
     plausible: parsed.plausible === true,
     reason: String(
       parsed.reason ||
-        (parsed.plausible ? "Plausibly worth $100+ used." : "Not clearly worth $100+ used.")
+        (parsed.plausible ? "Plausibly still has value as-is." : "Not clearly still has value as-is.")
     ).slice(0, 200),
     failed: false,
   };
@@ -1234,7 +1234,7 @@ async function handleVoiceEphemeral(request, env) {
             error: "worth_check_failed",
             reason: assess.reason,
             message:
-              "Couldn’t verify item worth right now. Use $0.25 talk or the typed form (free).",
+              "Couldn’t check value right now. Use $0.25 Talk or the free form.",
           },
           503
         );
@@ -1246,7 +1246,7 @@ async function handleVoiceEphemeral(request, env) {
             error: "not_worth_enough",
             reason: assess.reason,
             message:
-              "This doesn’t look like it’s plausibly worth $100+ used. Try $0.25 AI help or the free typed form.",
+              "This doesn’t look like it still has enough value for a free pickup. Try $0.25 Talk or the free form.",
           },
           403
         );
@@ -1326,7 +1326,7 @@ async function handleVoiceEphemeral(request, env) {
         mode === "test"
           ? "Test session (Ben allowlist). Talking normally costs money — this run is free for testing."
           : mode === "sponsored"
-            ? "Free talk — SHV is sponsoring this session (item confirmed worth $100+ used). Typed form stays free."
+            ? "Free talk — SHV is sponsoring this session (item confirmed still has value as-is). Typed form stays free."
             : "Talk session costs $0.25. Typed form stays free.",
     });
   } catch (e) {
