@@ -241,21 +241,33 @@
     #voice-gate-modal .vg-actions {
       display: flex; flex-direction: column; gap: 10px; margin-top: 8px;
     }
-    .vg-toggle {
-      display: flex; border: 1px solid #d6d3d1; border-radius: 999px;
-      overflow: hidden; background: #f5f5f4;
-      opacity: .45; pointer-events: none;
+    .vg-vouch {
+      display: flex; align-items: flex-start; gap: 10px;
+      margin: 10px 0 12px;
+      padding: 10px 12px;
+      border: 1px solid #e7e5e4;
+      border-radius: 10px;
+      background: #fafaf9;
+      opacity: .45;
+      pointer-events: none;
     }
-    .vg-toggle.ready { opacity: 1; pointer-events: auto; }
-    .vg-toggle button {
-      flex: 1; border: 0; background: transparent; color: #57534e;
-      padding: 8px 10px; font-size: .85rem; font-weight: 600; cursor: pointer;
-      border-radius: 0;
+    .vg-vouch.ready { opacity: 1; pointer-events: auto; }
+    .vg-vouch input {
+      margin-top: 3px; width: 18px; height: 18px; flex: 0 0 auto;
+      accent-color: #15803d;
     }
-    .vg-toggle button.on {
-      background: #fff; color: #1c1917;
-      box-shadow: inset 0 0 0 1px #d6d3d1;
+    .vg-vouch label {
+      margin: 0; font-weight: 600; font-size: .92rem; line-height: 1.4; color: #292524;
+      cursor: pointer;
     }
+    .vg-pay-hint {
+      display: none;
+      margin: 0 0 10px;
+      font-size: .9rem;
+      color: #57534e;
+      line-height: 1.4;
+    }
+    .vg-pay-hint.show { display: block; }
     #voice-gate-go {
       border: 0; border-radius: 999px; padding: 10px 16px;
       font-weight: 700; cursor: pointer; font-size: .95rem;
@@ -263,6 +275,10 @@
     }
     #voice-gate-go:hover { background: #166534; }
     #voice-gate-go:disabled { opacity: .45; cursor: not-allowed; }
+    #voice-gate-go.pay {
+      background: #d97706;
+    }
+    #voice-gate-go.pay:hover { background: #b45309; }
     #voice-gate-cancel {
       border: 0; background: transparent; color: #78716c;
       font-size: .9rem; font-weight: 600; cursor: pointer; padding: 4px;
@@ -540,14 +556,15 @@
         </div>
         <div id="vg-step-choice" class="vg-step show">
           <p class="vg-purpose">Next you’ll <strong>talk with an AI</strong>. It listens and fills this pickup form for you.</p>
-          <p class="vg-choice">Talk isn’t free for us to run. If you <strong>vouch</strong> that what you’re giving away still has real value to someone else, we trust you and cover it. If you’re not sure, pay <strong>$0.25</strong> and we’ll figure that out with you while you talk.</p>
+          <p class="vg-choice">Talk isn’t free for us to run. Check the box if you’re vouching that the item still has a <strong>significant amount</strong> of value to someone else — enough that it’s worth our time to pick up (about <strong>$100+</strong>). We’ll trust you and cover Talk. Leave it unchecked if you’re not sure — then Talk is <strong>$0.25</strong> and we’ll figure that out with you while you talk.</p>
           <p id="voice-gate-status" role="status" aria-live="polite">Finish the human check above.</p>
-          <div class="vg-toggle" id="vg-path-toggle" role="group" aria-label="Who pays for Talk">
-            <button type="button" id="voice-gate-free" class="on" aria-pressed="true" disabled>I vouch — free</button>
-            <button type="button" id="voice-gate-pay" aria-pressed="false" disabled>Not sure — $0.25</button>
+          <div class="vg-vouch" id="vg-vouch-wrap">
+            <input type="checkbox" id="voice-gate-vouch" disabled>
+            <label for="voice-gate-vouch">I vouch it still has significant value to someone else (~$100+)</label>
           </div>
+          <p class="vg-pay-hint show" id="vg-pay-hint">Box unchecked → Talk is <strong>$0.25</strong>.</p>
           <div class="vg-actions">
-            <button type="button" id="voice-gate-go" disabled>Start talking</button>
+            <button type="button" id="voice-gate-go" class="pay" disabled>Start talking — $0.25</button>
             <button type="button" id="voice-gate-cancel">Cancel</button>
           </div>
         </div>
@@ -851,20 +868,35 @@
       function syncGateButtons() {
         var ok = !!getTurnstileToken();
         setHumanVerifyDone(ok);
-        var freeB = document.getElementById("voice-gate-free");
-        var payB = document.getElementById("voice-gate-pay");
+        var vouch = document.getElementById("voice-gate-vouch");
+        var wrap = document.getElementById("vg-vouch-wrap");
         var goB = document.getElementById("voice-gate-go");
-        var tog = document.getElementById("vg-path-toggle");
-        if (freeB) freeB.disabled = !ok;
-        if (payB) payB.disabled = !ok;
-        if (goB) goB.disabled = !ok;
-        if (tog) {
-          if (ok) tog.classList.add("ready");
-          else tog.classList.remove("ready");
+        var payHint = document.getElementById("vg-pay-hint");
+        if (vouch) vouch.disabled = !ok;
+        if (wrap) {
+          if (ok) wrap.classList.add("ready");
+          else wrap.classList.remove("ready");
+        }
+        var vouched = !!(vouch && vouch.checked);
+        if (goB) {
+          goB.disabled = !ok;
+          if (vouched) {
+            goB.classList.remove("pay");
+            goB.textContent = "Start talking — free";
+          } else {
+            goB.classList.add("pay");
+            goB.textContent = "Start talking — $0.25";
+          }
+        }
+        if (payHint) {
+          if (vouched) payHint.classList.remove("show");
+          else payHint.classList.add("show");
         }
         var st = document.getElementById("voice-gate-status");
         if (st && !st.classList.contains("err")) {
-          st.textContent = ok ? "Pick free (you vouch) or $0.25, then start talking." : "Finish the human check above.";
+          if (!ok) st.textContent = "Finish the human check above.";
+          else if (vouched) st.textContent = "Vouch checked — Talk is free. Start when ready.";
+          else st.textContent = "No vouch — Talk is $0.25, or check the box if you can vouch.";
         }
       }
       function onTurnstileToken(token) {
@@ -1958,7 +1990,7 @@
           if (!gateModal) return;
           gateModal.hidden = false;
           gateModal.classList.add("show");
-          try { setGatePath("free"); } catch (ePath) {}
+          try { resetVouchUi(); } catch (ePath) {}
           try { renderTurnstile(); } catch (eR) {}
           try { syncGateButtons(); } catch (eS) {}
           if (!getTurnstileToken()) {
@@ -2002,39 +2034,24 @@
             openGateModal();
           });
         }
-        var freeBtn = document.getElementById("voice-gate-free");
-        var payBtn = document.getElementById("voice-gate-pay");
+        var vouchBox = document.getElementById("voice-gate-vouch");
         var goBtn = document.getElementById("voice-gate-go");
         var cancelBtn = document.getElementById("voice-gate-cancel");
-        var gatePath = "free";
-        function setGatePath(path) {
-          gatePath = path === "pay" ? "pay" : "free";
-          if (freeBtn) {
-            freeBtn.classList.toggle("on", gatePath === "free");
-            freeBtn.setAttribute("aria-pressed", gatePath === "free" ? "true" : "false");
-          }
-          if (payBtn) {
-            payBtn.classList.toggle("on", gatePath === "pay");
-            payBtn.setAttribute("aria-pressed", gatePath === "pay" ? "true" : "false");
-          }
+        function resetVouchUi() {
+          if (vouchBox) vouchBox.checked = false;
+          try { syncGateButtons(); } catch (eRV) {}
         }
-        if (freeBtn) {
-          freeBtn.addEventListener("click", function () {
-            if (freeBtn.disabled) return;
-            setGatePath("free");
-          });
-        }
-        if (payBtn) {
-          payBtn.addEventListener("click", function () {
-            if (payBtn.disabled) return;
-            setGatePath("pay");
+        if (vouchBox) {
+          vouchBox.addEventListener("change", function () {
+            try { syncGateButtons(); } catch (eCh) {}
           });
         }
         if (goBtn) {
           goBtn.addEventListener("click", function () {
             if (goBtn.disabled) return;
-            if (gatePath === "pay") takePaidPath();
-            else takeFreePath();
+            var vouched = !!(vouchBox && vouchBox.checked);
+            if (vouched) takeFreePath();
+            else takePaidPath();
           });
         }
         if (cancelBtn) {
