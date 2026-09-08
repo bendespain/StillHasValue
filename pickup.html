@@ -597,7 +597,7 @@
       <div class="vb-avatar" aria-hidden="true">💬</div>
       <div class="vb-body">
         <p class="vb-label">Talking with AI</p>
-        <p class="vb-text" id="voice-buddy-text">Tell me about the item — riding mower, motorcycle…</p>
+        <p class="vb-text" id="voice-buddy-text">Tell me about the item — riding mower, motorcycle, generator…</p>
         <p class="vb-heard" id="voice-buddy-heard" hidden></p>
         <div class="vb-session" id="voice-session-bar" hidden>
           <div class="vb-session-row">
@@ -627,7 +627,7 @@
       <div class="previews" id="previews"></div>
 
       <label for="title">What is it? <span class="req">*</span></label>
-      <input id="title" name="title" type="text" required maxlength="120" placeholder="e.g. Riding mower, motorcycle">
+      <input id="title" name="title" type="text" required maxlength="120" placeholder="e.g. Riding mower, motorcycle, working generator">
 
       <label for="description">Condition, brand, size, what’s wrong <span class="req">*</span></label>
       <textarea id="description" name="description" required maxlength="2000" placeholder="Brand, dimensions, does it work, scratches, missing parts…"></textarea>
@@ -1246,7 +1246,7 @@
         var SESSION_MAX_TURNS = 8; // /api/voice extract turns
         var SESSION_MAX_CHARS = 6000; // transcript chars processed (honest budget proxy)
         var OPENING_BUDDY =
-          "Tell me about the item — for example a riding mower or motorcycle, brand, size, and condition.";
+          "Tell me about the item — for example a riding mower, motorcycle, or working generator; brand, size, and condition.";
 
         function showVoiceBuddy(msg) {
           if (!buddyEl) return;
@@ -1425,7 +1425,7 @@
         var VOICE_INSTRUCTIONS =
           "You help Still Has Value capture a FREE pickup request in the Salt Lake valley. " +
           "Mission: pickup only — not chat, not shopping. Disclose briefly that talking normally costs money; this may be a Ben test. Session is time-limited (~5 minutes). " +
-          "OPENING (first speak): Say something like: Tell me about the item — for example a riding mower or motorcycle, brand, size, and condition. Then listen. Do NOT start with photo instructions. " +
+          "OPENING (first speak): Say something like: Tell me about the item — for example a riding mower, motorcycle, or working generator; brand, size, and condition. Then listen. Do NOT start with photo instructions. " +
           "After they describe the item, ask ONE specific missing thing at a time (zip, name, phone digits out loud, condition, access). " +
           "ACCEPT SPOKEN PHONE NUMBERS (digit-by-digit or number words like five five five…). Never tell them to type the phone into the form. " +
           "UI TRUTH: The form Photos field uses the browser control labeled Choose files (or similar). Tell them to use Choose files under Photos. " +
@@ -1934,9 +1934,19 @@
             state._syncTimer = setInterval(sync, 800);
           }
           if (opts.autoStart) {
-            setTimeout(function () {
-              try { startVoice(); } catch (eStart) {}
-            }, 50);
+            var tries = 0;
+            (function waitTokenAndStart() {
+              tries += 1;
+              if (getTurnstileToken()) {
+                try { startVoice(); } catch (eStart) {}
+                return;
+              }
+              if (tries < 40) {
+                setTimeout(waitTokenAndStart, 50);
+              } else {
+                try { startVoice(); } catch (eStart2) {}
+              }
+            })();
           }
         }
 
