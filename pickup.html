@@ -210,11 +210,6 @@
       cursor: pointer;
     }
     #mic-open:hover { color: #92400e; }
-    #voice-gate-free:disabled,
-    #voice-gate-pay:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
     #voice-gate-modal {
       display: none; position: fixed; inset: 0; z-index: 4000;
       background: rgba(28, 25, 23, .45);
@@ -234,26 +229,61 @@
       margin: 0 0 12px; line-height: 1.45; font-size: .95rem; color: #444;
     }
     #voice-gate-modal .vg-actions {
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; flex-direction: column; gap: 10px; margin-top: 8px;
     }
-    #voice-gate-modal button {
-      border: 0; border-radius: 999px; padding: 12px 16px;
+    .vg-toggle {
+      display: flex; border: 1px solid #d6d3d1; border-radius: 999px;
+      overflow: hidden; background: #f5f5f4;
+      opacity: .45; pointer-events: none;
+    }
+    .vg-toggle.ready { opacity: 1; pointer-events: auto; }
+    .vg-toggle button {
+      flex: 1; border: 0; background: transparent; color: #57534e;
+      padding: 8px 10px; font-size: .85rem; font-weight: 600; cursor: pointer;
+      border-radius: 0;
+    }
+    .vg-toggle button.on {
+      background: #fff; color: #1c1917;
+      box-shadow: inset 0 0 0 1px #d6d3d1;
+    }
+    #voice-gate-go {
+      border: 0; border-radius: 999px; padding: 10px 16px;
       font-weight: 700; cursor: pointer; font-size: .95rem;
+      background: #15803d; color: #fff;
     }
-    #voice-gate-free { background: #15803d; color: #fff; }
-    #voice-gate-free:hover { background: #166534; }
-    #voice-gate-pay { background: #d97706; color: #fff; }
-    #voice-gate-pay:hover { background: #b45309; }
+    #voice-gate-go:hover { background: #166534; }
+    #voice-gate-go:disabled { opacity: .45; cursor: not-allowed; }
     #voice-gate-cancel {
-      background: #fff; color: #444; border: 1px solid #d6d3d1 !important;
+      border: 0; background: transparent; color: #78716c;
+      font-size: .9rem; font-weight: 600; cursor: pointer; padding: 4px;
+      text-decoration: underline; text-underline-offset: 2px;
     }
-    #voice-gate-cancel:hover { background: #f5f5f4; }
+    #voice-gate-cancel:hover { color: #444; }
     #voice-gate-modal .vg-step { display: none; }
     #voice-gate-modal .vg-step.show { display: block; }
     #voice-gate-status {
-      margin: 10px 0 0; font-size: .9rem; line-height: 1.4; color: #57534e; min-height: 1.2em;
+      margin: 8px 0 0;
+      font-size: .85rem;
+      color: #78716c;
+      min-height: 1.2em;
     }
     #voice-gate-status.err { color: #b91c1c; }
+    .human-verify.done .cf-turnstile,
+    .human-verify.done h3 {
+      display: none !important;
+    }
+    .human-verify.done {
+      padding: 6px 10px;
+      margin: 0 0 10px;
+    }
+    .human-verify .hv-done {
+      display: none;
+      margin: 0;
+      font-size: .85rem;
+      font-weight: 600;
+      color: #15803d;
+    }
+    .human-verify.done .hv-done { display: block; }
     .human-verify {
       margin: 0 0 14px;
       padding: 12px 12px 10px;
@@ -364,13 +394,17 @@
         <div class="human-verify" id="vg-human-verify">
           <h3>Verify you’re human</h3>
           <div id="vg-turnstile" class="cf-turnstile" aria-label="Human verification"></div>
+          <p class="hv-done">Verified</p>
         </div>
         <div id="vg-step-choice" class="vg-step show">
-          <p>Still worth real money to someone else — just not useful to you? We sponsor Talk. Not sure? <strong>$0.25</strong>.</p>
+          <p>Still worth real money to someone else, and you’d rather they have it? We sponsor Talk. Not sure? <strong>$0.25</strong>.</p>
           <p id="voice-gate-status" role="status" aria-live="polite">Finish the check above.</p>
+          <div class="vg-toggle" id="vg-path-toggle" role="group" aria-label="Talk path">
+            <button type="button" id="voice-gate-free" class="on" aria-pressed="true" disabled>Free Talk</button>
+            <button type="button" id="voice-gate-pay" aria-pressed="false" disabled>$0.25</button>
+          </div>
           <div class="vg-actions">
-            <button type="button" id="voice-gate-free" disabled>Yes — free Talk</button>
-            <button type="button" id="voice-gate-pay" disabled>Not sure — $0.25</button>
+            <button type="button" id="voice-gate-go" disabled>Continue</button>
             <button type="button" id="voice-gate-cancel">Cancel</button>
           </div>
         </div>
@@ -382,6 +416,7 @@
       <div class="human-verify" id="voice-human-verify">
         <h3>Verify you’re human</h3>
         <div id="voice-panel-turnstile" class="cf-turnstile" aria-label="Human verification"></div>
+        <p class="hv-done">Verified</p>
       </div>
       <p class="voice-lead">As you talk, it fills the form — item, zip, name, phone. Add photos here. Say <strong>send it</strong> when ready.</p>
       <p class="voice-cost" id="voice-cost"></p>
@@ -640,15 +675,31 @@
         var w = document.getElementById("cf-widget");
         if (w) w.scrollIntoView({ behavior: "smooth", block: "center" });
       }
+      function setHumanVerifyDone(done) {
+        ["vg-human-verify", "voice-human-verify"].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          if (done) el.classList.add("done");
+          else el.classList.remove("done");
+        });
+      }
       function syncGateButtons() {
         var ok = !!getTurnstileToken();
+        setHumanVerifyDone(ok);
         var freeB = document.getElementById("voice-gate-free");
         var payB = document.getElementById("voice-gate-pay");
+        var goB = document.getElementById("voice-gate-go");
+        var tog = document.getElementById("vg-path-toggle");
         if (freeB) freeB.disabled = !ok;
         if (payB) payB.disabled = !ok;
+        if (goB) goB.disabled = !ok;
+        if (tog) {
+          if (ok) tog.classList.add("ready");
+          else tog.classList.remove("ready");
+        }
         var st = document.getElementById("voice-gate-status");
         if (st && !st.classList.contains("err")) {
-          st.textContent = ok ? "Pick free Talk or $0.25." : "Finish the check above.";
+          st.textContent = ok ? "Choose Free Talk or $0.25, then Continue." : "Finish the check above.";
         }
       }
       function onTurnstileToken(token) {
@@ -1510,6 +1561,7 @@
           if (!gateModal) return;
           gateModal.hidden = false;
           gateModal.classList.add("show");
+          try { setGatePath("free"); } catch (ePath) {}
           try { renderTurnstile(); } catch (eR) {}
           try { syncGateButtons(); } catch (eS) {}
           if (!getTurnstileToken()) {
@@ -1557,15 +1609,37 @@
         }
         var freeBtn = document.getElementById("voice-gate-free");
         var payBtn = document.getElementById("voice-gate-pay");
+        var goBtn = document.getElementById("voice-gate-go");
         var cancelBtn = document.getElementById("voice-gate-cancel");
+        var gatePath = "free";
+        function setGatePath(path) {
+          gatePath = path === "pay" ? "pay" : "free";
+          if (freeBtn) {
+            freeBtn.classList.toggle("on", gatePath === "free");
+            freeBtn.setAttribute("aria-pressed", gatePath === "free" ? "true" : "false");
+          }
+          if (payBtn) {
+            payBtn.classList.toggle("on", gatePath === "pay");
+            payBtn.setAttribute("aria-pressed", gatePath === "pay" ? "true" : "false");
+          }
+        }
         if (freeBtn) {
           freeBtn.addEventListener("click", function () {
-            takeFreePath();
+            if (freeBtn.disabled) return;
+            setGatePath("free");
           });
         }
         if (payBtn) {
           payBtn.addEventListener("click", function () {
-            takePaidPath();
+            if (payBtn.disabled) return;
+            setGatePath("pay");
+          });
+        }
+        if (goBtn) {
+          goBtn.addEventListener("click", function () {
+            if (goBtn.disabled) return;
+            if (gatePath === "pay") takePaidPath();
+            else takeFreePath();
           });
         }
         if (cancelBtn) {
