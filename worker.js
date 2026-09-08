@@ -780,12 +780,17 @@ function nextMissingSpeak(merged) {
   const z = zipOf(merged.zip);
   const name = String(merged.name || "").trim();
   const phone = String(merged.phone || "").trim();
+  const condition = String(merged.condition || "").trim();
+  if (!title && desc.length < 15) {
+    return "Tell me about the item — for example a riding mower or motorcycle, brand, size, and condition.";
+  }
   if (!title) return "What is the item?";
   if (desc.length < 15) return "Tell me a bit more about the condition or details.";
+  if (!condition) return "What condition is it — working, needs minor repair, for parts, or not sure?";
   if (z.length !== 5) return "What is your five-digit zip code?";
   if (!name) return "What is your name?";
   if (!phone) return "What phone number should we use? You can say the digits out loud.";
-  return "I have what I need. Add a photo with Add photos if you haven't, then say send it.";
+  return "I have what I need. Use Choose files under Photos if you haven't added a photo, then say send it.";
 }
 
 function lexicalPickupExtract(transcript, fields) {
@@ -858,7 +863,7 @@ function lexicalPickupExtract(transcript, fields) {
   if (junk) {
     return {
       fields: {},
-      speak: "This doesn’t look like a fit for a free value pickup. We don’t haul junk, mattresses, or hazardous stuff.",
+      speak: "This doesn’t look like a fit for a free value pickup right now. We don’t haul junk, mattresses, or hazardous stuff. What we can take is still limited — please check back later as we grow.",
       ready: false,
     };
   }
@@ -869,7 +874,7 @@ function lexicalPickupExtract(transcript, fields) {
     speak: ready
       ? (confirm
           ? "Sending your pickup request."
-          : ("Got it: " + merged.title + ". Add a photo with Add photos if needed, then say send it."))
+          : ("Got it: " + merged.title + ". Use Choose files under Photos if needed, then say send it."))
       : nextMissingSpeak(merged),
     ready,
   };
@@ -1034,9 +1039,9 @@ async function handleVoice(request, env) {
   const history = Array.isArray(body && body.history) ? body.history.slice(-6) : [];
 
   const system =
-    "You help people request a FREE pickup from Still Has Value in the Salt Lake valley. We pick up items that still have resale value. Not junk hauling. Extract what they said into JSON. Never invent a phone number or zip. Accept spoken phones as digit words (five five five…) or numerals — set phone when they clearly said it; never tell them to type the phone. Remind them to use Add photos in the Talk UI for pictures — do not say filling the form is the only path. condition must be one of: working, needs minor repair, for parts, not sure. category must be one of: furniture, appliance, electronics, tools, sporting/outdoor, auto, other.\nKnown fields so far: " +
+    "You help people request a FREE pickup from Still Has Value in the Salt Lake valley. We pick up items that still have resale value. Not junk hauling. Extract what they said into JSON. Never invent a phone number or zip. Accept spoken phones as digit words (five five five…) or numerals — set phone when they clearly said it; never tell them to type the phone. For photos: tell them to use Choose files under Photos on the form — do NOT say Add photos or tap Add photos in the Talk panel (that chrome is hidden). condition must be one of: working, needs minor repair, for parts, not sure. category must be one of: furniture, appliance, electronics, tools, sporting/outdoor, auto, other.\nKnown fields so far: " +
     JSON.stringify(pickVoiceFields(fields)) +
-    '\nReply ONLY JSON: {"fields":{...only keys you are confident about...},"speak":"one short spoken question or recap","ready":false}\nSet ready true only when title, description (at least 15 characters), zip, name, and phone are present (in incoming fields or newly extracted). When ready, speak a one-sentence recap and ask them to confirm they want to send it (and add a photo with Add photos if missing).\nIf they said yes/submit/send it and ready, {"fields":{},"speak":"Sending your pickup request.","ready":true,"submit":true}\nIf the item is junk, a mattress, box spring, hazardous, chemicals, trash, or similar, speak that it is not a fit for free value pickup, set ready false, and do not set submit.';
+    '\nReply ONLY JSON: {"fields":{...only keys you are confident about...},"speak":"one short spoken question or recap","ready":false}\nSet ready true only when title, description (at least 15 characters), zip, name, and phone are present (in incoming fields or newly extracted). When ready, speak a one-sentence recap and ask them to confirm they want to send it (and use Choose files under Photos if no photo yet).\nIf they said yes/submit/send it and ready, {"fields":{},"speak":"Sending your pickup request.","ready":true,"submit":true}\nIf the item is junk, a mattress, box spring, hazardous, chemicals, trash, or similar, speak that it is not a fit for free value pickup right now, invite them to check back later as we grow and can take more, set ready false, and do not set submit.';
 
   const messages = [{ role: "system", content: system }];
   for (const h of history) {
@@ -1085,7 +1090,7 @@ async function handleVoice(request, env) {
   if (junk) {
     return new Response(JSON.stringify({
       fields: {},
-      speak: "This doesn’t look like a fit for a free value pickup. We don’t haul junk, mattresses, or hazardous stuff.",
+      speak: "This doesn’t look like a fit for a free value pickup right now. We don’t haul junk, mattresses, or hazardous stuff. What we can take is still limited — please check back later as we grow.",
       ready: false,
       mode,
     }), { status: 200, headers });
