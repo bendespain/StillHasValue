@@ -898,7 +898,7 @@ async function runVoiceModels(env, messages) {
   return "";
 }
 
-/** Fail-closed AI pressure-test: item still has meaningful resale value as-is for free pickup. */
+/** Fail-closed AI pressure-test: significant value to someone else as-is (owner wants it gone). */
 async function assessItemWorth100Plus(env, itemText) {
   const text = String(itemText || "").trim();
   if (text.length < 12) {
@@ -909,7 +909,7 @@ async function assessItemWorth100Plus(env, itemText) {
     return { plausible: false, reason: "Not a fit for free value pickup (" + junk + ").", failed: false };
   }
   const system =
-    "You decide if a used consumer item described still has meaningful resale value as-is (no repair needed) for a free Still Has Value pickup in the Salt Lake valley " +
+    "You decide if a used consumer item still has significant resale value to someone else as-is (no repair) — the owner wants it gone but believes others would pay real money for it (sometimes hundreds or more). For free Still Has Value pickup in the Salt Lake valley " +
     "(US / Salt Lake City thrift and resale style). Be skeptical of vague claims like \"stuff\", \"furniture\", " +
     "or \"electronics\" alone. Mattresses, junk, hazardous materials = no. " +
     'Reply ONLY JSON: {"plausible":true|false,"reason":"short"}';
@@ -949,7 +949,7 @@ async function assessItemWorth100Plus(env, itemText) {
     plausible: parsed.plausible === true,
     reason: String(
       parsed.reason ||
-        (parsed.plausible ? "Plausibly still has value as-is." : "Not clearly still has value as-is.")
+        (parsed.plausible ? "Plausibly still has significant value to someone else." : "Not clearly valuable enough to someone else.")
     ).slice(0, 200),
     failed: false,
   };
@@ -1246,7 +1246,7 @@ async function handleVoiceEphemeral(request, env) {
             error: "not_worth_enough",
             reason: assess.reason,
             message:
-              "This doesn’t look like it still has enough value for a free pickup. Try $0.25 Talk or the free form.",
+              "This doesn’t look like it still has significant value to someone else. Try $0.25 Talk or the free form.",
           },
           403
         );
@@ -1326,7 +1326,7 @@ async function handleVoiceEphemeral(request, env) {
         mode === "test"
           ? "Test session (Ben allowlist). Talking normally costs money — this run is free for testing."
           : mode === "sponsored"
-            ? "Free talk — SHV is sponsoring this session (item confirmed still has value as-is). Typed form stays free."
+            ? "Free Talk — SHV is sponsoring this session (significant value to someone else). Typed form stays free."
             : "Talk session costs $0.25. Typed form stays free.",
     });
   } catch (e) {
