@@ -445,6 +445,47 @@
       color: #444;
       border: 1px solid #d6d3d1 !important;
     }
+    #voice-buddy .vb-session {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid #f5f5f4;
+    }
+    #voice-buddy .vb-session[hidden] { display: none !important; }
+    #voice-buddy .vb-session-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    #voice-buddy .vb-session-time {
+      font-variant-numeric: tabular-nums;
+      font-size: .82rem;
+      font-weight: 700;
+      color: #292524;
+    }
+    #voice-buddy .vb-session-time.warn { color: #9a3412; }
+    #voice-buddy .vb-session-budget-label {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      color: #78716c;
+    }
+    #voice-buddy .vb-session-track {
+      height: 6px;
+      border-radius: 999px;
+      background: #f5f5f4;
+      overflow: hidden;
+    }
+    #voice-buddy .vb-session-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: #d97706;
+      transition: width .25s ease, background .25s ease;
+    }
+    #voice-buddy .vb-session-fill.warn { background: #c2410c; }
     #voice-status { margin-top: 10px; min-height: 1.3em; font-size: .9rem; color: #444; }
     #voice-status.warn { color: #9a3412; }
     #voice-transcript {
@@ -531,11 +572,11 @@
         <div id="voice-panel-turnstile" class="cf-turnstile" aria-label="Human verification"></div>
         <p class="hv-done">Verified</p>
       </div>
-      <p class="voice-lead">Talk with the AI — it fills the form as you go (item, zip, name, phone). Add photos here. Say <strong>send it</strong> when ready.</p>
+      <p class="voice-lead">Talk with the AI — it fills the form as you go (item, zip, name, phone). Use <strong>Choose files</strong> under Photos. Say <strong>send it</strong> when ready.</p>
       <p class="voice-cost" id="voice-cost"></p>
       <div class="voice-actions">
         <button type="button" class="voice-btn" id="voice-start" disabled>Start talking</button>
-        <button type="button" class="voice-photos" id="voice-photos">Add photos</button>
+        <button type="button" class="voice-photos" id="voice-photos">Photos</button>
         <button type="button" class="voice-stop" id="voice-stop" hidden>Stop</button>
       </div>
       <p id="voice-status" role="status"></p>
@@ -546,10 +587,19 @@
       <div class="vb-avatar" aria-hidden="true">💬</div>
       <div class="vb-body">
         <p class="vb-label">Talking with AI</p>
-        <p class="vb-text" id="voice-buddy-text">Listening…</p>
+        <p class="vb-text" id="voice-buddy-text">Tell me about the item — riding mower, motorcycle…</p>
         <p class="vb-heard" id="voice-buddy-heard" hidden></p>
+        <div class="vb-session" id="voice-session-bar" hidden>
+          <div class="vb-session-row">
+            <span class="vb-session-time" id="voice-session-time">5:00</span>
+            <span class="vb-session-budget-label">session budget</span>
+          </div>
+          <div class="vb-session-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="session budget" id="voice-session-track">
+            <div class="vb-session-fill" id="voice-session-fill"></div>
+          </div>
+        </div>
         <div class="vb-actions">
-          <button type="button" class="vb-photos" id="voice-buddy-photos">Add photos</button>
+          <button type="button" class="vb-photos" id="voice-buddy-photos">Photos</button>
           <button type="button" class="vb-stop" id="voice-buddy-stop">Stop</button>
         </div>
       </div>
@@ -567,7 +617,7 @@
       <div class="previews" id="previews"></div>
 
       <label for="title">What is it? <span class="req">*</span></label>
-      <input id="title" name="title" type="text" required maxlength="120" placeholder="e.g. Riding mower, motorcycle, working generator">
+      <input id="title" name="title" type="text" required maxlength="120" placeholder="e.g. Riding mower, motorcycle">
 
       <label for="description">Condition, brand, size, what’s wrong <span class="req">*</span></label>
       <textarea id="description" name="description" required maxlength="2000" placeholder="Brand, dimensions, does it work, scratches, missing parts…"></textarea>
@@ -716,7 +766,7 @@
         var term = terminal !== false;
         if (!detail || /not a fit|junk|mattress|hazard/i.test(detail)) {
           showBanner("no", title +
-            "This doesn’t look like a fit for a free value pickup. We aren’t a junk-haul service — we only pick up items that still have resale value in the Salt Lake valley. You’re welcome to <a href=\"/\">shop the site</a> instead.", term);
+            "This doesn’t look like a fit for a free value pickup right now. We aren’t a junk-haul service — we only pick up items that still have resale value in the Salt Lake valley, and what we can take is still limited as we grow. Please check back later — we’ll be able to accept more kinds of items over time. You’re welcome to <a href=\"/\">shop the site</a> meanwhile.", term);
           return;
         }
         var map = {
@@ -1162,13 +1212,23 @@
         var buddyEl = document.getElementById("voice-buddy");
         var buddyText = document.getElementById("voice-buddy-text");
         var buddyHeard = document.getElementById("voice-buddy-heard");
+        var sessionBar = document.getElementById("voice-session-bar");
+        var sessionTimeEl = document.getElementById("voice-session-time");
+        var sessionFillEl = document.getElementById("voice-session-fill");
+        var sessionTrackEl = document.getElementById("voice-session-track");
         var buddyLastField = null;
+        var SESSION_LIMIT_MS = 300000; // align with voice mint ttl (~5 min)
+        var SESSION_MAX_TURNS = 8; // /api/voice extract turns
+        var SESSION_MAX_CHARS = 6000; // transcript chars processed (honest budget proxy)
+        var OPENING_BUDDY =
+          "Tell me about the item — for example a riding mower or motorcycle, brand, size, and condition.";
 
         function showVoiceBuddy(msg) {
           if (!buddyEl) return;
           if (msg && buddyText) buddyText.textContent = msg;
           buddyEl.hidden = false;
           buddyEl.classList.add("show", "listening");
+          if (sessionBar && state.listening) sessionBar.hidden = false;
           positionVoiceBuddy(buddyLastField);
         }
         function hideVoiceBuddy() {
@@ -1179,6 +1239,84 @@
           if (buddyHeard) {
             buddyHeard.hidden = true;
             buddyHeard.textContent = "";
+          }
+          if (sessionBar) sessionBar.hidden = true;
+        }
+        function formatSessionClock(msLeft) {
+          var s = Math.max(0, Math.ceil(msLeft / 1000));
+          var m = Math.floor(s / 60);
+          var r = s % 60;
+          return m + ":" + (r < 10 ? "0" : "") + r;
+        }
+        function sessionBudgetFrac() {
+          var turnFrac = (state.voiceTurns || 0) / SESSION_MAX_TURNS;
+          var charFrac = (state.voiceChars || 0) / SESSION_MAX_CHARS;
+          return Math.max(0, Math.min(1, Math.max(turnFrac, charFrac)));
+        }
+        function updateSessionMeters() {
+          if (!state.listening) return;
+          var now = Date.now();
+          var started = state.sessionStartedAt || now;
+          var elapsed = now - started;
+          var left = SESSION_LIMIT_MS - elapsed;
+          if (sessionTimeEl) {
+            sessionTimeEl.textContent = formatSessionClock(left);
+            sessionTimeEl.classList.toggle("warn", left <= 60000);
+          }
+          var frac = sessionBudgetFrac();
+          var pct = Math.round(frac * 100);
+          if (sessionFillEl) {
+            sessionFillEl.style.width = pct + "%";
+            sessionFillEl.classList.toggle("warn", frac >= 0.85);
+          }
+          if (sessionTrackEl) sessionTrackEl.setAttribute("aria-valuenow", String(pct));
+          if (left <= 0) {
+            endVoiceSessionLimit("time");
+            return;
+          }
+          if ((state.voiceTurns || 0) >= SESSION_MAX_TURNS || (state.voiceChars || 0) >= SESSION_MAX_CHARS) {
+            endVoiceSessionLimit("budget");
+          }
+        }
+        function startSessionMeters() {
+          state.sessionStartedAt = Date.now();
+          state.voiceTurns = 0;
+          state.voiceChars = 0;
+          state.sessionEndedByLimit = false;
+          if (state.sessionTimer) {
+            try { clearInterval(state.sessionTimer); } catch (eClr) {}
+          }
+          if (sessionBar) sessionBar.hidden = false;
+          updateSessionMeters();
+          state.sessionTimer = setInterval(updateSessionMeters, 500);
+        }
+        function stopSessionMeters() {
+          if (state.sessionTimer) {
+            try { clearInterval(state.sessionTimer); } catch (eClr2) {}
+            state.sessionTimer = null;
+          }
+          if (sessionBar) sessionBar.hidden = true;
+        }
+        function endVoiceSessionLimit(why) {
+          if (state.sessionEndedByLimit || !state.listening) return;
+          state.sessionEndedByLimit = true;
+          var msg =
+            why === "time"
+              ? "Session ended — 5 minutes is up. Use the free typed form or start a new Talk."
+              : "Session ended — session budget used up. Use the free typed form or start a new Talk.";
+          disconnectVoice();
+          setVoiceStatus(msg, true);
+          // Talk chrome is hidden — keep a visible buddy message after disconnect.
+          if (buddyEl && buddyText) {
+            buddyText.textContent = msg;
+            buddyEl.hidden = false;
+            buddyEl.classList.add("show");
+            buddyEl.classList.remove("listening");
+            if (sessionBar) sessionBar.hidden = true;
+            if (buddyHeard) {
+              buddyHeard.hidden = true;
+              buddyHeard.textContent = "";
+            }
           }
         }
         function positionVoiceBuddy(anchorEl) {
@@ -1251,17 +1389,24 @@
           assistantText: "",
           fields: {},
           submitting: false,
-          submitArmed: false
+          submitArmed: false,
+          sessionStartedAt: 0,
+          sessionTimer: null,
+          voiceTurns: 0,
+          voiceChars: 0,
+          sessionEndedByLimit: false
         };
 
         var VOICE_INSTRUCTIONS =
           "You help Still Has Value capture a FREE pickup request in the Salt Lake valley. " +
-          "Mission: pickup only — not chat, not shopping. Disclose briefly that talking normally costs money; this may be a Ben test. " +
-          "Collect: zip, what it is (title), short description/condition, name, phone, access notes, and photos. " +
+          "Mission: pickup only — not chat, not shopping. Disclose briefly that talking normally costs money; this may be a Ben test. Session is time-limited (~5 minutes). " +
+          "OPENING (first speak): Say something like: Tell me about the item — for example a riding mower or motorcycle, brand, size, and condition. Then listen. Do NOT start with photo instructions. " +
+          "After they describe the item, ask ONE specific missing thing at a time (zip, name, phone digits out loud, condition, access). " +
           "ACCEPT SPOKEN PHONE NUMBERS (digit-by-digit or number words like five five five…). Never tell them to type the phone into the form. " +
-          "For photos: guide them to tap Add photos in the Talk panel (camera or upload). Do NOT say they must fill the form for photos. " +
+          "UI TRUTH: The form Photos field uses the browser control labeled Choose files (or similar). Tell them to use Choose files under Photos. " +
+          "Do NOT say Add photos, click Add photos, or tap Add photos in the Talk panel — that chrome is hidden; match the visible form. " +
           "Sparse speak-back: short questions, no long monologues. " +
-          "When zip, item, name, phone are clear and they have added a photo, recap in one sentence and ask them to confirm send (say yes / send it). " +
+          "When zip, item, name, phone are clear, recap in one sentence, remind Choose files under Photos if no photo yet, then ask them to confirm send (say yes / send it). " +
           "On clear confirm, say you are submitting — the page will POST the request. Do not only tell them to tap Request pickup.";
 
         function photoCountNow() {
@@ -1282,7 +1427,7 @@
             return;
           }
           if (!photoCountNow()) {
-            setVoiceStatus("Add a photo with Add photos, then say send it.", true);
+            setVoiceStatus("Add a photo with Choose files under Photos, then say send it.", true);
             if (photosBtn) photosBtn.focus();
             return;
           }
@@ -1296,7 +1441,7 @@
             },
             onReject: function (data) {
               state.submitting = false;
-              setVoiceStatus((data && data.reason) || "Request not accepted.", true);
+              setVoiceStatus((data && data.reason) || "Request not accepted for now — check back later as we grow.", true);
             },
             onError: function () {
               state.submitting = false;
@@ -1372,9 +1517,16 @@
           }
         }
 
-        function extractFromTranscript(transcript) {
+        function extractFromTranscript(transcript, opts) {
           if (!transcript) return;
+          opts = opts || {};
           maybeConfirmSubmit(transcript);
+          if (opts.meter && state.listening) {
+            state.voiceTurns = (state.voiceTurns || 0) + 1;
+            state.voiceChars = (state.voiceChars || 0) + String(transcript).length;
+            updateSessionMeters();
+            if (state.sessionEndedByLimit || !state.listening) return;
+          }
           fetch("/api/voice", {
             method: "POST",
             headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -1418,6 +1570,7 @@
 
         function disconnectVoice() {
           state.listening = false;
+          stopSessionMeters();
           hideVoiceBuddy();
           try {
             var aiLink = document.getElementById("mic-open");
@@ -1592,10 +1745,11 @@
             state.assistantText = "";
             ws.onopen = function () {
               state.listening = true;
+              startSessionMeters();
               startBtn.classList.add("live");
               startBtn.textContent = "Listening…";
               stopBtn.hidden = false;
-              showVoiceBuddy("Listening — say what you’d like picked up.");
+              showVoiceBuddy(OPENING_BUDDY);
               followVoiceField(document.getElementById("title") || document.getElementById("pickup-form"));
               try {
                 var aiLink = document.getElementById("mic-open");
@@ -1611,6 +1765,8 @@
                   type: "session.update",
                   session: { instructions: VOICE_INSTRUCTIONS }
                 }));
+                // Prompt opening speak so the agent starts with “Tell me about the item…”
+                ws.send(JSON.stringify({ type: "response.create" }));
               } catch (e) {}
               startMic(ws).catch(function () {
                 setVoiceStatus("Microphone permission needed.", true);
@@ -1637,7 +1793,7 @@
                     buddyHeard.textContent = "Heard: " + String(transcript).slice(0, 120);
                   }
                   showVoiceBuddy("Listening…");
-                  extractFromTranscript(transcript);
+                  extractFromTranscript(transcript, { meter: true });
                 }
               } else if (t === "response.output_text.delta" && msg.delta) {
                 state.assistantText += msg.delta;
@@ -1653,7 +1809,7 @@
                   if (fieldsLookReady() && photoCountNow()) {
                     setVoiceStatus("Ready — say send it to submit, or tap Request pickup.");
                   } else if (fieldsLookReady()) {
-                    setVoiceStatus("Add photos with Add photos, then say send it.");
+                    setVoiceStatus("Use Choose files under Photos, then say send it.");
                   } else {
                     setVoiceStatus("Listening — say zip, item, phone, access notes.");
                   }
@@ -1773,7 +1929,7 @@
           input.click();
           setVoiceStatus("Pick or take a photo — then say send it when ready.");
           followVoiceField(input);
-          showVoiceBuddy("Add a photo, then keep talking.");
+          showVoiceBuddy("Use Choose files under Photos, then keep talking.");
         }
         if (photosBtn) {
           photosBtn.addEventListener("click", function () {
