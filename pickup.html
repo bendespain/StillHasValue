@@ -333,6 +333,69 @@
       border: 1px solid #d6d3d1; border-radius: 999px; padding: 10px 14px;
       background: #fff; font-weight: 700; cursor: pointer; font-size: .9rem;
     }
+    #voice-buddy {
+      display: none;
+      position: absolute;
+      z-index: 2500;
+      max-width: min(280px, calc(100vw - 32px));
+      background: #fff;
+      border: 1px solid #e7e5e4;
+      border-radius: 16px;
+      padding: 10px 12px 10px 10px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.16);
+      align-items: flex-start;
+      gap: 8px;
+      transition: top .25s ease, left .25s ease, opacity .2s ease;
+      pointer-events: none;
+    }
+    #voice-buddy.show { display: flex; }
+    #voice-buddy .vb-avatar {
+      flex: 0 0 auto;
+      width: 36px; height: 36px;
+      border-radius: 999px;
+      background: #d97706;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      position: relative;
+    }
+    #voice-buddy.listening .vb-avatar::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 999px;
+      border: 2px solid rgba(217, 119, 6, .45);
+      animation: vb-pulse 1.4s ease-out infinite;
+    }
+    @keyframes vb-pulse {
+      0% { transform: scale(.85); opacity: .9; }
+      100% { transform: scale(1.35); opacity: 0; }
+    }
+    #voice-buddy .vb-body { min-width: 0; flex: 1 1 auto; }
+    #voice-buddy .vb-label {
+      margin: 0;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #b45309;
+    }
+    #voice-buddy .vb-text {
+      margin: 2px 0 0;
+      font-size: .88rem;
+      line-height: 1.35;
+      color: #292524;
+      max-height: 4.2em;
+      overflow: hidden;
+    }
+    #voice-buddy .vb-heard {
+      margin: 4px 0 0;
+      font-size: .78rem;
+      color: #78716c;
+      font-style: italic;
+      max-height: 2.6em;
+      overflow: hidden;
+    }
     #voice-status { margin-top: 10px; min-height: 1.3em; font-size: .9rem; color: #444; }
     #voice-status.warn { color: #9a3412; }
     #voice-transcript {
@@ -428,6 +491,15 @@
       <p id="voice-status" role="status"></p>
       <div id="voice-transcript" aria-live="polite"></div>
     </section>
+
+    <div id="voice-buddy" aria-live="polite" hidden>
+      <div class="vb-avatar" aria-hidden="true">🎙</div>
+      <div class="vb-body">
+        <p class="vb-label">AI listening</p>
+        <p class="vb-text" id="voice-buddy-text">Listening…</p>
+        <p class="vb-heard" id="voice-buddy-heard" hidden></p>
+      </div>
+    </div>
 
     <h1>Request a free pickup</h1>
     <p class="lead">Salt Lake valley pickups for things that still matter to someone else — not junk. Quick screen first; we follow up if it’s a fit.</p>
@@ -1033,6 +1105,76 @@
         var photosBtn = document.getElementById("voice-photos");
         var statusEl = document.getElementById("voice-status");
         var transcriptEl = document.getElementById("voice-transcript");
+        var buddyEl = document.getElementById("voice-buddy");
+        var buddyText = document.getElementById("voice-buddy-text");
+        var buddyHeard = document.getElementById("voice-buddy-heard");
+        var buddyLastField = null;
+
+        function showVoiceBuddy(msg) {
+          if (!buddyEl) return;
+          if (msg && buddyText) buddyText.textContent = msg;
+          buddyEl.hidden = false;
+          buddyEl.classList.add("show", "listening");
+          positionVoiceBuddy(buddyLastField);
+        }
+        function hideVoiceBuddy() {
+          if (!buddyEl) return;
+          buddyEl.classList.remove("show", "listening");
+          buddyEl.hidden = true;
+          buddyLastField = null;
+          if (buddyHeard) {
+            buddyHeard.hidden = true;
+            buddyHeard.textContent = "";
+          }
+        }
+        function positionVoiceBuddy(anchorEl) {
+          if (!buddyEl || buddyEl.hidden) return;
+          var form = document.getElementById("pickup-form");
+          var host = document.body;
+          var top = 120;
+          var left = 16;
+          try {
+            var a = anchorEl;
+            if (!a && form) {
+              var filled = form.querySelectorAll("input, textarea, select");
+              for (var i = filled.length - 1; i >= 0; i--) {
+                var v = String(filled[i].value || "").trim();
+                if (v) { a = filled[i]; break; }
+              }
+            }
+            if (!a) a = document.getElementById("talk") || form;
+            if (!a) return;
+            var r = a.getBoundingClientRect();
+            var scrollY = window.scrollY || window.pageYOffset || 0;
+            var scrollX = window.scrollX || window.pageXOffset || 0;
+            top = Math.max(12, r.top + scrollY - 8);
+            left = Math.min(
+              (window.innerWidth || 360) - 296,
+              Math.max(12, r.right + scrollX + 12)
+            );
+            // On narrow screens, park under the field
+            if ((window.innerWidth || 360) < 720) {
+              left = Math.max(12, Math.min(r.left + scrollX, (window.innerWidth || 360) - 296));
+              top = r.bottom + scrollY + 8;
+            }
+          } catch (ePos) {}
+          buddyEl.style.top = top + "px";
+          buddyEl.style.left = left + "px";
+        }
+        function followVoiceField(el) {
+          if (!el) return;
+          buddyLastField = el;
+          positionVoiceBuddy(el);
+          try {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          } catch (eScr) {}
+        }
+        window.addEventListener("resize", function () {
+          positionVoiceBuddy(buddyLastField);
+        });
+        window.addEventListener("scroll", function () {
+          if (buddyEl && buddyEl.classList.contains("listening")) positionVoiceBuddy(buddyLastField);
+        }, { passive: true });
         var costEl = document.getElementById("voice-cost");
         if (!panel || !startBtn) return;
 
@@ -1126,6 +1268,8 @@
         function setVoiceStatus(msg, warn) {
           statusEl.textContent = msg || "";
           statusEl.className = warn ? "warn" : "";
+          if (state.listening && !warn) showVoiceBuddy(msg || "Listening…");
+          else if (state.listening && warn && buddyText) buddyText.textContent = msg || "";
         }
 
         function applyFields(fields) {
@@ -1142,23 +1286,36 @@
             email: "email",
             access: "access"
           };
+          var lastEl = null;
           Object.keys(map).forEach(function (k) {
             if (fields[k] == null || fields[k] === "") return;
             var el = document.getElementById(map[k]);
             if (!el) return;
             var val = String(fields[k]).trim();
             if (!val) return;
+            var changed = false;
             if (el.tagName === "SELECT") {
               var opts = Array.prototype.slice.call(el.options || []);
               var hit = opts.find(function (o) {
                 return o.value && o.value.toLowerCase() === val.toLowerCase();
               });
-              if (hit) el.value = hit.value;
+              if (hit && el.value !== hit.value) {
+                el.value = hit.value;
+                changed = true;
+              }
             } else if (!el.value || el.value.trim().length < val.length) {
-              el.value = val;
+              if (el.value !== val) {
+                el.value = val;
+                changed = true;
+              }
             }
             state.fields[k] = el.value;
+            if (changed) lastEl = el;
           });
+          if (lastEl && state.listening) {
+            followVoiceField(lastEl);
+            showVoiceBuddy(buddyText ? buddyText.textContent : "Filling the form…");
+          }
         }
 
         function extractFromTranscript(transcript) {
@@ -1207,6 +1364,7 @@
 
         function disconnectVoice() {
           state.listening = false;
+          hideVoiceBuddy();
           if (state.processor) {
             try { state.processor.disconnect(); } catch (e) {}
             state.processor = null;
@@ -1379,6 +1537,8 @@
               startBtn.classList.add("live");
               startBtn.textContent = "Listening…";
               stopBtn.hidden = false;
+              showVoiceBuddy("Listening — say what you’d like picked up.");
+              followVoiceField(document.getElementById("title") || document.getElementById("pickup-form"));
               setVoiceStatus(
                 data.mode === "test"
                   ? "Test session — listening."
@@ -1410,6 +1570,11 @@
                   (msg.item && msg.item.content && msg.item.content[0] && msg.item.content[0].transcript);
                 if (transcript) {
                   transcriptEl.textContent = transcript;
+                  if (buddyHeard) {
+                    buddyHeard.hidden = false;
+                    buddyHeard.textContent = "Heard: " + String(transcript).slice(0, 120);
+                  }
+                  showVoiceBuddy("Listening…");
                   extractFromTranscript(transcript);
                 }
               } else if (t === "response.output_text.delta" && msg.delta) {
