@@ -196,19 +196,54 @@
     }
 
 
-    .h1-row {
-      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-      margin: 0 0 10px;
+    .path-choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 0 0 22px;
     }
-    .h1-row h1 { margin: 0; flex: 1 1 auto; }
+    @media (max-width: 520px) {
+      .path-choices { grid-template-columns: 1fr; }
+    }
+    .path-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px 16px 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      border: 1px solid #e7e5e4;
+    }
+    .path-card h2 {
+      margin: 0 0 6px;
+      font-size: 1.15rem;
+    }
+    .path-card p {
+      margin: 0 0 14px;
+      color: #57534e;
+      font-size: .95rem;
+      line-height: 1.45;
+    }
+    .path-card a.path-form,
     #mic-open {
-      border: 0; border-radius: 999px; padding: 10px 16px;
-      font-weight: 700; cursor: pointer; font-size: .95rem;
+      display: inline-block;
+      border: 0; border-radius: 999px; padding: 12px 18px;
+      font-weight: 700; cursor: pointer; font-size: 1rem;
+      text-decoration: none; text-align: center;
+      box-sizing: border-box;
+    }
+    .path-card a.path-form {
+      background: #15803d; color: #fff;
+    }
+    .path-card a.path-form:hover { background: #166534; }
+    #mic-open {
       background: #d97706; color: #fff;
-      display: inline-flex; align-items: center; gap: 6px;
-      flex: 0 0 auto;
+      width: 100%;
     }
     #mic-open:hover { background: #b45309; }
+    #voice-gate-free:disabled,
+    #voice-gate-pay:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
     #voice-gate-modal {
       display: none; position: fixed; inset: 0; z-index: 4000;
       background: rgba(28, 25, 23, .45);
@@ -244,27 +279,10 @@
     #voice-gate-cancel:hover { background: #f5f5f4; }
     #voice-gate-modal .vg-step { display: none; }
     #voice-gate-modal .vg-step.show { display: block; }
-    #voice-gate-modal .vg-fields label {
-      display: block; font-weight: 700; margin: 10px 0 6px; font-size: .9rem; color: #292524;
-    }
-    #voice-gate-modal .vg-fields input,
-    #voice-gate-modal .vg-fields textarea {
-      width: 100%; box-sizing: border-box; border: 1px solid #d6d3d1;
-      border-radius: 10px; padding: 10px 12px; font-size: .95rem;
-      font-family: inherit;
-    }
-    #voice-gate-modal .vg-fields textarea { min-height: 64px; resize: vertical; }
     #voice-gate-status {
       margin: 10px 0 0; font-size: .9rem; line-height: 1.4; color: #57534e; min-height: 1.2em;
     }
     #voice-gate-status.err { color: #b91c1c; }
-    #voice-gate-check { background: #15803d; color: #fff; }
-    #voice-gate-check:hover { background: #166534; }
-    #voice-gate-check:disabled { opacity: .6; cursor: wait; }
-    #voice-gate-back {
-      background: #fff; color: #444; border: 1px solid #d6d3d1 !important;
-    }
-    #voice-gate-back:hover { background: #f5f5f4; }
     .human-verify {
       margin: 0 0 14px;
       padding: 12px 12px 10px;
@@ -371,33 +389,19 @@
 
     <div id="voice-gate-modal" role="dialog" aria-modal="true" aria-labelledby="voice-gate-title" hidden>
       <div class="vg-card">
-        <h2 id="voice-gate-title">Talk to fill this out</h2>
+        <h2 id="voice-gate-title">Talk to an AI</h2>
         <div class="human-verify" id="vg-human-verify">
           <h3>Verify you’re human</h3>
-          <p>Complete this check before Talk. It proves you’re a person, not a bot.</p>
+          <p>Complete this check first. Talk options stay locked until it’s done.</p>
           <div id="vg-turnstile" class="cf-turnstile" aria-label="Human verification"></div>
         </div>
         <div id="vg-step-choice" class="vg-step show">
-          <p>Free talk is available <strong>after we confirm</strong> your item is plausibly worth <strong>$100+</strong> used (not just a Yes tap). If you’re not sure, pay <strong>$0.25</strong> for AI help figuring that out. The typed form below stays free either way.</p>
+          <p>Free talk if your item is worth <strong>$100+</strong> used (you’ll say what it is — no typing first). Not sure? <strong>$0.25</strong> for AI help figuring that out. The form stays free either way.</p>
+          <p id="voice-gate-status" role="status" aria-live="polite">Complete Verify you’re human above to continue.</p>
           <div class="vg-actions">
-            <button type="button" id="voice-gate-free">Yes — worth $100+ (check &amp; free talk)</button>
-            <button type="button" id="voice-gate-pay">Not sure — $0.25 AI help</button>
+            <button type="button" id="voice-gate-free" disabled>Yes — worth $100+ (free talk)</button>
+            <button type="button" id="voice-gate-pay" disabled>Not sure — $0.25 AI help</button>
             <button type="button" id="voice-gate-cancel">Cancel</button>
-          </div>
-        </div>
-        <div id="vg-step-describe" class="vg-step">
-          <p>Tell us what it is so we can confirm it’s plausibly worth $100+ used. Make sure the <strong>Verify you’re human</strong> check above is done first.</p>
-          <div class="vg-fields">
-            <label for="vg-item-title">What is it? <span class="req">*</span></label>
-            <input id="vg-item-title" type="text" maxlength="120" placeholder="e.g. Mid-century dresser, working KitchenAid mixer" autocomplete="off">
-            <label for="vg-item-desc">Brand / condition / details <span class="opt">(optional)</span></label>
-            <textarea id="vg-item-desc" maxlength="500" placeholder="Brand, size, working condition, what’s included…"></textarea>
-          </div>
-          <p id="voice-gate-status" role="status" aria-live="polite"></p>
-          <div class="vg-actions" style="margin-top:12px">
-            <button type="button" id="voice-gate-check">Check &amp; start free talk</button>
-            <button type="button" id="voice-gate-pay2">Not sure — $0.25 AI help</button>
-            <button type="button" id="voice-gate-back">Back</button>
           </div>
         </div>
       </div>
@@ -421,11 +425,21 @@
       <div id="voice-transcript" aria-live="polite"></div>
     </section>
 
-    <div class="h1-row">
-      <h1>Request a free pickup</h1>
-      <button type="button" id="mic-open" aria-label="Talk to fill this out" title="Talk to fill this out">🎤 Talk</button>
-    </div>
+    <h1>Request a free pickup</h1>
     <p class="lead">We pick up items that still have value in the Salt Lake valley (Murray / West Jordan and nearby). Not junk hauling. A quick screen happens first; if it looks worth the trip, Ben reviews and will contact you.</p>
+
+    <div class="path-choices" aria-label="How to request a pickup">
+      <div class="path-card">
+        <h2>Fill out the form</h2>
+        <p>Type the details yourself. Always free.</p>
+        <a class="path-form" href="#pickup-form">Use the form</a>
+      </div>
+      <div class="path-card">
+        <h2>Talk to an AI</h2>
+        <p>Say what you’ve got — we’ll fill it out for you.</p>
+        <button type="button" id="mic-open" aria-label="Talk to an AI to fill this out" title="Talk to an AI">🎤 Talk to an AI</button>
+      </div>
+    </div>
 
     <form id="pickup-form" novalidate>
       <label for="photos">Photos <span class="req">*</span></label>
@@ -668,6 +682,19 @@
         var w = document.getElementById("cf-widget");
         if (w) w.scrollIntoView({ behavior: "smooth", block: "center" });
       }
+      function syncGateButtons() {
+        var ok = !!getTurnstileToken();
+        var freeB = document.getElementById("voice-gate-free");
+        var payB = document.getElementById("voice-gate-pay");
+        if (freeB) freeB.disabled = !ok;
+        if (payB) payB.disabled = !ok;
+        var st = document.getElementById("voice-gate-status");
+        if (st && !st.classList.contains("err")) {
+          st.textContent = ok
+            ? "Human check done — pick free talk or $0.25."
+            : "Complete Verify you’re human above to continue.";
+        }
+      }
       function onTurnstileToken(token) {
         window.__tsToken = token || "";
         setSubmitEnabled(!!window.__tsToken);
@@ -677,11 +704,13 @@
             startBtn.disabled = !window.__tsToken;
           }
         } catch (eSync) {}
+        try { syncGateButtons(); } catch (eG) {}
       }
       function resetTurnstile() {
         window.__tsToken = "";
         btn.classList.remove("sending");
         setSubmitEnabled(false);
+        try { syncGateButtons(); } catch (eRG) {}
         try {
           if (window.turnstile) {
             if (window.__tsWidgetId != null) window.turnstile.reset(window.__tsWidgetId);
@@ -1268,6 +1297,15 @@
         }
 
         function startVoice() {
+          if (!getTurnstileToken()) {
+            setVoiceStatus("Verify you’re human first, then Start talking.", true);
+            try {
+              var hv = document.getElementById("voice-human-verify");
+              if (hv) hv.scrollIntoView({ behavior: "smooth", block: "center" });
+            } catch (eHV) {}
+            startBtn.disabled = true;
+            return;
+          }
           if (state.listening) return;
           setVoiceStatus("Connecting…");
           startBtn.disabled = true;
@@ -1494,12 +1532,7 @@
         // Shortcuts that still enable the panel (skip modal / auto-free): ?voice=1, ?voiceTest=1, employee Access.
         var gateModal = document.getElementById("voice-gate-modal");
         var micBtn = document.getElementById("mic-open");
-
-        var vgStepChoice = document.getElementById("vg-step-choice");
-        var vgStepDescribe = document.getElementById("vg-step-describe");
         var vgStatus = document.getElementById("voice-gate-status");
-        var vgTitleInput = document.getElementById("vg-item-title");
-        var vgDescInput = document.getElementById("vg-item-desc");
 
         function setGateStatus(msg, isErr) {
           if (!vgStatus) return;
@@ -1508,24 +1541,15 @@
           else vgStatus.classList.remove("err");
         }
 
-        function showGateStep(step) {
-          if (vgStepChoice) {
-            if (step === "choice") vgStepChoice.classList.add("show");
-            else vgStepChoice.classList.remove("show");
-          }
-          if (vgStepDescribe) {
-            if (step === "describe") vgStepDescribe.classList.add("show");
-            else vgStepDescribe.classList.remove("show");
-          }
-        }
-
         function openGateModal() {
           if (!gateModal) return;
-          showGateStep("choice");
-          setGateStatus("");
           gateModal.hidden = false;
           gateModal.classList.add("show");
           try { renderTurnstile(); } catch (eR) {}
+          try { syncGateButtons(); } catch (eS) {}
+          if (!getTurnstileToken()) {
+            setGateStatus("Complete Verify you’re human above to continue.", false);
+          }
         }
         function requireHumanInGate() {
           var token = getTurnstileToken();
@@ -1535,6 +1559,7 @@
             var hv = document.getElementById("vg-human-verify");
             if (hv) hv.scrollIntoView({ behavior: "smooth", block: "center" });
           } catch (eH) {}
+          try { syncGateButtons(); } catch (eS2) {}
           try { renderTurnstile(); } catch (eR2) {}
           return false;
         }
@@ -1542,7 +1567,6 @@
           if (!gateModal) return;
           gateModal.classList.remove("show");
           gateModal.hidden = true;
-          showGateStep("choice");
           setGateStatus("");
         }
 
@@ -1556,6 +1580,16 @@
           );
         }
 
+        function takeFreePath() {
+          if (!requireHumanInGate()) return;
+          closeGateModal();
+          enablePanel(false, { worthConfirmed: true });
+          setVoiceStatus(
+            "Say what the item is — free talk for $100+ used items. Complete Verify you’re human in the panel if needed, then Start talking.",
+            false
+          );
+        }
+
         if (micBtn) {
           micBtn.addEventListener("click", function () {
             openGateModal();
@@ -1563,25 +1597,10 @@
         }
         var freeBtn = document.getElementById("voice-gate-free");
         var payBtn = document.getElementById("voice-gate-pay");
-        var payBtn2 = document.getElementById("voice-gate-pay2");
         var cancelBtn = document.getElementById("voice-gate-cancel");
-        var checkBtn = document.getElementById("voice-gate-check");
-        var backBtn = document.getElementById("voice-gate-back");
         if (freeBtn) {
           freeBtn.addEventListener("click", function () {
-            showGateStep("describe");
-            setGateStatus("");
-            try {
-              var tEl = document.getElementById("title");
-              var dEl = document.getElementById("description");
-              if (vgTitleInput && tEl && !String(vgTitleInput.value || "").trim() && tEl.value) {
-                vgTitleInput.value = tEl.value;
-              }
-              if (vgDescInput && dEl && !String(vgDescInput.value || "").trim() && dEl.value) {
-                vgDescInput.value = dEl.value;
-              }
-              if (vgTitleInput) vgTitleInput.focus();
-            } catch (eFocus) {}
+            takeFreePath();
           });
         }
         if (payBtn) {
@@ -1589,100 +1608,9 @@
             takePaidPath();
           });
         }
-        if (payBtn2) {
-          payBtn2.addEventListener("click", function () {
-            takePaidPath();
-          });
-        }
-        if (backBtn) {
-          backBtn.addEventListener("click", function () {
-            showGateStep("choice");
-            setGateStatus("");
-          });
-        }
         if (cancelBtn) {
           cancelBtn.addEventListener("click", function () {
             closeGateModal();
-          });
-        }
-        if (checkBtn) {
-          checkBtn.addEventListener("click", function () {
-            var title = vgTitleInput ? String(vgTitleInput.value || "").trim() : "";
-            var desc = vgDescInput ? String(vgDescInput.value || "").trim() : "";
-            var combined = (title + " " + desc).trim();
-            if (combined.length < 12) {
-              setGateStatus("Please describe the item more specifically (at least ~12 characters).", true);
-              return;
-            }
-            var token = getTurnstileToken();
-            if (!token) {
-              setGateStatus("Verify you’re human with the check above, then try again.", true);
-              try {
-                var hv2 = document.getElementById("vg-human-verify");
-                if (hv2) hv2.scrollIntoView({ behavior: "smooth", block: "center" });
-              } catch (eH2) {}
-              return;
-            }
-            checkBtn.disabled = true;
-            setGateStatus("Checking whether it’s plausibly worth $100+ used…");
-            fetch("/api/voice/worth-check", {
-              method: "POST",
-              credentials: "same-origin",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json"
-              },
-              body: JSON.stringify({
-                turnstileToken: token,
-                itemTitle: title,
-                itemDescription: desc
-              })
-            })
-              .then(function (r) {
-                return r.json().catch(function () { return {}; }).then(function (data) {
-                  return { status: r.status, data: data || {} };
-                });
-              })
-              .then(function (res) {
-                checkBtn.disabled = false;
-                var data = res.data;
-                if (data.error === "turnstile_failed" || (res.status === 401 && !data.ok)) {
-                  setGateStatus((data.message || data.reason || "Human check failed.") + " Complete Verify you’re human above, then try again.", true);
-                  try { resetTurnstile(); } catch (eR) {}
-                  return;
-                }
-                if (data.error === "worth_check_failed" || res.status === 503) {
-                  setGateStatus(
-                    (data.message || data.reason || "Worth check unavailable.") +
-                      " Try $0.25 AI help or the typed form.",
-                    true
-                  );
-                  return;
-                }
-                if (!data.ok) {
-                  setGateStatus(data.message || data.reason || "Couldn’t check that item.", true);
-                  return;
-                }
-                if (data.plausible === true) {
-                  closeGateModal();
-                  enablePanel(false, {
-                    worthConfirmed: true,
-                    itemTitle: title,
-                    itemDescription: desc
-                  });
-                  setVoiceStatus("Item looks plausibly $100+ — Start talking (free). Complete bot check if needed.");
-                  return;
-                }
-                setGateStatus(
-                  (data.reason || "Doesn’t look like it’s plausibly worth $100+ used.") +
-                    " You can still use $0.25 AI help below.",
-                  true
-                );
-              })
-              .catch(function () {
-                checkBtn.disabled = false;
-                setGateStatus("Network error checking worth. Try again or use $0.25 / typed form.", true);
-              });
           });
         }
         if (gateModal) {
