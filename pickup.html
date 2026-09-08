@@ -278,22 +278,11 @@
       min-height: 1.2em;
     }
     #voice-gate-status.err { color: #b91c1c; }
-    .human-verify.done .cf-turnstile,
-    .human-verify.done h3 {
+    /* After Turnstile succeeds, remove the verify block entirely (no leftover “Verified” strip). */
+    .human-verify.done {
       display: none !important;
     }
-    .human-verify.done {
-      padding: 6px 10px;
-      margin: 0 0 10px;
-    }
-    .human-verify .hv-done {
-      display: none;
-      margin: 0;
-      font-size: .85rem;
-      font-weight: 600;
-      color: #15803d;
-    }
-    .human-verify.done .hv-done { display: block; }
+    .human-verify .hv-done { display: none !important; }
     .human-verify {
       margin: 0 0 14px;
       padding: 12px 12px 10px;
@@ -550,9 +539,9 @@
           <p class="hv-done">Verified</p>
         </div>
         <div id="vg-step-choice" class="vg-step show">
-          <p class="vg-purpose">You’ll <strong>talk with an AI</strong> and it’ll fill the form as you go.</p>
-          <p class="vg-choice">If you <strong>vouch</strong> the item is worth a lot, we trust you and cover Talk. Not sure? Pay <strong>$0.25</strong> and we’ll figure that out together while you talk.</p>
-          <p id="voice-gate-status" role="status" aria-live="polite">Finish the check above.</p>
+          <p class="vg-purpose">Next you’ll <strong>talk with an AI</strong>. It listens and fills this pickup form for you.</p>
+          <p class="vg-choice">Talk isn’t free for us to run. If you <strong>vouch</strong> that what you’re giving away still has real value to someone else, we trust you and cover it. If you’re not sure, pay <strong>$0.25</strong> and we’ll figure that out with you while you talk.</p>
+          <p id="voice-gate-status" role="status" aria-live="polite">Finish the human check above.</p>
           <div class="vg-toggle" id="vg-path-toggle" role="group" aria-label="Who pays for Talk">
             <button type="button" id="voice-gate-free" class="on" aria-pressed="true" disabled>I vouch — free</button>
             <button type="button" id="voice-gate-pay" aria-pressed="false" disabled>Not sure — $0.25</button>
@@ -875,7 +864,7 @@
         }
         var st = document.getElementById("voice-gate-status");
         if (st && !st.classList.contains("err")) {
-          st.textContent = ok ? "Choose free (you vouch) or $0.25, then start talking." : "Finish the check above.";
+          st.textContent = ok ? "Pick free (you vouch) or $0.25, then start talking." : "Finish the human check above.";
         }
       }
       function onTurnstileToken(token) {
