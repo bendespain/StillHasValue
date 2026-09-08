@@ -1188,8 +1188,8 @@ async function handleVoiceEphemeral(request, env) {
   let mode = "public";
   // Free Ben test: VOICE_BEN_TEST (phone / no Access) OR CF Access session.
   // Never put TEST_MINT_KEY / VOICE_TEST_MINT_KEY in frontend JS.
-  // SHV-sponsored public free: Turnstile (above) + item text + server-side AI worth check.
-  // Fail closed — do not honor worthConfirmed alone; never fall through to free mint on AI outage.
+  // SHV-sponsored public free: Turnstile (above) + client sponsored flag.
+  // If item text is present, AI worth-check still runs (fail closed). Otherwise worth is judged in talk.
   const sponsoredAsk =
     data.worthConfirmed === true ||
     data.shvSponsored === true ||
@@ -1199,42 +1199,35 @@ async function handleVoiceEphemeral(request, env) {
     mintBody.testKey = env.VOICE_TEST_MINT_KEY;
     mode = "test";
   } else if (sponsoredAsk) {
+    // Free talk: Turnstile already verified above. Worth confirmed in conversation
+    // (no type-before-talk). If client already has item text, still pressure-test it.
     const combined = combineItemText(data);
-    if (combined.length < 12) {
-      return json(
-        {
-          ok: false,
-          error: "item_too_short",
-          message:
-            "Free talk needs a specific item description first. Or use $0.25 talk / the typed form.",
-        },
-        400
-      );
-    }
-    const assess = await assessItemWorth100Plus(env, combined);
-    if (assess.failed) {
-      return json(
-        {
-          ok: false,
-          error: "worth_check_failed",
-          reason: assess.reason,
-          message:
-            "Couldn’t verify item worth right now. Use $0.25 talk or the typed form (free).",
-        },
-        503
-      );
-    }
-    if (assess.plausible !== true) {
-      return json(
-        {
-          ok: false,
-          error: "not_worth_enough",
-          reason: assess.reason,
-          message:
-            "This doesn’t look like it’s plausibly worth $100+ used. Try $0.25 AI help or the free typed form.",
-        },
-        403
-      );
+    if (combined.length >= 12) {
+      const assess = await assessItemWorth100Plus(env, combined);
+      if (assess.failed) {
+        return json(
+          {
+            ok: false,
+            error: "worth_check_failed",
+            reason: assess.reason,
+            message:
+              "Couldn’t verify item worth right now. Use $0.25 talk or the typed form (free).",
+          },
+          503
+        );
+      }
+      if (assess.plausible !== true) {
+        return json(
+          {
+            ok: false,
+            error: "not_worth_enough",
+            reason: assess.reason,
+            message:
+              "This doesn’t look like it’s plausibly worth $100+ used. Try $0.25 AI help or the free typed form.",
+          },
+          403
+        );
+      }
     }
     if (!(env && env.VOICE_TEST_MINT_KEY)) {
       return json(
