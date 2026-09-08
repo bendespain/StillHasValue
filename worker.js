@@ -1126,10 +1126,26 @@ function benTestOpen(env) {
   return truthySecret(env && env.VOICE_BEN_TEST);
 }
 
-function canAttachTestMintKey(request, env) {
+function clientAskedVoiceTest(request, data) {
+  data = data || {};
+  if (data.voiceTest === true || data.voiceTest === 1 || String(data.voiceTest || "").toLowerCase() === "true") {
+    return true;
+  }
+  const h = request && request.headers && request.headers.get("X-SHV-Voice-Test");
+  if (h && (h === "1" || String(h).toLowerCase() === "true")) return true;
+  try {
+    const u = new URL(request.url);
+    if (u.searchParams.get("voice") === "1" || u.searchParams.get("voiceTest") === "1") return true;
+  } catch (e) {}
+  return false;
+}
+
+/** Free test mint only for Access employees, or Ben staging when client explicitly asks (?voice=1). */
+function canAttachTestMintKey(request, env, data) {
   if (!(env && env.VOICE_TEST_MINT_KEY)) return false;
-  if (benTestOpen(env)) return true;
   if (hasAccessSession(request)) return true;
+  // VOICE_BEN_TEST alone must NOT free-mint every public visitor (broke $0.25 path).
+  if (benTestOpen(env) && clientAskedVoiceTest(request, data)) return true;
   return false;
 }
 
@@ -1159,7 +1175,7 @@ async function handleVoiceEphemeral(request, env) {
       talk_ui_ok: free_test_available,
       test_mint:
         "Worker secrets VOICE_TEST_MINT_KEY (+ VOICE_BEN_TEST or CF Access). Browser never sees the key.",
-      note: "Public talk: $0.25 unpaid, or SHV-sponsored free after Turnstile + Worker AI confirms item is plausibly worth $100+ used (VOICE_TEST_MINT_KEY). Typed /api/pickup stays free. Ben test mint via VOICE_BEN_TEST or Access.",
+      note: "Public talk: $0.25 unpaid (requirePayment), or SHV-sponsored free after Turnstile + worth claim. Ben test mint only with Access or VOICE_BEN_TEST + explicit ?voice=1 — not for all public traffic. Typed /api/pickup stays free.",
       paths: ["/api/voice/ephemeral", "/api/voice-ephemeral", "/api/voice/worth-check", "/api/voice-worth-check"],
     });
   }
@@ -1186,16 +1202,23 @@ async function handleVoiceEphemeral(request, env) {
   if (data.sessionCredit) mintBody.sessionCredit = String(data.sessionCredit);
 
   let mode = "public";
-  // Free Ben test: VOICE_BEN_TEST (phone / no Access) OR CF Access session.
+  // Free Ben test: CF Access, or VOICE_BEN_TEST + explicit client ?voice=1 / voiceTest (not all public).
   // Never put TEST_MINT_KEY / VOICE_TEST_MINT_KEY in frontend JS.
   // SHV-sponsored public free: Turnstile (above) + client sponsored flag.
   // If item text is present, AI worth-check still runs (fail closed). Otherwise worth is judged in talk.
+  const requirePayment =
+    data.requirePayment === true ||
+    data.paidPath === true ||
+    String(data.requirePayment || "").toLowerCase() === "true" ||
+    String(data.paidPath || "").toLowerCase() === "true";
   const sponsoredAsk =
-    data.worthConfirmed === true ||
-    data.shvSponsored === true ||
-    String(data.worthConfirmed || "").toLowerCase() === "true" ||
-    String(data.shvSponsored || "").toLowerCase() === "true";
-  if (canAttachTestMintKey(request, env)) {
+    !requirePayment &&
+    (data.worthConfirmed === true ||
+      data.shvSponsored === true ||
+      String(data.worthConfirmed || "").toLowerCase() === "true" ||
+      String(data.shvSponsored || "").toLowerCase() === "true");
+  // Paid/$0.25 path: never test or sponsored free mint — fall through to normal mint (402 unpaid).
+  if (!requirePayment && canAttachTestMintKey(request, env, data)) {
     mintBody.testKey = env.VOICE_TEST_MINT_KEY;
     mode = "test";
   } else if (sponsoredAsk) {

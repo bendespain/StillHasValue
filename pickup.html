@@ -196,21 +196,13 @@
     }
 
 
-    .path-choices {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin: 0 0 22px;
-    }
-    @media (max-width: 520px) {
-      .path-choices { grid-template-columns: 1fr; }
-    }
     .path-card {
       background: #fff;
       border-radius: 14px;
       padding: 16px 16px 18px;
       box-shadow: 0 2px 12px rgba(0,0,0,.08);
       border: 1px solid #e7e5e4;
+      margin: 0 0 22px;
     }
     .path-card h2 {
       margin: 0 0 6px;
@@ -222,23 +214,21 @@
       font-size: .95rem;
       line-height: 1.45;
     }
-    .path-card a.path-form,
     #mic-open {
       display: inline-block;
       border: 0; border-radius: 999px; padding: 12px 18px;
       font-weight: 700; cursor: pointer; font-size: 1rem;
-      text-decoration: none; text-align: center;
+      text-align: center;
       box-sizing: border-box;
-    }
-    .path-card a.path-form {
-      background: #15803d; color: #fff;
-    }
-    .path-card a.path-form:hover { background: #166534; }
-    #mic-open {
       background: #d97706; color: #fff;
       width: 100%;
     }
     #mic-open:hover { background: #b45309; }
+    .form-path-heading {
+      margin: 0 0 6px;
+      font-size: 1.25rem;
+    }
+    .form-path-hint { margin: 0 0 14px; }
     #voice-gate-free:disabled,
     #voice-gate-pay:disabled {
       opacity: .45;
@@ -428,18 +418,14 @@
     <h1>Request a free pickup</h1>
     <p class="lead">We pick up items that still have value in the Salt Lake valley (Murray / West Jordan and nearby). Not junk hauling. A quick screen happens first; if it looks worth the trip, Ben reviews and will contact you.</p>
 
-    <div class="path-choices" aria-label="How to request a pickup">
-      <div class="path-card">
-        <h2>Fill out the form</h2>
-        <p>Type the details yourself. Always free.</p>
-        <a class="path-form" href="#pickup-form">Use the form</a>
-      </div>
-      <div class="path-card">
-        <h2>Talk to an AI</h2>
-        <p>Say what you’ve got — we’ll fill it out for you.</p>
-        <button type="button" id="mic-open" aria-label="Talk to an AI to fill this out" title="Talk to an AI">🎤 Talk to an AI</button>
-      </div>
+    <div class="path-card path-card-talk" aria-label="Talk to an AI">
+      <h2>Talk to an AI</h2>
+      <p>Say what you’ve got — we’ll fill it out for you.</p>
+      <button type="button" id="mic-open" aria-label="Talk to an AI to fill this out" title="Talk to an AI">🎤 Talk to an AI</button>
     </div>
+
+    <h2 class="form-path-heading" id="form-path-heading">Fill out the form</h2>
+    <p class="hint form-path-hint">Type the details yourself. Always free.</p>
 
     <form id="pickup-form" novalidate>
       <label for="photos">Photos <span class="req">*</span></label>
@@ -1035,6 +1021,7 @@
           enabled: false,
           employee: false,
           worthConfirmed: false,
+          paidPath: false,
           itemTitle: "",
           itemDescription: "",
           _syncTimer: null,
@@ -1274,8 +1261,13 @@
             return Promise.reject(new Error("turnstile"));
           }
           var body = { turnstileToken: token, product: "shv-pickup", voiceTest: !!voiceTestQ };
-          // Public free path: Worker re-checks AI worth. Never send mint key from the browser.
-          if (state.worthConfirmed) {
+          // Never send mint key from the browser.
+          // Paid path must not claim sponsored/free — Worker must hit normal paywall.
+          if (state.paidPath) {
+            body.requirePayment = true;
+            body.worthConfirmed = false;
+            body.shvSponsored = false;
+          } else if (state.worthConfirmed) {
             body.worthConfirmed = true;
             if (state.itemTitle) body.itemTitle = state.itemTitle;
             if (state.itemDescription) body.itemDescription = state.itemDescription;
@@ -1463,7 +1455,13 @@
           opts = opts || {};
           state.employee = !!employee;
           state.enabled = true;
-          if (opts.worthConfirmed) {
+          if (opts.paidPath) {
+            state.paidPath = true;
+            state.worthConfirmed = false;
+            state.itemTitle = "";
+            state.itemDescription = "";
+          } else if (opts.worthConfirmed) {
+            state.paidPath = false;
             state.worthConfirmed = true;
             if (opts.itemTitle) state.itemTitle = String(opts.itemTitle);
             if (opts.itemDescription) state.itemDescription = String(opts.itemDescription);
@@ -1478,11 +1476,8 @@
                 descEl.value = state.itemDescription;
               }
             } catch (ePrefill) {}
-          }
-          if (opts.paidPath) {
-            state.worthConfirmed = false;
-            state.itemTitle = "";
-            state.itemDescription = "";
+          } else {
+            state.paidPath = false;
           }
           panel.hidden = false;
           panel.classList.add("show");
