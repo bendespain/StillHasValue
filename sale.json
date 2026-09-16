@@ -3,7 +3,7 @@
   "endpoint": "https://tracker.stillhasvalue.com/api/save",
   "method": "POST",
   "contentType": "text/plain;charset=utf-8",
-  "notes": "Grok/voice should set source to grok-voice. Do not invent a sale price. Optional inventoryId is the shop item id from inventory.json. After a confirmed tracker save, the tracker (not the shop page) marks that item status sold in inventory.json so it drops off the shop. If Grok/voice has no inventoryId, the tracker matches by title; if two or more match, it skips the shop update.",
+  "notes": "Grok/voice should set source to grok-voice. Do not invent a sale price. Costs: purchaseCost (acquisition), storageCost, cleaningCost, repairCost (materials). Optional inventoryId is the shop item id from inventory.json. After a confirmed tracker save, the tracker (not the shop page) marks that item status sold in inventory.json so it drops off the shop. If Grok/voice has no inventoryId, the tracker matches by title; if two or more match, it skips the shop update. If the Sheet save succeeds but mark-sold fails, the tracker returns partialSuccess with an actionable shopError.",
   "humanForm": "https://tracker.stillhasvalue.com",
   "sheet": "Still Has Value Tracker, Sales tab",
   "fields": {
@@ -24,10 +24,20 @@
       ]
     },
     "purchaseCost": {
-      "type": "number"
+      "type": "number",
+      "description": "Acquisition / purchase cost"
+    },
+    "storageCost": {
+      "type": "number",
+      "description": "Storage / yard time cost (not notes)"
+    },
+    "cleaningCost": {
+      "type": "number",
+      "description": "Cleaning / detailing cost"
     },
     "repairCost": {
-      "type": "number"
+      "type": "number",
+      "description": "Repair / materials cost"
     },
     "dateSold": {
       "type": "string",
@@ -53,7 +63,7 @@
     "inventoryId": {
       "type": "string",
       "required": false,
-      "description": "Shop inventory.json item id. Prefer picking the card on the tracker form."
+      "description": "Shop inventory.json item id for the live listing. Prefer picking it on the tracker form so Save marks that listing sold."
     }
   }
 }
