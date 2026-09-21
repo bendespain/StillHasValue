@@ -1264,7 +1264,10 @@
       fetch("/inventory.json")
         .then(function (r) { return r.json(); })
         .then(function (data) {
-          var items = (data.items || []).filter(function (it) { return it.status !== "sold"; });
+          var items = (data.items || []).filter(function (it) {
+            var ksl = it.channels && it.channels.ksl;
+            return it.status !== "sold" && ksl && String(ksl).indexOf("http") === 0;
+          });
           items.forEach(function (it, i) {
             it._jsonOrd = i;
             it._family = familyOf(it);
