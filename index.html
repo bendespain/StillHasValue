@@ -1361,9 +1361,9 @@
           
           if (queued.length) {
             queued = sortItemsSmart(queued.slice());
-            var qhtml = '<section class="queue-section cat-group" data-category="__queue__" aria-label="In queue">';
-            qhtml += '<h3 class="cat-heading">In queue <span class="queue-badge">Coming soon</span></h3>';
-            qhtml += '<p class="field-help" style="margin:0 0 0.75rem;color:#57534e;font-size:0.92rem">These are being listed on KSL — names and prices are real; they are not clickable yet.</p>';
+            var qhtml = '<section class="queue-section cat-group" data-category="__queue__" aria-label="On Deck">';
+            qhtml += '<h3 class="cat-heading">On Deck <span class="queue-badge">Coming soon</span></h3>';
+            qhtml += '<p class="field-help" style="margin:0 0 0.75rem;color:#57534e;font-size:0.92rem">These are on deck for KSL — names and prices are real; they are not clickable yet.</p>';
             qhtml += '<div class="grid">';
             queued.forEach(function (it) {
               var title = it.title || "Item";
@@ -1371,9 +1371,9 @@
               var nPrice = itemPrice(it);
               var hasPrice = nPrice != null;
               var priceLabel = hasPrice ? ("$" + (Number.isInteger(nPrice) ? nPrice : nPrice.toFixed(2))) : "";
-              qhtml += '<div class="card card-queue" role="group" aria-label="' + esc(title) + ' (in queue)" data-id="' + esc(String(it.id)) + '" data-title="' + esc(title) + '">'
+              qhtml += '<div class="card card-queue" role="group" aria-label="' + esc(title) + ' (on deck)" data-id="' + esc(String(it.id)) + '" data-title="' + esc(title) + '">'
                 + '<span class="card-media">'
-                + '<span class="queue-ribbon">In queue</span>'
+                + '<span class="queue-ribbon">On Deck</span>'
                 + (img ? ('<img src="' + esc(img) + '" alt="" loading="lazy">') : '<span class="no-photo">No photo</span>')
                 + '</span>'
                 + '<span class="title">' + esc(title) + '</span>'
