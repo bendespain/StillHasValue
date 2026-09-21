@@ -1052,7 +1052,7 @@
       function layoutCards(searchOrder) {
         var searching = !!searchOrder;
         var flatten = currentSort !== "smart";
-        var cards = Array.prototype.slice.call(document.querySelectorAll("#grid .card"));
+        var cards = Array.prototype.slice.call(document.querySelectorAll("#grid .card:not(.card-queue)"));
         var visible = [];
         cards.forEach(function (c) {
           var id = String(c.getAttribute("data-id") || "");
@@ -1143,6 +1143,17 @@
             list.forEach(function (c) { if (grid) grid.appendChild(c); });
           });
         }
+        // Keep On Deck section intact (queue cards are excluded from reshuffle above)
+        var qs = document.querySelector("#grid .queue-section");
+        if (qs) {
+          qs.style.display = "";
+          qs.hidden = false;
+          qs.querySelectorAll(".card-queue").forEach(function (c) {
+            c.hidden = false;
+            c.style.display = "";
+            c.classList.remove("is-out");
+          });
+        }
         settleAfterFilter();
         return visible.length;
       }
@@ -1159,7 +1170,7 @@
       // Hybrid floors live in worker.js handleSearch (1-token: lex or sem>=0.78; phrase embed-only >=0.68; include >=0.60 unless lex>=0.5). This fallback is lexical-only.
       function applyClientLexical(q, showExplain) {
         var rows = [];
-        document.querySelectorAll("#grid .card").forEach(function (c) {
+        document.querySelectorAll("#grid .card:not(.card-queue)").forEach(function (c) {
           var score = lexicalScore(q, c.getAttribute("data-title") || "", c.getAttribute("data-category") || "");
           if (score > 0) rows.push({ id: c.getAttribute("data-id"), score: score });
         });
@@ -1365,7 +1376,7 @@
             queued = sortItemsSmart(queued.slice());
             htmlQueue += '<section class="queue-section" data-category="__queue__" aria-label="On Deck">';
             htmlQueue += '<h2 class="cat-heading" style="font-size:1.25rem;margin:0 0 0.35rem">On Deck <span class="queue-badge">Coming soon</span></h2>';
-            htmlQueue += '<p style="margin:0 0 0.85rem;color:#57534e;font-size:0.92rem">These are next up for KSL — you can see them here, but they are not clickable until listed.</p>';
+            htmlQueue += '<p style="margin:0 0 0.85rem;color:#57534e;font-size:0.92rem">These are next up for our public listings — you can see them here, but they are not clickable until they go live.</p>';
             htmlQueue += '<div class="grid">';
             queued.forEach(function (it) {
               var title = it.title || "Item";
@@ -1373,7 +1384,7 @@
               var nPrice = itemPrice(it);
               var hasPrice = nPrice != null;
               var priceLabel = hasPrice ? ("$" + (Number.isInteger(nPrice) ? nPrice : nPrice.toFixed(2))) : "";
-              htmlQueue += '<div class="card card-queue" role="group" aria-label="' + esc(title) + ' (on deck)" data-id="' + esc(String(it.id)) + '" data-title="' + esc(title) + '">'
+              htmlQueue += '<div class="card card-queue" data-queue="1" role="group" aria-label="' + esc(title) + ' (on deck)" data-id="' + esc(String(it.id)) + '" data-title="' + esc(title) + '">'
                 + '<span class="card-media">'
                 + '<span class="queue-ribbon">On Deck</span>'
                 + (img ? ('<img src="' + esc(img) + '" alt="" loading="lazy">') : '<span class="no-photo">No photo</span>')
