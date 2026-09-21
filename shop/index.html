@@ -1261,12 +1261,25 @@
           return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
         });
       }
+      function hasWorkingKsl(it) {
+        var k = it && it.channels && it.channels.ksl;
+        if (typeof k !== "string") return false;
+        k = k.trim();
+        if (!/^https?:\/\//i.test(k)) return false;
+        try {
+          var host = new URL(k).hostname.toLowerCase();
+          return host === "classifieds.ksl.com" || host.endsWith(".classifieds.ksl.com");
+        } catch (e) {
+          return false;
+        }
+      }
       fetch("/inventory.json")
         .then(function (r) { return r.json(); })
         .then(function (data) {
+          // Public shop: hide available items without a real KSL classifieds URL.
+          // Keep them in inventory.json for tracker/posting desks.
           var items = (data.items || []).filter(function (it) {
-            var ksl = it.channels && it.channels.ksl;
-            return it.status !== "sold" && ksl && String(ksl).indexOf("http") === 0;
+            return it.status !== "sold" && hasWorkingKsl(it);
           });
           items.forEach(function (it, i) {
             it._jsonOrd = i;
