@@ -1,7 +1,7 @@
 {
   "name": "Still Has Value",
   "url": "https://stillhasvalue.com",
-  "updated": "2026-09-23",
+  "updated": "2026-09-23T19:46:20Z",
   "channels": [
     "site",
     "ksl"
@@ -16,18 +16,18 @@
   "items": [
     {
       "id": "shv-1a0acc3ee0e-241a",
-      "title": "2016 Pitster Pro dirt bike \u2014 street registered",
+      "title": "2016 Pitster Pro dirt bike — street registered",
       "price": 2450,
       "category": "Powersports",
       "status": "available",
       "image": "https://stillhasvalue.com/images/shv-1a0acc3ee0e-241a/0.jpg",
       "url": "https://stillhasvalue.com/#item-shv-1a0acc3ee0e-241a",
       "channels": {
-        "ksl": null,
+        "ksl": "https://classifieds.ksl.com/listing/82164590",
         "facebook": "https://www.facebook.com/marketplace/item/1088323530585791/",
         "ebay": null
       },
-      "condition": "Used \u2014 starts and runs well",
+      "condition": "Used — starts and runs well",
       "description": "2016 Pitster Pro dirt bike. Starts and runs well. Registered for the road September 2026 through 2027. Includes dirt tires as shown in photos. Local pickup Salt Lake valley / Murray area. Still Has Value.",
       "images": [
         "https://stillhasvalue.com/images/shv-1a0acc3ee0e-241a/0.jpg",
@@ -40,18 +40,18 @@
     {
       "id": "shv-1a07e05c855-5fc7",
       "title": "Craftsman LT2000 Riding Mower 42 in 18.5 hp with Twin Bagger",
-      "price": 695,
+      "price": 795,
       "category": "Lawn & outdoor",
       "status": "available",
       "image": "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/0.jpg",
       "url": "https://stillhasvalue.com/#item-shv-1a07e05c855-5fc7",
       "channels": {
-        "ksl": null,
+        "ksl": "https://classifieds.ksl.com/listing/82164666",
         "facebook": "https://www.facebook.com/marketplace/item/1733024671264617/",
         "ebay": null
       },
-      "condition": "Used \u2014 seat torn (foam showing), deck worn/rusty, twin bagger included",
-      "description": "Craftsman LT2000 riding mower, 18.5 OHV, ~42\" Heavy Duty deck, with black twin bagger / dual catcher installed.\n\nGray hood with red Craftsman stripe, white rims, headlights. Includes the rear twin bagger \u2014 not a bare side-discharge-only unit.\n\nHonest wear: black seat has large tears with foam showing; mower deck shows heavy surface wear/rust/paint loss; bagger bins are dusty/used. Good candidate if you want bagging without paying premium red-unit money.\n\nLocal pickup Murray / West Jordan / Salt Lake valley. Cash or Venmo. Still Has Value \u2014 we prove it has value.",
+      "condition": "Used — seat torn (foam showing), deck worn/rusty, twin bagger included",
+      "description": "Craftsman LT2000 riding mower, 18.5 OHV, ~42\" Heavy Duty deck, with black twin bagger / dual catcher installed.\n\nGray hood with red Craftsman stripe, white rims, headlights. Includes the rear twin bagger — not a bare side-discharge-only unit.\n\nHonest wear: black seat has large tears with foam showing; mower deck shows heavy surface wear/rust/paint loss; bagger bins are dusty/used. Good candidate if you want bagging without paying premium red-unit money.\n\nLocal pickup Murray / West Jordan / Salt Lake valley. Cash or Venmo. Still Has Value — we prove it has value.",
       "images": [
         "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/0.jpg",
         "https://stillhasvalue.com/images/shv-1a07e05c855-5fc7/1.jpg",
@@ -72,7 +72,7 @@
       "image": "https://stillhasvalue.com/images/shv-hechinger-1642/0.jpg",
       "url": "https://stillhasvalue.com/#item-shv-hechinger-1642",
       "channels": {
-        "ksl": null,
+        "ksl": "https://classifieds.ksl.com/listing/82164697",
         "facebook": "https://www.facebook.com/marketplace/item/1098061652915369/",
         "ebay": null
       },
