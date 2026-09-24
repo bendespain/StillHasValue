@@ -12,8 +12,24 @@
     "offerup",
     "nextdoor"
   ],
-  "count_available": 143,
+  "count_available": 144,
   "items": [
+    {
+      "id": "shv-1a0d408bacd-12a7",
+      "title": "ASUS RT-AX55 AX1800 Dual Band WiFi 6 Router",
+      "price": 35,
+      "category": "Electronics",
+      "status": "available",
+      "image": "https://stillhasvalue.com/images/shv-1a0d408bacd-12a7/0.jpg",
+      "url": "https://stillhasvalue.com/#item-shv-1a0d408bacd-12a7",
+      "channels": {
+        "ksl": null,
+        "facebook": null,
+        "ebay": null
+      },
+      "condition": "Used as photographed; power-on not verified.",
+      "description": "ASUS RT-AX55 AX1800 Dual Band WiFi 6. Underside label photographed (do not publish WiFi credentials from label). Used as photographed; power-on not verified. Factory reset recommended. Local pickup Murray / Salt Lake valley."
+    },
     {
       "id": "shv-1a0d408a16a-32da",
       "title": "Netgear Nighthawk RAX70 AX6600 WiFi 6 Router",
