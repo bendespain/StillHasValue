@@ -1292,6 +1292,34 @@
           return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
         });
       }
+      /** Resize SHV-hosted product photos via Cloudflare Image Resizing. Leave KSL/other CDNs alone. */
+      function shopImgSrc(url, width) {
+        if (!url) return "";
+        var u = String(url);
+        var marker = "/images/";
+        var hostOk = /(?:^https?:\/\/(?:www\.)?stillhasvalue\.com)?\/images\//i;
+        var m = u.match(/^(?:https?:\/\/(?:www\.)?stillhasvalue\.com)?(\/images\/.+)$/i);
+        if (!m) return u;
+        var path = m[1];
+        var w = width || 800;
+        return "/cdn-cgi/image/width=" + w + ",quality=80,format=auto" + path;
+      }
+      function shopImgTag(url, alt, opts) {
+        opts = opts || {};
+        if (!url) return "";
+        var isShv = /(?:^https?:\/\/(?:www\.)?stillhasvalue\.com)?\/images\//i.test(String(url));
+        var loading = opts.loading || "lazy";
+        var fp = opts.fetchpriority ? (' fetchpriority="' + opts.fetchpriority + '"') : "";
+        var w = opts.widthAttr || "400";
+        var h = opts.heightAttr || "300";
+        var altAttr = alt != null ? (' alt="' + esc(alt) + '"') : ' alt=""';
+        if (!isShv) {
+          return '<img src="' + esc(url) + '"' + altAttr + ' loading="' + loading + '"' + fp + ' decoding="async" referrerpolicy="no-referrer" width="' + w + '" height="' + h + '">';
+        }
+        var src = shopImgSrc(url, 800);
+        var srcset = shopImgSrc(url, 400) + " 400w, " + shopImgSrc(url, 800) + " 800w, " + shopImgSrc(url, 1200) + " 1200w";
+        return '<img src="' + esc(src) + '" srcset="' + esc(srcset) + '" sizes="' + esc(opts.sizes || "(max-width: 600px) 50vw, 280px") + '"' + altAttr + ' loading="' + loading + '"' + fp + ' decoding="async" referrerpolicy="no-referrer" width="' + w + '" height="' + h + '" data-full="' + esc(url) + '">';
+      }
       fetch("/inventory.json")
         .then(function (r) { return r.json(); })
         .then(function (data) {
@@ -1346,7 +1374,7 @@
               var fam = it._family || "Other";
               var href = (it.channels && it.channels.ksl) || it.url || "#";
               var img = it.image || "";
-              var eager = cardIndex < 24;
+              var eager = cardIndex < 8;
               var nPrice = itemPrice(it);
               var hasPrice = nPrice != null;
               var priceLabel = "";
@@ -1361,7 +1389,7 @@
               var recency = itemRecency(it, it._jsonOrd || 0);
               html += '<a class="card" href="' + esc(href) + '" target="_blank" rel="noopener" data-id="' + esc(String(it.id)) + '" data-ord="' + cardIndex + '" data-json-ord="' + esc(String(it._jsonOrd || 0)) + '" data-recency="' + esc(String(recency)) + '" data-price="' + (hasPrice ? esc(String(nPrice)) : "") + '" data-title="' + esc(dataTitle) + '" data-search="' + esc(search) + '" data-category="' + esc(cat) + '" data-family="' + esc(fam) + '">'
                 + '<span class="card-media">'
-                + '<img src="' + esc(img) + '" alt="' + esc(title) + '" loading="eager"' + (eager ? ' fetchpriority="high"' : "") + ' decoding="async" referrerpolicy="no-referrer" width="400" height="300">'
+                + shopImgTag(img, title, { loading: eager ? "eager" : "lazy", fetchpriority: eager ? "high" : "", widthAttr: "400", heightAttr: "300", sizes: "(max-width: 600px) 50vw, 280px" })
                 + (hasPrice ? '<span class="price">' + esc(priceLabel) + "</span>" : "")
                 + "</span>"
                 + '<span class="title">' + esc(title) + "</span>"
@@ -1387,7 +1415,7 @@
               htmlQueue += '<div class="card card-queue" data-queue="1" role="group" aria-label="' + esc(title) + ' (on deck)" data-id="' + esc(String(it.id)) + '" data-title="' + esc(title) + '">'
                 + '<span class="card-media">'
                 + '<span class="queue-ribbon">On Deck</span>'
-                + (img ? ('<img src="' + esc(img) + '" alt="" loading="lazy">') : '<span class="no-photo">No photo</span>')
+                + (img ? shopImgTag(img, "", { loading: "lazy", widthAttr: "400", heightAttr: "300" }) : '<span class="no-photo">No photo</span>')
                 + '</span>'
                 + '<span class="title">' + esc(title) + '</span>'
                 + (hasPrice ? ('<span class="price">' + esc(priceLabel) + '</span>') : '')
@@ -1401,9 +1429,15 @@
             var img = e.target;
             if (!img || img.tagName !== "IMG" || img.dataset.retried) return;
             img.dataset.retried = "1";
+            var full = img.getAttribute("data-full") || "";
             var src = img.getAttribute("src") || "";
-            if (!src) return;
             img.referrerPolicy = "no-referrer";
+            if (full && full !== src) {
+              img.removeAttribute("srcset");
+              img.src = full;
+              return;
+            }
+            if (!src) return;
             img.src = src;
           }, true);
           inventoryReady = true;
