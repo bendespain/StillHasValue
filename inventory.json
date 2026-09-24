@@ -12,8 +12,24 @@
     "offerup",
     "nextdoor"
   ],
-  "count_available": 145,
+  "count_available": 146,
   "items": [
+    {
+      "id": "shv-1a0d408fffd-d7de",
+      "title": "Netgear Nighthawk C7000v2 AC1900 Cable Modem Router",
+      "price": 35,
+      "category": "Electronics",
+      "status": "available",
+      "image": "https://stillhasvalue.com/images/shv-1a0d408fffd-d7de/0.jpg",
+      "url": "https://stillhasvalue.com/#item-shv-1a0d408fffd-d7de",
+      "channels": {
+        "ksl": null,
+        "facebook": null,
+        "ebay": null
+      },
+      "condition": "Used as photographed; power-on not verified.",
+      "description": "Netgear Nighthawk C7000v2 AC1900 WiFi cable modem/router, DOCSIS 3.0. Buyer should confirm ISP compatibility/activation. Used as photographed; power-on not verified. Local pickup Murray / Salt Lake valley."
+    },
     {
       "id": "shv-1a0d408d990-4bda",
       "title": "Netgear Nighthawk R7000 AC1900 Smart WiFi Router",
