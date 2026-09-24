@@ -12,8 +12,24 @@
     "offerup",
     "nextdoor"
   ],
-  "count_available": 147,
+  "count_available": 148,
   "items": [
+    {
+      "id": "shv-1a0d40933ae-13d9",
+      "title": "Netgear Nighthawk RAXE500 AXE11000 WiFi 6E Router",
+      "price": 125,
+      "category": "Electronics",
+      "status": "available",
+      "image": "https://stillhasvalue.com/images/shv-1a0d40933ae-13d9/0.jpg",
+      "url": "https://stillhasvalue.com/#item-shv-1a0d40933ae-13d9",
+      "channels": {
+        "ksl": null,
+        "facebook": null,
+        "ebay": null
+      },
+      "condition": "Used as photographed; power-on not verified.",
+      "description": "Netgear Nighthawk RAXE500 AXE11000 tri-band WiFi 6E. Box in shrink wrap as photographed. Used as photographed; power-on not verified. Local pickup Murray / Salt Lake valley."
+    },
     {
       "id": "shv-1a0d4091adc-d21b",
       "title": "Arris TG1682G DOCSIS 3.0 Cable Gateway",
