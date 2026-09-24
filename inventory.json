@@ -12,8 +12,28 @@
     "offerup",
     "nextdoor"
   ],
-  "count_available": 144,
+  "count_available": 145,
   "items": [
+    {
+      "id": "shv-1a0d408d990-4bda",
+      "title": "Netgear Nighthawk R7000 AC1900 Smart WiFi Router",
+      "price": 25,
+      "category": "Electronics",
+      "status": "available",
+      "image": "https://stillhasvalue.com/images/shv-1a0d408d990-4bda/0.jpg",
+      "url": "https://stillhasvalue.com/#item-shv-1a0d408d990-4bda",
+      "channels": {
+        "ksl": null,
+        "facebook": null,
+        "ebay": null
+      },
+      "condition": "Used as photographed; power-on not verified.",
+      "description": "Netgear Nighthawk R7000 AC1900. Unit + label photographed. Used as photographed; power-on not verified. Factory reset recommended. Local pickup Murray / Salt Lake valley.",
+      "images": [
+        "https://stillhasvalue.com/images/shv-1a0d408d990-4bda/0.jpg",
+        "https://stillhasvalue.com/images/shv-1a0d408d990-4bda/1.jpg"
+      ]
+    },
     {
       "id": "shv-1a0d408bacd-12a7",
       "title": "ASUS RT-AX55 AX1800 Dual Band WiFi 6 Router",
