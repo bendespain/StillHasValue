@@ -761,8 +761,17 @@
         return n;
       }
       function itemRecency(it, jsonIndex) {
-        var n = Number(it.id);
-        if (it.id != null && it.id !== "" && isFinite(n)) return n;
+        // Prefer shv-{hexMs}-* timestamps (shop writes). Old KSL ids stay numeric.
+        // Do not use Number("shv-...") — that is NaN and wrongly falls back to jsonIndex,
+        // which then loses to ~8e7 KSL ids when Latest sorts recency DESC.
+        var id = it.id != null ? String(it.id) : "";
+        var m = /^shv-([0-9a-f]+)-/i.exec(id);
+        if (m) {
+          var ms = parseInt(m[1], 16);
+          if (isFinite(ms) && ms > 0) return ms;
+        }
+        var n = Number(id);
+        if (id !== "" && isFinite(n)) return n;
         return jsonIndex;
       }
       function clusterTopPrice(list) {
@@ -1020,11 +1029,6 @@
         }
         return null;
       }
-      function cardRecency(el) {
-        var n = Number(el.getAttribute("data-recency") || 0);
-        if (isFinite(n) && n > 0) return n;
-        return Number(el.getAttribute("data-json-ord") || 0);
-      }
       function cardPrice(el) {
         var raw = el.getAttribute("data-price");
         if (raw == null || raw === "") return null;
@@ -1038,8 +1042,8 @@
       }
       function cmpSecondary(a, b) {
         if (currentSort === "latest") {
-          var rb = cardRecency(b) - cardRecency(a);
-          if (rb) return rb;
+          // Inventory is newest-first (prepend); ASC json-ord matches Latest.
+          return Number(a.getAttribute("data-json-ord") || 0) - Number(b.getAttribute("data-json-ord") || 0);
         } else if (currentSort === "price-high" || currentSort === "price-low") {
           var pa = cardPrice(a), pb = cardPrice(b);
           var ha = pa != null, hb = pb != null;
@@ -1076,10 +1080,9 @@
             return cmpSecondary(a, b);
           });
         } else if (currentSort === "latest") {
+          // inventory.json prepend = newest first → sort by data-json-ord ASC
           visible.sort(function (a, b) {
-            var d = cardRecency(b) - cardRecency(a);
-            if (d) return d;
-            return Number(b.getAttribute("data-json-ord") || 0) - Number(a.getAttribute("data-json-ord") || 0);
+            return Number(a.getAttribute("data-json-ord") || 0) - Number(b.getAttribute("data-json-ord") || 0);
           });
         } else if (currentSort === "price-high" || currentSort === "price-low") {
           var dir = currentSort === "price-high" ? 1 : -1;
