@@ -12,8 +12,24 @@
     "offerup",
     "nextdoor"
   ],
-  "count_available": 146,
+  "count_available": 147,
   "items": [
+    {
+      "id": "shv-1a0d4091adc-d21b",
+      "title": "Arris TG1682G DOCSIS 3.0 Cable Gateway",
+      "price": 20,
+      "category": "Electronics",
+      "status": "available",
+      "image": "https://stillhasvalue.com/images/shv-1a0d4091adc-d21b/0.jpg",
+      "url": "https://stillhasvalue.com/#item-shv-1a0d4091adc-d21b",
+      "channels": {
+        "ksl": null,
+        "facebook": null,
+        "ebay": null
+      },
+      "condition": "Used as photographed; power-on not verified.",
+      "description": "Arris TG1682G DOCSIS 3.0 gateway (common Xfinity XB3-class). Buyer must check ISP unlock/activation. Used as photographed; power-on not verified. Local pickup Murray / Salt Lake valley."
+    },
     {
       "id": "shv-1a0d408fffd-d7de",
       "title": "Netgear Nighthawk C7000v2 AC1900 Cable Modem Router",
