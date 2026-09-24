@@ -12,8 +12,24 @@
     "offerup",
     "nextdoor"
   ],
-  "count_available": 149,
+  "count_available": 150,
   "items": [
+    {
+      "id": "shv-1a0d4096c04-50c1",
+      "title": "weBoost Home Room Cell Signal Booster 5G Ready",
+      "price": 120,
+      "category": "Electronics",
+      "status": "available",
+      "image": "https://stillhasvalue.com/images/shv-1a0d4096c04-50c1/0.jpg",
+      "url": "https://stillhasvalue.com/#item-shv-1a0d4096c04-50c1",
+      "channels": {
+        "ksl": null,
+        "facebook": null,
+        "ebay": null
+      },
+      "condition": "Used as photographed; power-on not verified.",
+      "description": "weBoost Home Room cell signal booster, 5G ready, up to ~1500 sq ft (per box). Retail box shown; contents not opened/verified in these shots. Local pickup Murray / Salt Lake valley."
+    },
     {
       "id": "shv-1a0d4095191-6337",
       "title": "Gfast Dual WAN CPE zGFS-1231C",
