@@ -12,8 +12,24 @@
     "offerup",
     "nextdoor"
   ],
-  "count_available": 148,
+  "count_available": 149,
   "items": [
+    {
+      "id": "shv-1a0d4095191-6337",
+      "title": "Gfast Dual WAN CPE zGFS-1231C",
+      "price": 20,
+      "category": "Electronics",
+      "status": "available",
+      "image": "https://stillhasvalue.com/images/shv-1a0d4095191-6337/0.jpg",
+      "url": "https://stillhasvalue.com/#item-shv-1a0d4095191-6337",
+      "channels": {
+        "ksl": null,
+        "facebook": null,
+        "ebay": null
+      },
+      "condition": "Used as photographed; power-on not verified.",
+      "description": "Gfast Dual WAN CPE model zGFS-1231C. White unit with cord as photographed. Niche/ISP CPE gear. Used as photographed; power-on not verified. Local pickup Murray / Salt Lake valley."
+    },
     {
       "id": "shv-1a0d40933ae-13d9",
       "title": "Netgear Nighthawk RAXE500 AXE11000 WiFi 6E Router",
