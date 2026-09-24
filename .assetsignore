@@ -1,0 +1,8 @@
+.git
+.gitignore
+.dev.vars
+.dev.vars.example
+node_modules
+.wrangler
+*.md
+scripts
