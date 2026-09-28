@@ -1,7 +1,7 @@
 {
   "name": "Still Has Value",
   "url": "https://stillhasvalue.com",
-  "updated": "2026-09-24",
+  "updated": "2026-09-28",
   "channels": [
     "site",
     "ksl"
@@ -24,7 +24,7 @@
       "url": "https://stillhasvalue.com/#item-shv-1a0d4096c04-50c1",
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/82183929",
-        "facebook": null,
+        "facebook": "https://www.facebook.com/marketplace/item/1079189748371471/",
         "ebay": "https://www.ebay.com/itm/267794826059"
       },
       "condition": "Used as photographed; power-on not verified.",
