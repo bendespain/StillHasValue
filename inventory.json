@@ -1,7 +1,7 @@
 {
   "name": "Still Has Value",
   "url": "https://stillhasvalue.com",
-  "updated": "2026-10-01",
+  "updated": "2026-10-02",
   "channels": [
     "site",
     "ksl"
@@ -551,7 +551,7 @@
       "url": "https://stillhasvalue.com/#item-80345040",
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/80345040",
-        "facebook": null,
+        "facebook": "https://www.facebook.com/marketplace/item/28401347092890927/",
         "ebay": null
       }
     },
