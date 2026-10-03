@@ -382,10 +382,11 @@
       "image": "https://image.ksldigital.com/507380b1-e9fd-4148-bf47-d95d46ac297a.jpg?filter=marketplace/400x300_cropped",
       "url": "https://stillhasvalue.com/#item-79497625",
       "channels": {
-        "ksl": "https://classifieds.ksl.com/listing/79497625",
+        "ksl": null,
         "facebook": null,
         "ebay": null,
-        "facebook_cleared": "https://www.facebook.com/marketplace/item/4050301851930721/"
+        "facebook_cleared": "https://www.facebook.com/marketplace/item/4050301851930721/",
+        "ksl_cleared": "https://classifieds.ksl.com/listing/79497625"
       }
     },
     {
