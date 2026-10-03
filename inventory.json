@@ -972,7 +972,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/81120661",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1004,7 +1004,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/81284978",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1068,7 +1068,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/81815894",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1084,7 +1084,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/81816668",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1100,7 +1100,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/81819100",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1132,7 +1132,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/76766653",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1164,7 +1164,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/77567434",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1195,7 +1195,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/78042707",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       },
@@ -1243,7 +1243,9 @@
       "url": "https://stillhasvalue.com/#item-78416997",
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/78416997",
-        "facebook": null,
+        "facebook": {
+          "status": "rejected"
+        },
         "ebay": null
       }
     },
@@ -1258,7 +1260,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/78575099",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1305,7 +1307,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/78756962",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       },
@@ -1418,7 +1420,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/80618930",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1497,7 +1499,9 @@
       "url": "https://stillhasvalue.com/#item-81455560",
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/81455560",
-        "facebook": null,
+        "facebook": {
+          "status": "rejected"
+        },
         "ebay": null
       }
     },
@@ -1543,7 +1547,9 @@
       "url": "https://stillhasvalue.com/#item-81680206",
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/81680206",
-        "facebook": null,
+        "facebook": {
+          "status": "rejected"
+        },
         "ebay": null
       }
     },
@@ -1588,7 +1594,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/73499657",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1716,7 +1722,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/74589436",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -1843,7 +1849,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/76728134",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       },
@@ -1956,7 +1962,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/77838894",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -2083,7 +2089,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/78388326",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       },
@@ -2212,7 +2218,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/78715501",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -2228,7 +2234,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/80697664",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
@@ -2276,7 +2282,7 @@
       "channels": {
         "ksl": "https://classifieds.ksl.com/listing/77488676",
         "facebook": {
-          "status": "in_review"
+          "status": "rejected"
         },
         "ebay": null
       }
